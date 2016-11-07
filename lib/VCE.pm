@@ -144,5 +144,28 @@ sub _process_config{
     $self->_set_config($cfg);
 }
 
+=head2 get_workgroups
+
+=cut
+
+sub get_workgroups{
+    my $self = shift;
+
+    my %params = @_;
+
+    if(!defined($params{'username'})){
+	my @wgps = (keys %{$self->config->{'workgroups'}});
+	return \@wgps;
+    }
+
+    if(defined($self->config->{'users'}->{$params{'username'}})){
+	return $self->config->{'users'}->{$params{'username'}};
+    }
+
+    
+    return [];
+
+}
+
 
 1;
