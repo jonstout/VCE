@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME                => 'perl-VCE',
     AUTHOR              => 'GRNOC Systems Engineering <syseng@grnoc.iu.edu>',
-    VERSION_FROM        => 'lib/GRNOC/VCE/VCE.pm',
+    VERSION_FROM        => 'lib/VCE.pm',
     PL_FILES            => {},
     PREREQ_PM => {
     'Net::SSH2' => 0
