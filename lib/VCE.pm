@@ -1,5 +1,38 @@
 #!/usr/bin/perl
 
+#----- VCE Virtual Customer Equipment
+##----
+##----
+##---- Main module for interacting with the VCE application
+##----
+##
+## Copyright 2016 Trustees of Indiana University
+##
+##   Licensed under the Apache License, Version 2.0 (the "License");
+##  you may not use this file except in compliance with the License.
+##   You may obtain a copy of the License at
+##
+##       http://www.apache.org/licenses/LICENSE-2.0
+##
+##   Unless required by applicable law or agreed to in writing, software
+##   distributed under the License is distributed on an "AS IS" BASIS,
+##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+##   See the License for the specific language governing permissions and
+##   limitations under the License.
+#
+
+=head1 NAME
+
+VCE - VCE Virtual Customer Equipement
+
+=head1 VERSION
+
+Version 1.0.0
+
+=cut
+
+
+
 package VCE;
 
 use strict;
@@ -16,6 +49,27 @@ has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 has access => (is => 'rwp');
+
+=head1 SYNOPSIS
+This is a module to provide a simplified object oriented way to connect to
+and interact with the VCE database.
+
+Some examples:
+
+    use VCE;
+
+    my $vce = VCE->new();
+    my $is_in_workgroup = $vce->access->user_in_workgroup( username => 'aragusa@iu.edu',
+                                                           workgroup => 'ajco');
+
+
+=cut
+
+=head2 BUILD
+
+
+
+=cut
 
 sub BUILD{
     my ($self) = @_;
@@ -62,7 +116,28 @@ sub _process_config{
     my $switches = $config->get('/accessPolicy/switch');
     foreach my $switch (@$switches){
 	$self->logger->debug("Processing switch: " . Data::Dumper::Dumper($switch));
-	$switches{$switch->{'name'}} = $switch;
+	my $s = {};
+	$s->{'name'} = $switch->{'name'};
+	
+
+	my %ports;
+	foreach my $port (keys(%{$switch->{'port'}})){
+	    my $p = {};
+	    my %tags;
+	    foreach my $tag (@{$switch->{'port'}->{$port}->{'tags'}}){
+		for(my $i=$tag->{'start'};$i<=$tag->{'end'};$i++){
+		    $tags{$i} = $tag->{'workgroup'};
+		}
+	    }
+	    
+	    $p->{'tags'} = \%tags;
+	    $s->{'ports'}->{$port} = $p;
+	    
+	}
+
+	$switches{$switch->{'name'}} = $s;
+	
+	
     }
 
     $cfg->{'switches'} = \%switches;

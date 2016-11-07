@@ -39,6 +39,6 @@ cmp_deeply($workgroups, {
 			    'aragusa@iu.edu' => {}
 			},
 			'name' => 'ajco',
-			'description' => 'this is edcos exchange point access workgroup'
+			'description' => 'this is ajcos exchange point access workgroup'
 		}
 	   });

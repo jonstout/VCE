@@ -19,7 +19,7 @@
     <user id="stan@iu.edu" />
   </workgroup>
 
-  <workgroup name="ajco"  description="this is edcos exchange point access workgroup">
+  <workgroup name="ajco"  description="this is ajcos exchange point access workgroup">
     <user id="aragusa@iu.edu"/>
   </workgroup>
 

@@ -1,5 +1,26 @@
 #!/usr/bin/perl
 
+## Copyright 2011 Trustees of Indiana University
+##
+##   Licensed under the Apache License, Version 2.0 (the "License");
+##  you may not use this file except in compliance with the License.
+##   You may obtain a copy of the License at
+##
+##       http://www.apache.org/licenses/LICENSE-2.0
+##
+##   Unless required by applicable law or agreed to in writing, software
+##   distributed under the License is distributed on an "AS IS" BASIS,
+##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+##   See the License for the specific language governing permissions and
+##   limitations under the License.
+#
+
+=head1 NAME
+
+VCE::Access - Virtual Customer Equipment - Access module
+
+=cut
+
 package VCE::Access;
 
 use strict;
@@ -11,6 +32,10 @@ use GRNOC::Log;
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 
+=head2 BUILD
+
+=cut
+
 sub BUILD{
     my ($self) = @_;
     
@@ -19,6 +44,10 @@ sub BUILD{
 
     return $self;
 }
+
+=head2 has_access
+
+=cut
 
 sub has_access{
     my $self = shift;
@@ -55,6 +84,10 @@ sub has_access{
     return 1;
 }
 
+=head2 user_in_workgroup
+
+=cut
+
 sub user_in_workgroup{
     my $self = shift;
     my %params = @_;
@@ -70,9 +103,9 @@ sub user_in_workgroup{
     }
 
     if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-	foreach my $user (@{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'users'}}){
+	foreach my $user (keys(%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}})){
 	    if($params{'username'} eq $user){
-		$self->logger->debug("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
+		$self->logger->error("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
 		return 1;
 	    }
 	}
@@ -81,9 +114,13 @@ sub user_in_workgroup{
 	return 0;
     }
 
-    $self->logger->debug("user_in_workgroup: user " . $params{'username'} . " is not workgroup " . $params{'workgroup'});
+    $self->logger->error("user_in_workgroup: user " . $params{'username'} . " is not workgroup " . $params{'workgroup'});
     return 0;
 }
+
+=head2 workgroup_has_access_to_port
+
+=cut
 
 sub workgroup_has_access_to_port{
     my $self = shift;
@@ -106,12 +143,12 @@ sub workgroup_has_access_to_port{
     
     if(defined($self->config->{'switches'}->{$params{'switch'}})){
 	
-	if(defined($self->config->{'switches'}->{$params{'switch'}}->{'port'}->{$params{'port'}})){
+	if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}})){
 	    
 	    if(defined($params{'vlan'})){
 		
-		if(defined($self->config->{'switches'}->{$params{'switch'}}->{'port'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}})){
-		    if($self->config->{'switches'}->{$params{'switch'}}->{'port'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}}->{'workgroup'} eq $params{'workgroup'}){
+		if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}})){
+		    if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}} eq $params{'workgroup'}){
 			$self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
 			return 1;
 		    }else{
@@ -122,8 +159,8 @@ sub workgroup_has_access_to_port{
 
 	    }else{
 		
-		foreach my $tag (keys(%{$self->config->{'switches'}->{$params{'switch'}}->{'port'}->{$params{'port'}}->{'tags'}})){
-		    if($tag->{'workgroup'} eq $params{'workgroup'}){
+		foreach my $tag (keys(%{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}})){
+		    if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$tag} eq $params{'workgroup'}){
 			$self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
 			return 1;
 		    }
