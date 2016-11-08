@@ -14,6 +14,7 @@ has password => (is => 'rwp');
 has port => (is => 'rwp');
 has connected => (is => 'rwp',
 		  default => 0);
+
 has hostname => (is => 'rwp');
 
 sub BUILD{
