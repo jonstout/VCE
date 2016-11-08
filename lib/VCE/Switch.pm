@@ -98,7 +98,7 @@ sub register_rpc_methods{
     my $d = shift;
 
     my $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces",
-					       callbacek => sub { return {results => $self->get_interfaces(@_) } },
+					       callback => sub { return {results => $self->get_interfaces(@_) } },
 					       description => "Get the device interfaces" );
 
     $method->add_input_parameter( name => "interface_name",
