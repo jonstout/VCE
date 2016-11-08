@@ -32,8 +32,8 @@ my $switch = VCE::Switch->new( username => $username,
 					     host => 'localhost',
 					     port => 5672});
 
-$switch->connect();
-
-$switch->start();
+if(defined($switch)){
+    $switch->start();
+}
 
 warn Data::Dumper::Dumper($switch->get_interfaces());
