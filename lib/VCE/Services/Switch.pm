@@ -18,6 +18,7 @@ has access => (is => 'rwp');
 has logger => (is => 'rwp');
 has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
+has rabbit_mq => (is => 'rwp');
 
 sub BUILD{
     my ($self) = @_;
@@ -27,7 +28,13 @@ sub BUILD{
 
     $self->_set_access( VCE::Access->new() );
 
-    my $client = GRNOC::RabbitMQ::Client->new( );
+    my $client = GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
+					       pass => $self->rabbit_mq->{'pass'},
+					       host => $self->rabbit_mq->{'host'},
+					       timeout => 30,
+					       port => $self->rabbit_mq->{'port'},
+					       exchange => 'VCE',
+					       topic => 'VCE.Switch.RPC' );
     
     $self->_set_rabbit_client( $client );
     
@@ -57,6 +64,21 @@ sub register_webservice_methods{
 
     $d->register_method($method);
 				  
+}
+
+sub get_interfaces{
+    my $self = shift;
+    my $m_ref = shift;
+    my $p_ref = shift;
+    
+    my $interfaces = $self->rabbit_client->get_interfaces( interface_name => $p_ref->{'interface_name'}{'value'} )->{'results'};
+
+    my @ints;
+    foreach my $int (keys(%{$interfaces})){
+	push(@ints,$interfaces->{$int});
+    }
+
+    return {results => \@ints};
 }
 
 sub handle_request{

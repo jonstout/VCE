@@ -35,5 +35,3 @@ my $switch = VCE::Switch->new( username => $username,
 if(defined($switch)){
     $switch->start();
 }
-
-warn Data::Dumper::Dumper($switch->get_interfaces());

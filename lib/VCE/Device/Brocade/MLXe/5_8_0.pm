@@ -57,6 +57,7 @@ sub get_interfaces{
 	my $ints = $self->_process_interfaces($interfaces_brief);
 	foreach my $int (@$ints){
 	    my $int_details = $self->_get_interface( name => $int->{'port_name'});
+	    next if(!defined($int_details));
 	    $interfaces{$int_details->{'name'}} = $int_details;
 	}
 	return \%interfaces;
@@ -71,8 +72,17 @@ sub _get_interface{
     my $self = shift;
     my %params = @_;
 
-    my $int_details = $self->comm->issue_command("show interface ethernet" . $params{'name'});
-    
+    my $int_details;
+    if($params{'name'} =~ /\d+\/\d+/){
+	$int_details = $self->comm->issue_command("show interface ethernet" . $params{'name'});
+    }elsif( $params{'name'} =~ /mgmt(\d+)/){
+	$self->comm->issue_command("show interface management " . $1);
+    }else{
+	$self->comm->issue_command("show interface " . $params{'name'});
+    }
+
+    return if(!defined($int_details));
+
     my $int = {};
     foreach my $line (split(/\n/,$int_details)){
 	if($line =~ /^\s/){

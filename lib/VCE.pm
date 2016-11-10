@@ -45,10 +45,14 @@ use GRNOC::RabbitMQ;
 
 use VCE::Access;
 
+use JSON::XS;
+
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 has access => (is => 'rwp');
+
+has state => (is => 'rwp');
 
 =head1 SYNOPSIS
 This is a module to provide a simplified object oriented way to connect to

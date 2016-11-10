@@ -47,7 +47,7 @@ sub BUILD{
 						       pass => $self->rabbit_mq->{'pass'},
 						       exchange => 'VCE',
 						       queue => 'VCE-Switch',
-						       topic => 'VCE-Switch.RPC');
+						       topic => 'VCE.Switch.RPC');
 
     $self->register_rpc_methods( $dispatcher );
 
@@ -98,7 +98,7 @@ sub register_rpc_methods{
     my $d = shift;
 
     my $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces",
-					       callback => sub { return {results => $self->get_interfaces(@_) } },
+					       callback => sub { return $self->get_interfaces( @_ )  },
 					       description => "Get the device interfaces" );
 
     $method->add_input_parameter( name => "interface_name",
@@ -114,11 +114,14 @@ sub register_rpc_methods{
 
 sub get_interfaces{
     my $self = shift;
-    my %params = @_;
+    my $m_ref = shift;
+    my $p_ref = shift;
+
+    warn Data::Dumper::Dumper($p_ref);
 
     if($self->device->connected){
 	
-	return $self->device->get_interfaces( %params );
+	return $self->device->get_interfaces(  );
 	
     }else{
 	$self->logger->error("Error device is not connected");
