@@ -168,7 +168,7 @@ sub register_webservice_methods{
                                   description => "Workgroup name");
 
     $method->add_input_parameter( name => "vlan_id",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::TEXT,
                                   required => 1,
                                   multiple => 0,
                                   description => "VLAN ID");
@@ -326,7 +326,7 @@ sub get_vlan_details{
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
 
-        my $vlan = $self->vce->network_model->get_vlan_details($p_ref->{'vlan_id'}{'value'});
+        my $vlan = $self->vce->network_model->get_vlan_details( vlan_id => $p_ref->{'vlan_id'}{'value'});
         if($vlan->{'workgroup'} eq $workgroup){
             return {results => [{circuit => $vlan}]};
         }else{

@@ -77,8 +77,18 @@ sub add_vlan{
     my $self = shift;
     my %params = @_;
 
+    $self->logger->error("Adding a VLAN");
+
     my $obj = {};
-    $obj->{'vlan_id'} = $self->uuid->to_string($self->uuid->create());
+    if(!defined($params{'vlan_id'})){
+        $obj->{'vlan_id'} = $self->uuid->to_string($self->uuid->create());
+    }else{
+        if(defined($self->nm->{'vlans'}->{$params{'vlan_id'}})){
+            $self->logger->error("Add VLAN: with vlan id already existing");
+            return;
+        }
+        $obj->{'vlan_id'} = $params{'vlan_id'};
+    }
     $obj->{'description'} = $params{'description'};
     $obj->{'workgroup'} = $params{'workgroup'};
     $obj->{'username'} = $params{'username'};
@@ -86,16 +96,32 @@ sub add_vlan{
     $obj->{'endpoints'} = [];
     $obj->{'status'} = "Active";
     
+    $self->logger->error("All base parts ready");
 
     foreach my $ep (@{$params{'endpoints'}}){
-	my $ep_obj = {};
-        $ep_obj->{'switch'} = $ep_obj->{'switch'};
-	$ep_obj->{'port'} = $ep_obj->{'port'};
-	$ep_obj->{'tag'} = $ep_obj->{'tag'};
-	push(@{$obj->{'endpoints'}}, $ep_obj);
+        #validate that the endpoint is not in use!
+        
+        if($self->check_tag_availability( switch => $ep->{'switch'},
+                                          port => $ep->{'port'},
+                                          tag => $ep->{'vlan'})){
+            
+            my $ep_obj = {};
+            $ep_obj->{'switch'} = $ep->{'switch'};
+            $ep_obj->{'port'} = $ep->{'port'};
+            $ep_obj->{'tag'} = $ep->{'vlan'};
+
+            push(@{$obj->{'endpoints'}}, $ep_obj);
+        }else{
+            $self->logger->error("Endpoint " . $ep->{'switch'} . ":" . $ep->{'port'} . " tag " . $ep->{'vlan'} . " is already in use");
+            return;
+        }
     }
 
+    $self->logger->error("processed endpoints");
+
     $self->nm->{'vlans'}->{$obj->{'vlan_id'}} = $obj;
+
+    $self->logger->error("Writing network model");
 
     $self->_write_network_model();
 
@@ -184,9 +210,10 @@ sub get_vlans{
 	    push(@vlans, $vlan);
 	}
     }else{
-	foreach my $vlan (keys(%{$self->nm->{'vlans'}})){
+	foreach my $vlan_id (keys(%{$self->nm->{'vlans'}})){
+            my $vlan = $self->nm->{'vlans'}->{$vlan_id};
 	    if($vlan->{'workgroup'} eq $params{'workgroup'}){
-		push(@vlans, $vlan);
+		push(@vlans, $vlan_id);
 	    }
 	}
     }

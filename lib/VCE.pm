@@ -289,5 +289,71 @@ sub is_tag_available{
     
 }
 
+sub provision_vlan{
+    my $self = shift;
+    my %params = @_;
+
+    if($#{$params{'switch'}} != $#{$params{'port'}} || $#{$params{'switch'}} != $#{$params{'tag'}}){
+        $self->logger->error("Number of switches, ports and tags doesn't match... our endpoints are jacked");
+        return;
+    }
+
+    if($#{$params{'switch'}} < 1){
+        $self->logger->error("Not enough endpoints");
+        return;
+    }    
+    
+
+    my @eps;
+    #validate endpoints and create ep object
+    for(my $i=0; $i <= $#{$params{'switch'}}; $i++){
+
+        $self->logger->error("Checking access to port");
+        
+        if(!$self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+                                                         switch => $params{'switch'}->[$i],
+                                                         port => $params{'port'}->[$i],
+                                                         vlan => $params{'tag'}->[$i])){
+
+            $self->logger->error("Workgroup " . $params{'workgroup'} . " does not have access to tag " . $params{'tag'}->[$i] . " on " . $params{'switch'}->[$i] . ":" . $params{'port'}->[$i]);
+            return;
+        }else{
+            push(@eps, { switch => $params{'switch'}->[$i],
+                         port => $params{'port'}->[$i],
+                         vlan => $params{'tag'}->[$i]});
+        }
+    }
+    
+
+    $self->logger->error("Provisioning VLAN in network model");
+    
+    warn Data::Dumper::Dumper(@eps);
+
+    #ok we made it this far... provision!
+    my $id = $self->network_model->add_vlan( description => $params{'description'},
+                                             workgroup => $params{'workgroup'},
+                                             endpoints => \@eps,
+                                             username => $params{'username'},
+                                             vlan_id => $params{'vlan_id'});
+
+    return $id;
+}
+
+
+sub delete_vlan{
+    my $self = shift;
+    my %params = @_;
+
+    my $vlan = $self->network_model->get_vlan_details( vlan_id => $params{'vlan_id'});
+    if($vlan->{'workgroup'} eq $params{'workgroup'}){
+        
+        $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'});
+        return 1;
+    }else{
+        $self->logger->error("Unable to delete vlan: " . $params{'vlan_id'} . " because workgroup " . $params{'workgroup'} . " does not own it");
+        return 0;
+
+    }
+}
 
 1;
