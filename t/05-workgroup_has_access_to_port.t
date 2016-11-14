@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 9;
+use Test::More tests => 14;
 use Test::Deep;
 
 use VCE;
@@ -69,3 +69,42 @@ $access = $vce->access->workgroup_has_access_to_port( workgroup => 'ajco',
                                                          vlan => 101);
 
 ok($access, "ajco has access to eth0/1 vlan 101");
+
+$access = $vce->access->workgroup_has_access_to_port( workgroup => 'ajco',
+                                                      switch => 'foobar',
+                                                      port => 'eth0/1',
+                                                      vlan => 2000);
+
+ok(!$access, "ajco has access to eth0/1 vlan 2000");
+
+
+$access = $vce->access->workgroup_has_access_to_port( 
+                                                      switch => 'foobar',
+                                                      port => 'eth0/1',
+                                                      vlan => 2000);
+
+ok(!$access, "proper result when no workgroup specified");
+
+
+$access = $vce->access->workgroup_has_access_to_port( workgroup => 'ajco',
+                                                      port => 'eth0/1',
+                                                      vlan => 2000);
+
+ok(!$access, "proper result when no switch specified");
+
+
+$access = $vce->access->workgroup_has_access_to_port( workgroup => 'ajco',
+                                                      switch => 'foobar',
+                                                    
+                                                      vlan => 2000);
+
+ok(!$access, "proper result when no port specified");
+
+
+$access = $vce->access->workgroup_has_access_to_port( workgroup => 'ajco',
+                                                      switch => 'foobar1',
+                                                      port => 'eth0/1',
+                                                      vlan => 2000);
+
+ok(!$access, "proper result when non-existing switch specified");
+

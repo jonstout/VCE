@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 7;
+use Test::More tests => 9;
 use Test::Deep;
 
 use VCE;
@@ -46,3 +46,11 @@ $user_in_workgroup = $vce->access->user_in_workgroup( username => 'ebalas@iu.edu
                                                       workgroup => 'edco');
 
 ok($user_in_workgroup, "Ed is also in edco");
+
+$user_in_workgroup = $vce->access->user_in_workgroup( username => 'ebalas@iu.edu');
+
+ok(!$user_in_workgroup, "Proper result when workgroup not specified");
+
+$user_in_workgroup = $vce->access->user_in_workgroup( workgroup => 'edco');
+
+ok(!$user_in_workgroup, "Proper result when user not specified");

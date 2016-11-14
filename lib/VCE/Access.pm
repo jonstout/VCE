@@ -187,23 +187,27 @@ sub workgroup_has_access_to_port{
     return 0;
 }
 
+=head2 get_tags_on_port
+
+=cut
+
 sub get_tags_on_port{
     my $self = shift;
     my %params = @_;
 
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_available_tags_on_port: workgroup not specified");
-        return 0;
+        return;
     }
 
     if(!defined($params{'switch'})){
         $self->logger->error("get_available_tags_on_port: switch not specified");
-        return 0;
+        return;
     }
 
     if(!defined($params{'port'})){
         $self->logger->error("get_available_tags_on_port: port not specified");
-        return 0;
+        return;
     }
     
     my @available_tags;
@@ -219,6 +223,9 @@ sub get_tags_on_port{
     
 }
 
+=head2 get_workgroup_switches
+
+=cut
 
 sub get_workgroup_switches{
     my $self = shift;
@@ -226,7 +233,7 @@ sub get_workgroup_switches{
 
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_workgroup_switches: workgroup not specified");
-        return 0;
+        return;
     }
     
     my %switches;
