@@ -46,3 +46,4 @@ ok(!defined($details), "no result when non-existing vlan queried");
 $details = $vce->network_model->get_vlan_details( );
 
 ok(!defined($details), "no result when non-existing vlan queried");
+
