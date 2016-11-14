@@ -5,6 +5,7 @@ package VCE::NetworkModel;
 use strict;
 use warnings;
 
+use Moo;
 use JSON::XS;
 use GRNOC::Log;
 
@@ -14,7 +15,7 @@ use constant NET_MODEL => "/var/run/vce/network_model.json";
 
 has logger => (is => 'rwp');
 has nm => (is => 'rwp');
-has uudi => (is => 'rwp');
+has uuid => (is => 'rwp');
 
 =head2 BUILD
 
@@ -40,7 +41,7 @@ sub _read_network_model{
 
     if(!-e NET_MODEL){
 	
-	$self->_set_nm({vlans => []});
+	$self->_set_nm({vlans => {}});
 	$self->_write_network_model();
 
     }else{
@@ -49,7 +50,7 @@ sub _read_network_model{
 	while(my $line = <$fh>){
 	    $str .= $line;
 	}
-	my $data = from_json($str);
+	my $data = decode_json($str);
 	$self->_set_nm($data);
     }
 }
@@ -57,7 +58,7 @@ sub _read_network_model{
 sub _write_network_model{
     my $self = shift;
 
-    my $json = to_json($self->nm);
+    my $json = encode_json($self->nm);
     open(my $fh, ">", NET_MODEL);
     print $fh $json;
     close($fh);
@@ -88,6 +89,7 @@ sub add_vlan{
 
     foreach my $ep (@{$params{'endpoints'}}){
 	my $ep_obj = {};
+        $ep_obj->{'switch'} = $ep_obj->{'switch'};
 	$ep_obj->{'port'} = $ep_obj->{'port'};
 	$ep_obj->{'tag'} = $ep_obj->{'tag'};
 	push(@{$obj->{'endpoints'}}, $ep_obj);
@@ -116,19 +118,32 @@ sub check_tag_availability{
     my %params = @_;
 
     if(!defined($params{'tag'})){
-	$self->logger->error("check_tag_availability: ");
+	$self->logger->error("check_tag_availability: tag not defined");
+        return;
     }
     
     if(!defined($params{'switch'})){
-	
+        $self->logger->error("check_tag_availability: switch not defined");
+        return;
     }
     
     if(!defined($params{'port'})){
-	
+        $self->logger->error("check_tag_availability: port not defined");
+        return;
     }
 
-    
+    foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
+        foreach my $ep (@{$self->nm->{'vlans'}->{$vlan}->{'endpoints'}}){
+            if($ep->{'switch'} eq $params{'switch'} && $ep->{'port'} eq $params{'port'} && $ep->{'tag'} eq $params{'tag'}){
+                #no it is not available in use by this vlan
+                return 0;
+            }
+        }
+    }
 
+    #yep its available
+
+    return 1;
 }
 
 =head2 delete_vlan
@@ -143,7 +158,7 @@ sub delete_vlan{
 
     if(defined($self->nm->{'vlans'}->{$params{'vlan_id'}})){
 	$self->logger->debug("Removing VLAN: " . $params{'vlan_id'} . " from network model");
-	delete $self->nm->{'vlanss'}->{$params{'vlan_id'}};
+	delete $self->nm->{'vlans'}->{$params{'vlan_id'}};
 	$self->_write_network_model();
 	return 1;
     }else{
@@ -179,6 +194,20 @@ sub get_vlans{
     return \@vlans;
 }
 
+=head2 get_vlan_details
 
+=cut
+
+sub get_vlan_details{
+    my $self = shift;
+    my %params = @_;
+
+    if(defined($self->nm->{'vlans'}->{$params{'vlan_id'}})){
+        return $self->nm->{'vlans'}->{$params{'vlan_id'}};
+    }
+
+    $self->logger->error("No VLAN with ID: " . $params{'vlan_id'});
+    return;
+}
 
 1;

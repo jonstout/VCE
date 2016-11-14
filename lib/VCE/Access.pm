@@ -27,7 +27,9 @@ use strict;
 use warnings;
 
 use Moo;
+use VCE;
 use GRNOC::Log;
+
 
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
@@ -185,6 +187,63 @@ sub workgroup_has_access_to_port{
     return 0;
 }
 
+sub get_tags_on_port{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_available_tags_on_port: workgroup not specified");
+        return 0;
+    }
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_available_tags_on_port: switch not specified");
+        return 0;
+    }
+
+    if(!defined($params{'port'})){
+        $self->logger->error("get_available_tags_on_port: port not specified");
+        return 0;
+    }
+    
+    my @available_tags;
+    for(my $vlan = 1; $vlan < 4095; $vlan++){
+        if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+                                                switch => $params{'switch'},
+                                                port => $params{'port'},
+                                                vlan => $vlan)){
+            push(@available_tags, $vlan);
+        }
+    }
+    return \@available_tags;
+    
+}
+
+
+sub get_workgroup_switches{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_workgroup_switches: workgroup not specified");
+        return 0;
+    }
+    
+    my %switches;
+
+    foreach my $switch (keys (%{$self->config->{'switches'}})){
+        foreach my $port (keys (%{$self->config->{'switches'}->{$switch}->{'ports'}})){
+            if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+                                                    switch => $switch,
+                                                    port => $port)){
+                $switches{$switch} = 1;
+                
+            }
+        }
+    }
+    my @switches = keys %switches;
+    return \@switches;
+}
 
 
 1;

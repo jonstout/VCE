@@ -44,13 +44,17 @@ use GRNOC::Config;
 use GRNOC::RabbitMQ;
 
 use VCE::Access;
+use VCE::NetworkModel;
 
 use JSON::XS;
+
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
+
 has access => (is => 'rwp');
+has network_model => (is => 'rwp');
 
 has state => (is => 'rwp');
 
@@ -84,6 +88,8 @@ sub BUILD{
     $self->_process_config();
 
     $self->_set_access( VCE::Access->new( config => $self->config ));
+
+    $self->_set_network_model( VCE::NetworkModel->new( ));
     
     return $self;
 }
@@ -169,6 +175,118 @@ sub get_workgroups{
     
     return [];
 
+}
+
+=head2 get_available_ports
+
+=cut
+
+sub get_available_ports{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+	$self->logger->error("get_available_ports: Workgroup not specified");
+	return;
+    }
+
+    if(!defined($params{'switch'})){
+	$self->logger->error("get_available_ports: Switch not specified");
+	return;
+    }
+
+
+
+    my @ports;
+
+    my $switch = $self->config->{'switches'}->{$params{'switch'}};
+    foreach my $port (keys %{$switch->{'ports'}}){
+	if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+							switch => $params{'switch'},
+							port => $port)){
+            my $tags = $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
+                                                       switch => $params{'switch'},
+                                                       port => $port);
+	    push(@ports, {port => $port, tags => $tags});
+	}
+    }
+
+    return \@ports;
+
+
+}
+
+=head2 get_available_tags_on_port
+
+=cut
+
+sub get_tags_on_port{
+    my $self = shift;
+    my %params = @_;
+    
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_tags_on_port: Workgroup not specified");
+        return;
+    }
+    
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_tags_on_port: Switch not specified");
+        return;
+    }
+
+    if(!defined($params{'port'})){
+        $self->logger->error("get_tags_on_port: Port not specified");
+        return;
+    }
+
+    if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+                                                    switch => $params{'switch'},
+                                                    port => $params{'port'})){
+        return $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
+                                                         switch => $params{'switch'},
+                                                         port => $params{'port'});
+    }
+
+}
+
+sub get_switches{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_tags_on_port: Workgroup not specified");
+        return;
+    }
+
+    my $switches = $self->access->get_workgroup_switches( workgroup => $params{'workgroup'});
+    return $switches;
+}
+
+
+sub is_tag_available{
+    my $self = shift;
+    my %params = @_;
+    
+    
+    if(!defined($params{'switch'})){
+        $self->logger->error("is_tag_available: Switch not specified");
+        return;
+    }
+
+    if(!defined($params{'port'})){
+        $self->logger->error("is_tag_available: Port not specified");
+        return;
+    }
+
+    if(!defined($params{'tag'})){
+        $self->logger->error("is_tag_available: tag not specified");
+        return;
+    }
+
+    return $self->network_model->check_tag_availability( switch => $params{'switch'},
+                                                         port => $params{'port'},
+                                                         tag => $params{'tag'});
+    
 }
 
 
