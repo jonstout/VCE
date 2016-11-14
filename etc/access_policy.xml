@@ -1,0 +1,31 @@
+<accessPolicy>
+
+  <switch name="foobar"  ip="managementip" username="username" password="password">
+
+    <port name="eth0/1">
+      <tags start="1" end="100" workgroup="edco"/>
+      <tags start="101" end="200" workgroup="ajco"/>
+    </port>
+
+   <port name="eth0/2">
+      <tags start="1" end="100" workgroup="edco"/>
+      <tags start="101" end="200" workgroup="ajco"/>
+    </port>
+
+  </switch>
+
+  <workgroup name="edco"  description="this is edcos exchange point access workgroup">
+    <user id="ebalas" />
+    <user id="stan" />
+  </workgroup>
+
+  <workgroup name="ajco"  description="this is edcos exchange point access workgroup">
+    <user id="aragusa"/>
+  </workgroup>
+
+  <workgroup name="admin" admin="1" description="admin workgroup">
+    <user id="ebalas" />
+  </workgroup>
+
+
+</accessPolicy>
