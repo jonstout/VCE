@@ -50,6 +50,7 @@ use JSON::XS;
 
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
+has network_model_file => (is => 'rwp', default => "/var/run/vce/network_model.json");
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 
@@ -89,7 +90,7 @@ sub BUILD{
 
     $self->_set_access( VCE::Access->new( config => $self->config ));
 
-    $self->_set_network_model( VCE::NetworkModel->new( ));
+    $self->_set_network_model( VCE::NetworkModel->new( file => $self->network_model_file ));
     
     return $self;
 }

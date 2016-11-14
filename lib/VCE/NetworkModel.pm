@@ -11,10 +11,9 @@ use GRNOC::Log;
 
 use Data::UUID;
 
-use constant NET_MODEL => "/var/run/vce/network_model.json";
-
 has logger => (is => 'rwp');
-has nm => (is => 'rwp');
+has file => (is => 'rwp');
+has nm => (is => 'rwp', default => '/var/run/vce/network_model.json' );
 has uuid => (is => 'rwp');
 
 =head2 BUILD
@@ -39,14 +38,14 @@ sub BUILD{
 sub _read_network_model{
     my $self = shift;
 
-    if(!-e NET_MODEL){
+    if(!-e $self->file ){
 	
 	$self->_set_nm({vlans => {}});
 	$self->_write_network_model();
 
     }else{
 	my $str;
-	open(my $fh, "<", NET_MODEL);
+	open(my $fh, "<", $self->file);
 	while(my $line = <$fh>){
 	    $str .= $line;
 	}
@@ -59,7 +58,7 @@ sub _write_network_model{
     my $self = shift;
 
     my $json = encode_json($self->nm);
-    open(my $fh, ">", NET_MODEL);
+    open(my $fh, ">", $self->file);
     print $fh $json;
     close($fh);
     
@@ -228,6 +227,11 @@ sub get_vlans{
 sub get_vlan_details{
     my $self = shift;
     my %params = @_;
+
+    if(!defined($params{'vlan_id'})){
+        $self->logger->error("No VLAN ID specified");
+        return;
+    }
 
     if(defined($self->nm->{'vlans'}->{$params{'vlan_id'}})){
         return $self->nm->{'vlans'}->{$params{'vlan_id'}};
