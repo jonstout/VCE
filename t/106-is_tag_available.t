@@ -3,10 +3,12 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 9;
 use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;
+
+`cp t/etc/nm1.json.orig t/etc/nm1.json`;
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
@@ -15,123 +17,34 @@ my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/s
                                              debug => 0,
                                              timeout => 60 );
 
-my $vlan = $client->get_vlan_details( workgroup => 'ajco',
-                                       vlan_id => '979f9708-7102-4762-8a6a-8e30ed80b88c');
+my $avail = $client->is_tag_available( workgroup => 'ajco',
+                                      switch => 'foobar',
+                                      port => 'eth0/1',
+                                      tag => 110);
 
-ok(defined($vlan), "vlan result was defined for AJ");
+ok(defined($avail), "availability result was defined for AJ");
+ok($avail->{'results'}->[0]->{'available'}, "Tag is available");
 
-cmp_deeply($vlan, {
-    'results' => [
-        {
-            'circuit' => {
-                'workgroup' => 'ajco',
-                'status' => 'Active',
-                'create_time' => 1479158369,
-                'description' => 'test',
-                'endpoints' => [
-                    {
-                        'switch' => 'foobar',
-                        'tag' => '102',
-                        'port' => 'eth0/1'
-                    },
-                    {
-                        'switch' => 'foobar',
-                        'tag' => '102',
-                        'port' => 'eth0/2'
-                    }
-                    ],
-                'username' => 'aragusa',
-                'vlan_id' => '979f9708-7102-4762-8a6a-8e30ed80b88c'
-            }
-        }
-        ]
-           }
-    );
+$avail = $client->is_tag_available( workgroup => 'ajco',
+                                    switch => 'foobar',
+                                    port => 'eth0/1',
+                                    tag => 102);
 
-$vlan = $client->get_vlan_details( workgroup => 'ajco',
-                                   vlan_id => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2');
+ok(defined($avail), "availability result was defined for AJ");
+ok(!$avail->{'results'}->[0]->{'available'}, "Tag is 102 not available for ajco");
 
-ok(defined($vlan), "vlan result was defined for AJ");
+$avail = $client->is_tag_available( workgroup => 'ajco',
+                                    switch => 'foobar',
+                                    port => 'eth0/1',
+                                    tag => 90);
 
-cmp_deeply($vlan, {
-    'results' => [
-        {
-            'circuit' => {
-                'workgroup' => 'ajco',
-                'status' => 'Active',
-                'create_time' => 1479153788,
-                'description' => 'test',
-                'endpoints' => [
-                    {
-                        'switch' => 'foobar',
-                        'tag' => '101',
-                        'port' => 'eth0/1'
-                    },
-                    {
-                        'switch' => 'foobar',
-                        'tag' => '101',
-                        'port' => 'eth0/2'
-                    }
-                    ],
-                'username' => 'aragusa',
-                'vlan_id' => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2'
-            }
-        }
-        ]
-           }
-    );
+ok(defined($avail), "availability result was defined for AJ");
+ok(!$avail->{'results'}->[0]->{'available'}, "Tag 90 is not available to ajco");
+ok($avail->{'error'}->{'msg'} eq 'Workgroup ajco is not allowed tag 90 on foobar:eth0/1', "gave proper error message");
+$avail = $client->is_tag_available( workgroup => 'edco',
+                                    switch => 'foobar',
+                                    port => 'eth0/1',
+                                    tag => 90);
 
-
-$vlan = $client->get_vlan_details( workgroup => 'ajco',
-                                   vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f');
-
-ok(defined($vlan), "vlan result was defined for AJ");
-
-ok($vlan->{'error'}->{'msg'} eq 'Workgroup ajco does not have access to vlan 2806baa4-173c-4bdd-b552-c063a82e232f');
-
-my $client2 = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
-                                              realm => 'VCE',
-                                              uid => 'ebalas',
-                                              passwd => 'unittester',
-                                              debug => 0,
-                                              timeout => 60 );
-
-$vlan = $client2->get_vlan_details( workgroup => 'edco',
-                                    vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f' );
-
-ok(defined($vlan), "vlan result was defined for Ed");
-
-cmp_deeply($vlan, {
-    'results' => [
-        {
-            'circuit' => {
-                'workgroup' => 'edco',
-                'status' => 'Active',
-                'create_time' => 1479158359,
-                'description' => 'test',
-                'vlan_id' => '2806baa4-173c-4bdd-b552-c063a82e232f',
-                'username' => 'aragusa',
-                'endpoints' => [
-                    {
-                        'switch' => 'foobar',
-                        'tag' => '10',
-                        'port' => 'eth0/1'
-                    },
-                    {
-                        'switch' => 'foobar',
-                        'tag' => '10',
-                        'port' => 'eth0/2'
-                    }
-                    ]
-            }
-        }
-        ]
-           });
-
-
-$vlan = $client->get_vlan_details( workgroup => 'edco',
-                                   vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f');
-
-ok(defined($vlan), "Got a proper response");
-
-ok($vlan->{'error'}->{'msg'} eq "User aragusa not in specified workgroup edco");
+ok(defined($avail), "availability result was defined for AJ");
+ok($avail->{'error'}->{'msg'} eq "User aragusa not in specified workgroup edco");

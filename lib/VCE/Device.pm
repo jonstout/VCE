@@ -17,6 +17,10 @@ has connected => (is => 'rwp',
 
 has hostname => (is => 'rwp');
 
+=head2 BUILD
+
+=cut
+
 sub BUILD{
     my ($self) = @_;
 
@@ -26,17 +30,29 @@ sub BUILD{
     return $self;
 }
 
+=head2 connect
+
+=cut
+
 sub connect{
     my $self = shift;
     $self->logger->error("Connect has not been overridden");
     return;
 }
 
+=head2 get_interfaces
+
+=cut
+
 sub get_interfaces{
     my $self = shift;
     $self->logger->error("Get interfaces has not been overridden");
     return;
 }
+
+=head2 get_light_levels
+
+=cut
 
 sub get_light_levels{
     my $self = shift;

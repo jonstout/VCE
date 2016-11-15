@@ -15,9 +15,18 @@ use GRNOC::WebService::Dispatcher;
 use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
 
+use Data::Dumper;
+
 has vce=> (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
+
+has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
+has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+
+=head2 BUILD
+
+=cut
 
 sub BUILD{
     my ($self) = @_;
@@ -25,18 +34,19 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::Services::Provisioning");
     $self->_set_logger($logger);
 
-    $self->_set_vce( VCE->new() );
+    $self->_set_vce( VCE->new( config_file => $self->config_file,
+                               network_model_file => $self->network_model_file  ) );
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
-    $self->register_webservice_methods($dispatcher);
+    $self->_register_webservice_methods($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
 
     return $self;
 }
 
-sub register_webservice_methods{
+sub _register_webservice_methods{
     my $self = shift;
     my $d = shift;
 
@@ -113,7 +123,7 @@ sub register_webservice_methods{
     $method->add_input_parameter( name => "vlan_id",
                                   pattern => $GRNOC::WebService::Regex::TEXT,
                                   required => 1,
-                                  multiple => 1,
+                                  multiple => 0,
                                   description => "VLAN ID to edit");
 
     $d->register_method($method);
@@ -138,11 +148,19 @@ sub register_webservice_methods{
 
 }
 
+=head2 handle_request
+
+=cut
+
 sub handle_request{
     my $self = shift;
 
     $self->dispatcher->handle_request();
 }
+
+=head2 provision_vlan
+
+=cut
 
 
 sub provision_vlan{
@@ -167,7 +185,7 @@ sub provision_vlan{
             return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
         }
         
-        my $status = $self->send_vlan_add( vlan_id => $vlan_id );                                        
+        my $status = $self->_send_vlan_add( vlan_id => $vlan_id );                                        
         
         if($status){
             
@@ -181,7 +199,9 @@ sub provision_vlan{
 }
 
 
-1;
+=head2 edit_vlan
+
+=cut
 
 sub edit_vlan{
     my $self = shift;
@@ -207,13 +227,24 @@ sub edit_vlan{
             return {results => [], error => {msg => "Workgroup $workgroup is not allowed to edit vlan $vlan_id"}};
         }
 
-        my $status = $self->send_vlan_remove( vlan_id => $vlan_id);
+        #first validate new circuit before we remove the old!
+        if(!$self->vce->validate_circuit( workgroup => $workgroup,
+                                         description => $description,
+                                         username => $user,
+                                         switch => $switches,
+                                         port => $ports,
+                                         tag => $tags )){
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Circuit does not validate"}};
+        }
+
+
+        my $status = $self->_send_vlan_remove( vlan_id => $vlan_id);
         
         if(!$status){
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
         }else{
             
-            $self->vce->delete_vlan( vlan_id => $vlan_id );
+            $self->vce->delete_vlan( vlan_id => $vlan_id, workgroup => $workgroup );
             
             $self->vce->provision_vlan( vlan_id => $vlan_id,
                                         workgroup => $workgroup, 
@@ -223,7 +254,7 @@ sub edit_vlan{
                                         port => $ports, 
                                         tag => $tags);
             
-            $status = $self->send_vlan_add( vlan_id => $vlan_id);
+            $status = $self->_send_vlan_add( vlan_id => $vlan_id);
 
             if(!$status){
                 return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
@@ -235,6 +266,10 @@ sub edit_vlan{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 }
+
+=head2 delete_vlan
+
+=cut
 
 sub delete_vlan{
     my $self = shift;
@@ -252,7 +287,7 @@ sub delete_vlan{
         
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         if($details->{'workgroup'} eq $workgroup){
-            my $status = $self->send_vlan_remove( vlan_id => $vlan_id);
+            my $status = $self->_send_vlan_remove( vlan_id => $vlan_id);
             if(!$status){
                 return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
             }else{
@@ -267,15 +302,16 @@ sub delete_vlan{
     }
 }
 
-
-sub send_vlan_add{
+sub _send_vlan_add{
     my $self = shift;
 
     return 1;
 }
 
-sub send_vlan_remove{
+sub _send_vlan_remove{
     my $self = shift;
     
     return 1;
 }
+
+1;

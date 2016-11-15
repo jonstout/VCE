@@ -9,6 +9,7 @@ SetEnv TESTING 1
 SetEnv NETWORK_MODEL_FILE "@DocumentRoot@../../t/etc/nm1.json"
 SetEnv CONFIG_FILE "@DocumentRoot@../../t/etc/test_config.xml"
 
+
 PerlPassEnv PERL_TEST_HARNESS_DUMP_TAP
 
 <Location /vce/services>

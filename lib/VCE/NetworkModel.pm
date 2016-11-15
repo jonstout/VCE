@@ -35,6 +35,15 @@ sub BUILD{
     return $self;
 }
 
+=head2 reload_state
+
+=cut
+
+sub reload_state{
+    my $self = shift;
+    $self->_read_network_model();
+}
+
 sub _read_network_model{
     my $self = shift;
 

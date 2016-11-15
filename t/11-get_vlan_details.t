@@ -7,8 +7,9 @@ use Test::More tests => 16;
 use Test::Deep;
 
 use VCE;
-
 use GRNOC::Log;
+
+`cp t/etc/nm1.json.orig t/etc/nm1.json`;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 

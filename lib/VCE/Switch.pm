@@ -27,6 +27,10 @@ has hostname => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
 
+=head2 BUILD
+
+=cut
+
 sub BUILD{
     my ($self) = @_;
     
@@ -49,7 +53,7 @@ sub BUILD{
 						       queue => 'VCE-Switch',
 						       topic => 'VCE.Switch.RPC');
 
-    $self->register_rpc_methods( $dispatcher );
+    $self->_register_rpc_methods( $dispatcher );
 
     $self->_set_dispatcher($dispatcher);
 
@@ -93,7 +97,7 @@ sub _connect_to_device{
 
 }
 
-sub register_rpc_methods{
+sub _register_rpc_methods{
     my $self = shift;
     my $d = shift;
 
@@ -112,6 +116,10 @@ sub register_rpc_methods{
 }
 
 
+=head2 get_interfaces
+
+=cut
+
 sub get_interfaces{
     my $self = shift;
     my $m_ref = shift;
@@ -129,6 +137,10 @@ sub get_interfaces{
     }
     
 }
+
+=head2 start
+
+=cut
 
 sub start{
     my $self = shift;

@@ -10,6 +10,8 @@ use VCE;
 
 use GRNOC::Log;
 
+`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',

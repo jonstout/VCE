@@ -47,7 +47,7 @@ use VCE::Access;
 use VCE::NetworkModel;
 
 use JSON::XS;
-
+use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
 has network_model_file => (is => 'rwp', default => "/var/run/vce/network_model.json");
@@ -297,11 +297,11 @@ sub is_tag_available{
     
 }
 
-=head2 provision_vlan
+=head2 validate_circuit
 
 =cut
 
-sub provision_vlan{
+sub validate_circuit{
     my $self = shift;
     my %params = @_;
 
@@ -313,42 +313,54 @@ sub provision_vlan{
     if($#{$params{'switch'}} < 1){
         $self->logger->error("Not enough endpoints");
         return;
-    }    
-    
+    }
 
-    my @eps;
     #validate endpoints and create ep object
     for(my $i=0; $i <= $#{$params{'switch'}}; $i++){
-
+        
         $self->logger->error("Checking access to port");
         
         if(!$self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
                                                          switch => $params{'switch'}->[$i],
                                                          port => $params{'port'}->[$i],
                                                          vlan => $params{'tag'}->[$i])){
-
             $self->logger->error("Workgroup " . $params{'workgroup'} . " does not have access to tag " . $params{'tag'}->[$i] . " on " . $params{'switch'}->[$i] . ":" . $params{'port'}->[$i]);
             return;
-        }else{
-            push(@eps, { switch => $params{'switch'}->[$i],
-                         port => $params{'port'}->[$i],
-                         vlan => $params{'tag'}->[$i]});
         }
     }
-    
+    return 1;
+}
 
-    $self->logger->error("Provisioning VLAN in network model");
-    
-    warn Data::Dumper::Dumper(@eps);
+=head2 provision_vlan
 
-    #ok we made it this far... provision!
-    my $id = $self->network_model->add_vlan( description => $params{'description'},
-                                             workgroup => $params{'workgroup'},
-                                             endpoints => \@eps,
-                                             username => $params{'username'},
-                                             vlan_id => $params{'vlan_id'});
+=cut
 
-    return $id;
+sub provision_vlan{
+    my $self = shift;
+    my %params = @_;
+
+
+    if($self->validate_circuit( %params )){
+
+        my @eps;
+        for(my $i=0; $i <= $#{$params{'switch'}}; $i++){
+            push(@eps,{switch => $params{'switch'}->[$i],
+                       port => $params{'port'}->[$i],
+                       vlan => $params{'tag'}->[$i]});
+        }
+
+        $self->logger->error("Provisioning VLAN in network model");
+        
+        #ok we made it this far... provision!
+        my $id = $self->network_model->add_vlan( description => $params{'description'},
+                                                 workgroup => $params{'workgroup'},
+                                                 endpoints => \@eps,
+                                                 username => $params{'username'},
+                                                 vlan_id => $params{'vlan_id'});
+        return $id;
+    }
+
+    return;
 }
 
 
@@ -360,16 +372,35 @@ sub delete_vlan{
     my $self = shift;
     my %params = @_;
 
+    if(!defined($params{'workgroup'}) || !defined($params{'vlan_id'})){
+        $self->logger->error("Workgroup or VLAN ID not specified");
+        return;
+    }
+
     my $vlan = $self->network_model->get_vlan_details( vlan_id => $params{'vlan_id'});
+    if(!defined($vlan)){
+        $self->logger->error("No vlan by that Id can be found");
+        return;
+    }
+
     if($vlan->{'workgroup'} eq $params{'workgroup'}){
-        
-        $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'});
+        $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'} );
         return 1;
     }else{
-        $self->logger->error("Unable to delete vlan: " . $params{'vlan_id'} . " because workgroup " . $params{'workgroup'} . " does not own it");
         return 0;
-
     }
+
+}
+
+=head2 refresh_state
+
+=cut
+
+sub refresh_state{
+    my $self = shift;
+    my %params = @_;
+
+    $self->network_model->reload_state();
 }
 
 1;

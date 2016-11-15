@@ -192,6 +192,8 @@ sub _register_webservice_methods{
 sub handle_request{
     my $self = shift;
 
+    $self->vce->refresh_state();
+
     $self->dispatcher->handle_request();
 }
 
@@ -290,7 +292,7 @@ sub is_tag_available{
         if($self->vce->access->workgroup_has_access_to_port( workgroup => $workgroup,
                                                              switch => $switch, 
                                                              port => $port,
-                                                             tag => $tag)){
+                                                             vlan => $tag)){
             
             my $tag_avail = $self->vce->is_tag_available( switch => $switch, port => $port, tag => $tag);
             return {results => [{ available => $tag_avail}]};

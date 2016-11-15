@@ -20,6 +20,10 @@ has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
 
+=head2 BUILD
+
+=cut
+
 sub BUILD{
     my ($self) = @_;
     
@@ -40,14 +44,14 @@ sub BUILD{
     
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
-    $self->register_webservice_methods($dispatcher);
+    $self->_register_webservice_methods($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
 
     return $self;
 }
 
-sub register_webservice_methods{
+sub _register_webservice_methods{
     my $self = shift;
     my $d = shift;
 
@@ -66,6 +70,10 @@ sub register_webservice_methods{
 				  
 }
 
+=head2 get_interfaces
+
+=cut
+
 sub get_interfaces{
     my $self = shift;
     my $m_ref = shift;
@@ -80,6 +88,10 @@ sub get_interfaces{
 
     return {results => \@ints};
 }
+
+=head2 handle_request
+
+=cut
 
 sub handle_request{
     my $self = shift;
