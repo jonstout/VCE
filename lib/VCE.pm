@@ -217,7 +217,7 @@ sub get_available_ports{
 
 }
 
-=head2 get_available_tags_on_port
+=head2 get_tags_on_port
 
 =cut
 
@@ -250,6 +250,10 @@ sub get_tags_on_port{
 
 }
 
+=head2 get_switches
+
+=cut
+
 sub get_switches{
     my $self = shift;
     my %params = @_;
@@ -263,6 +267,9 @@ sub get_switches{
     return $switches;
 }
 
+=head2 is_tag_available
+
+=cut
 
 sub is_tag_available{
     my $self = shift;
@@ -289,6 +296,10 @@ sub is_tag_available{
                                                          tag => $params{'tag'});
     
 }
+
+=head2 provision_vlan
+
+=cut
 
 sub provision_vlan{
     my $self = shift;
@@ -340,6 +351,10 @@ sub provision_vlan{
     return $id;
 }
 
+
+=head2 delete_vlan
+
+=cut
 
 sub delete_vlan{
     my $self = shift;

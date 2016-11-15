@@ -28,7 +28,7 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::NetworkModel");
     $self->_set_logger($logger);
 
-    $self->_set_uuid( new Data::UUID );
+    $self->_set_uuid( Data::UUID->new() );
 
     $self->_read_network_model();
 
