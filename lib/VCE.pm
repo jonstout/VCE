@@ -31,7 +31,7 @@ Version 1.0.0
 
 =cut
 
-
+our $VERSION = '1.0.0';
 
 package VCE;
 

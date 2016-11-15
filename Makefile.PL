@@ -9,7 +9,7 @@ use FindBin;
 sub MY::postamble { <<"END"; }
 
 test_jenkins :
-    make test PERL_TEST_HARNESS_DUMP_TAP=$FindBin::Bin/tap/
+	make test PERL_TEST_HARNESS_DUMP_TAP=$FindBin::Bin/tap/
 
 END
 
