@@ -19,6 +19,10 @@ has vce=> (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 
+=head2 BUILD
+
+=cut
+
 sub BUILD{
     my ($self) = @_;
 
@@ -29,14 +33,14 @@ sub BUILD{
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
-    $self->register_webservice_methods($dispatcher);
+    $self->_register_webservice_methods($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
 
     return $self;
 }
 
-sub register_webservice_methods{
+sub _register_webservice_methods{
     my $self = shift;
     my $d = shift;
 
@@ -177,12 +181,20 @@ sub register_webservice_methods{
 
 }
 
+=head2 handle_request
+
+=cut
+
 sub handle_request{
     my $self = shift;
 
     $self->dispatcher->handle_request();
 }
 
+
+=head2 get_workgroups
+
+=cut
 
 sub get_workgroups{
     my $self = shift;
@@ -192,6 +204,10 @@ sub get_workgroups{
     $self->logger->debug("Fetching workgroups for user: " . $user);
     return {results => [{workgroups => $self->vce->get_workgroups( username => $user )}]};
 }
+
+=head2 get_ports
+
+=cut
 
 sub get_ports{
     my $self = shift;
@@ -209,11 +225,15 @@ sub get_ports{
 					      workgroup => $workgroup )){
 	
 	my $p = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch, ports => $ports);
-	return {results => { ports => $p}};
+	return {results => [{ ports => $p}]};
     }else{
 	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 }
+
+=head2 get_tags_on_ports
+
+=cut
 
 sub get_tags_on_ports{
     my $self = shift;
@@ -235,11 +255,16 @@ sub get_tags_on_ports{
 	    my $tags = $self->vce->get_tags_on_port( workgroup => $workgroup, switch => $switch, port => $port);
 	    push(@results, {port => $port, tags => $tags});
 	}
-	return {results => \@results};
+	return {results => [{ports => \@results}]};
     }else{
 	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 }
+
+
+=head2 is_tag_available
+
+=cut
 
 sub is_tag_available{
     my $self = shift;
@@ -273,6 +298,10 @@ sub is_tag_available{
     }
 }
 
+=head2 get_switches
+
+=cut
+
 
 sub get_switches{
     my $self = shift;
@@ -292,6 +321,10 @@ sub get_switches{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 }
+
+=head2 get_vlans
+
+=cut
 
 sub get_vlans{
     my $self = shift;
@@ -313,6 +346,10 @@ sub get_vlans{
     }
 
 }
+
+=head2 get_vlan_details
+
+=cut
 
 sub get_vlan_details{
     my $self = shift;
