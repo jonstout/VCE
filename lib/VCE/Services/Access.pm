@@ -19,6 +19,9 @@ has vce=> (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 
+has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
+has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+
 =head2 BUILD
 
 =cut
@@ -29,7 +32,8 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::Services::Switch");
     $self->_set_logger($logger);
 
-    $self->_set_vce( VCE->new() );
+    $self->_set_vce( VCE->new( config_file => $self->config_file,
+                               network_model_file => $self->network_model_file  ) );
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 

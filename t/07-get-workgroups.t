@@ -18,14 +18,14 @@ my $workgroups = $vce->get_workgroups();
 
 cmp_deeply($workgroups, ['admin','edco','ajco']);
 
-$workgroups = $vce->get_workgroups( username => 'aragusa@iu.edu' );
+$workgroups = $vce->get_workgroups( username => 'aragusa' );
 
 cmp_deeply($workgroups, ['ajco']);
 
-$workgroups = $vce->get_workgroups( username => 'ebalas@iu.edu' );
+$workgroups = $vce->get_workgroups( username => 'ebalas' );
 
 cmp_deeply($workgroups, ['edco','admin']);
 
-$workgroups = $vce->get_workgroups( username => 'foo@iu.edu' );
+$workgroups = $vce->get_workgroups( username => 'foo' );
 
 cmp_deeply($workgroups, []);

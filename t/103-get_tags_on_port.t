@@ -38,9 +38,9 @@ for(my $i=0;$i<100;$i++){
 
 ok($is_ok, "Expected range is correct");
 
-my $port_tags = $client->get_ports_tags( workgroup => 'ajco',
-                                         switch => 'foobar',
-                                         port => ['eth0/1','eth0/2']  );
+$port_tags = $client->get_ports_tags( workgroup => 'ajco',
+                                      switch => 'foobar',
+                                      port => ['eth0/1','eth0/2']  );
 
 ok(defined($port_tags), "ports result was defined for AJ");
 
@@ -70,8 +70,8 @@ for(my $i=0;$i<100;$i++){
 }
 ok($is_ok, "Expected range is correct");
 
-my $port_tags = $client->get_ports_tags( workgroup => 'edco',
-                                         switch => 'foobar',
-                                         port => 'eth0/1'  );
+$port_tags = $client->get_ports_tags( workgroup => 'edco',
+                                      switch => 'foobar',
+                                      port => 'eth0/1'  );
 
 ok(defined($port_tags->{'error'}) && $port_tags->{'error'}->{'msg'} eq 'User aragusa not in specified workgroup edco');

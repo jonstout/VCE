@@ -29,7 +29,7 @@ use warnings;
 use Moo;
 use VCE;
 use GRNOC::Log;
-
+use Data::Dumper;
 
 has config => (is => 'rwp');
 has logger => (is => 'rwp');

@@ -5,6 +5,9 @@ Alias /vce/services/switch.cgi @DocumentRoot@/switch.cgi
 
 PerlSetupEnv On
 SetEnv PERL5OPT "-MDevel::Cover=-db,@DocumentRoot@../../cover_db,-silent,1 -I@DocumentRoot@../../blib/lib/"
+SetEnv TESTING 1
+SetEnv NETWORK_MODEL_FILE "@DocumentRoot@../../t/etc/nm1.json"
+SetEnv CONFIG_FILE "@DocumentRoot@../../t/etc/test_config.xml"
 
 PerlPassEnv PERL_TEST_HARNESS_DUMP_TAP
 

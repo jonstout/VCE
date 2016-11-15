@@ -17,7 +17,7 @@ ok(defined($vce), "Created VCE Object");
 
 my $access = $vce->access->has_access( switch => 'foobar',
 				       port => 'eth0/1',
-				       username => 'aragusa@iu.edu',
+				       username => 'aragusa',
 				       workgroup => 'ajco');
 
 ok($access, "AJ via ajco has access to eth0/1");
@@ -25,7 +25,7 @@ ok($access, "AJ via ajco has access to eth0/1");
 $access = $vce->access->has_access( switch => 'foobar',
 				    port => 'eth0/1',
 				    vlan => 101,
-				    username => 'aragusa@iu.edu',
+				    username => 'aragusa',
 				    workgroup => 'ajco');
 
 ok($access, "AJ via ajco has access to eth0/1 vlan 101");
@@ -33,7 +33,7 @@ ok($access, "AJ via ajco has access to eth0/1 vlan 101");
 $access = $vce->access->has_access( switch => 'foobar',
                                     port => 'eth0/1',
                                     vlan => 150,
-                                    username => 'aragusa@iu.edu',
+                                    username => 'aragusa',
                                     workgroup => 'ajco');
 
 ok($access, "AJ via ajco has access to eth0/1 vlan 150");
@@ -41,7 +41,7 @@ ok($access, "AJ via ajco has access to eth0/1 vlan 150");
 $access = $vce->access->has_access( switch => 'foobar',
                                     port => 'eth0/1',
                                     vlan => 100,
-                                    username => 'aragusa@iu.edu',
+                                    username => 'aragusa',
                                     workgroup => 'ajco');
 
 ok(!$access, "AJ via ajco does not have access to eth0/1 vlan 100");
@@ -49,7 +49,7 @@ ok(!$access, "AJ via ajco does not have access to eth0/1 vlan 100");
 $access = $vce->access->has_access( switch => 'foobar',
                                     port => 'eth0/1',
                                     vlan => 100,
-                                    username => 'aragusa@iu.edu',
+                                    username => 'aragusa',
                                     workgroup => 'edco');
 
 ok(!$access, "AJ not in edco");
@@ -58,7 +58,7 @@ ok(!$access, "AJ not in edco");
 $access = $vce->access->has_access( switch => 'foobar1',
                                     port => 'eth0/1',
                                     vlan => 100,
-                                    username => 'aragusa@iu.edu',
+                                    username => 'aragusa',
                                     workgroup => 'ajco');
 
 ok(!$access, "No switch called foobar1");
@@ -66,7 +66,7 @@ ok(!$access, "No switch called foobar1");
 $access = $vce->access->has_access( switch => 'foobar',
                                     port => 'eth0/1',
                                     vlan => 100,
-                                    username => 'ebalas@iu.edu',
+                                    username => 'ebalas',
                                     workgroup => 'edco');
 
 ok($access, "Ed via Edco has access to eth0/1 vlan 100");
@@ -74,7 +74,7 @@ ok($access, "Ed via Edco has access to eth0/1 vlan 100");
 $access = $vce->access->has_access( 
                                     port => 'eth0/1',
                                     vlan => 100,
-                                    username => 'ebalas@iu.edu',
+                                    username => 'ebalas',
                                     workgroup => 'edco');
 
 ok(!$access, "proper result when switch not specified");
@@ -82,7 +82,7 @@ ok(!$access, "proper result when switch not specified");
 $access = $vce->access->has_access(
                                     switch => 'foobar',
                                     vlan => 100,
-                                    username => 'ebalas@iu.edu',
+                                    username => 'ebalas',
                                     workgroup => 'edco');
 
 ok(!$access, "proper result when port not specified");
@@ -96,7 +96,7 @@ ok(!$access, "proper result when user not specified");
 
 $access = $vce->access->has_access( switch => 'foobar',
                                     port => 'eth0/1',
-                                    username => 'ebalas@.iu.edu',
+                                    username => 'ebalasasdf',
                                     vlan => 100);
 
 ok(!$access, "proper result when workgroup not specified");
