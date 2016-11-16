@@ -165,8 +165,7 @@ ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Looks like we did not successf
 $delete = $provisioner->delete_vlan( vlan_id => '11111',
                                      workgroup => 'ajco');
 
-warn Dumper($delete);
-ok($delete->{'results'}->[0] == {}, "Unable to delete the circuit");
+ok(!defined($delete->{'results'}->[0]), "Unable to delete the circuit");
 
 $vlans = $client->get_vlans( workgroup => 'ajco');
 

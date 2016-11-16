@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 use Test::Deep;
 
 use VCE;
@@ -88,6 +88,15 @@ ok($#vlan_ids == 0, "JSON has proper number of vlans after edit");
 $res = $vce->network_model->delete_vlan( vlan_id => $vlan_id);
 
 ok(!$res, "Unable to remove the circuit again because it isn't there");
+
+$json = _read_config();
+
+@vlan_ids = (keys %{$json->{'vlans'}});
+ok($#vlan_ids == 0, "JSON has proper number of vlans after edit");
+
+$res = $vce->network_model->delete_vlan( );
+
+ok(!$res, "Unable to remove the circuit because it wasn't specified");
 
 $json = _read_config();
 

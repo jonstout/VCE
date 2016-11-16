@@ -190,6 +190,11 @@ sub delete_vlan{
     my $self = shift;
     my %params = @_;
 
+    if(!defined($params{'vlan_id'})){
+        $self->logger->error("No vlan_id specified");
+        return;
+    }
+
     if(defined($self->nm->{'vlans'}->{$params{'vlan_id'}})){
 	$self->logger->debug("Removing VLAN: " . $params{'vlan_id'} . " from network model");
 	delete $self->nm->{'vlans'}->{$params{'vlan_id'}};

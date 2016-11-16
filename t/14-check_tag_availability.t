@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 16;
 use Test::Deep;
 
 use VCE;
@@ -47,6 +47,15 @@ ok($vce->network_model->check_tag_availability( switch => 'foobar',
                                                 tag => 2000), "ok tag is available");
 
 
+ok($vce->is_tag_available( switch => 'foobar',
+                           port => 'eth0/1',
+                            tag => 101), "ok tag is available");
+
+ok($vce->is_tag_available( switch => 'foobar',
+                           port => 'eth0/1',
+                           tag => 2000), "ok tag is available");
+
+
 my $vlan_id = $vce->network_model->add_vlan( description => '14-check_tag-availability circuit 1',
                                              workgroup => 'ajco',
                                              username => 'aragusa',
@@ -75,3 +84,16 @@ ok(!defined($vce->network_model->check_tag_availability( switch => 'foobar',
 
 ok(!defined($vce->network_model->check_tag_availability( port => 'eth0/1',
                                                          switch => 'foobar')), "returned proper result for no switch specified");
+
+ok(!$vce->is_tag_available( switch => 'foobar',
+                              port => 'eth0/1',
+                              tag => 101), "ok tag is not available available");
+
+ok(!defined($vce->is_tag_available( port => 'eth0/1',
+                                      tag => 101)), "returned proper result for no switch specified");
+
+ok(!defined($vce->is_tag_available( switch => 'foobar',
+                                      tag => 101)), "returned proper result for no switch specified");
+
+ok(!defined($vce->is_tag_available( port => 'eth0/1',
+                                      switch => 'foobar')), "returned proper result for no switch specified");
