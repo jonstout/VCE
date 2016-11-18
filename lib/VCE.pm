@@ -135,6 +135,7 @@ sub _process_config{
 	foreach my $port (keys(%{$switch->{'port'}})){
 	    my $p = {};
 	    my %tags;
+            
 	    foreach my $tag (@{$switch->{'port'}->{$port}->{'tags'}}){
 		for(my $i=$tag->{'start'};$i<=$tag->{'end'};$i++){
 		    $tags{$i} = $tag->{'workgroup'};
@@ -143,7 +144,7 @@ sub _process_config{
 	    
 	    $p->{'tags'} = \%tags;
 	    $s->{'ports'}->{$port} = $p;
-	    
+	    $p->{'owner'} = $switch->{'port'}->{$port}->{'owner'};
 	}
 
 	$switches{$switch->{'name'}} = $s;
@@ -177,6 +178,7 @@ sub get_workgroups{
     return [];
 
 }
+
 
 =head2 get_available_ports
 

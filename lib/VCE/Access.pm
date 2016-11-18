@@ -87,6 +87,78 @@ sub has_access{
     return 1;
 }
 
+=head2 workgroup_owns_port
+
+=cut
+
+sub workgroup_owns_port{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("workgroup_owns_port: workgroup not specified");
+        return 0;
+    }
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("workgroup_owns_port: switch not specified");
+        return 0;
+    }
+
+    if(!defined($params{'port'})){
+        $self->logger->error("workgroup_owns_port: port not specified");
+        return 0;
+    }
+
+    if(defined($self->config->{'switches'}->{$params{'switch'}})){
+
+        if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}})){
+
+            if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}){
+                $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is owned by " . $params{'workgroup'});
+                return 1;
+            }
+            $self->logger->error("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
+            return 0;
+        }
+        $self->logger->error("switch " . $params{'switch'} . " does not have port: " . $params{'port'});
+        return 0;
+    }
+    $self->logger->error("no switch called " . $params{'switch'} . " in configuration");
+    return 0;
+
+    
+}
+
+
+=head2 workgroups_owned_ports
+
+=cut
+
+sub workgroups_owned_ports{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("workgroups_owned_ports: workgroup not specified");
+        return;
+    }
+
+    my @owned_ints;
+
+    foreach my $switch (keys %{$self->config->{'switches'}}){
+        foreach my $port (keys %{$self->config->{'switches'}{$switch}{'ports'}}){
+            if($self->config->{'switches'}{$switch}{'ports'}{$port}{'owner'} eq $params{'workgroup'}){
+                push(@owned_ints,{ switch => $switch, port => $port});
+            }
+        }
+    }
+
+    return \@owned_ints;
+    
+
+}
+
 =head2 user_in_workgroup
 
 =cut
