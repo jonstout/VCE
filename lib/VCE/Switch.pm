@@ -104,15 +104,40 @@ sub _register_rpc_methods{
     my $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces",
 					       callback => sub { return $self->get_interfaces( @_ )  },
 					       description => "Get the device interfaces" );
-
     $method->add_input_parameter( name => "interface_name",
 				  description => "Name of the interface to gather data about",
 				  required => 0,
 				  multiple => 1,
 				  pattern => $GRNOC::WebService::Regex::NAME );
-
     $d->register_method($method);
-    
+
+
+    $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",
+                                            callback => sub { return $self->interface_tagged( @_ )  },
+                                            description => "Add vlan tagged interface" );
+    $method->add_input_parameter( name        => "port",
+				  description => "Name of the interface to add tag to",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::TEXT );
+    $method->add_input_parameter( name        => "vlan",
+				  description => "VLAN number to use for tag",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $d->register_method($method);
+
+
+    $method = GRNOC::RabbitMQ::Method->new( name => "no_interface_tagged",
+                                            callback => sub { return $self->no_interface_tagged( @_ )  },
+                                            description => "Remove vlan tagged interface" );
+    $method->add_input_parameter( name        => "port",
+				  description => "Name of the interface to remove tag from",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::TEXT );
+    $method->add_input_parameter( name        => "vlan",
+				  description => "VLAN number to use for tag",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $d->register_method($method);
 }
 
 
@@ -137,6 +162,47 @@ sub get_interfaces{
     }
     
 }
+
+sub interface_tagged {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $port = $params->{'port'}{'value'};
+    my $vlan = $params->{'vlan'}{'value'};
+
+    if (!$self->device->connected) {
+        $self->logger->error("Error device is not connected.");
+    }
+
+    my ($res, $err) = $self->device->interface_tagged('ethernet 15/2', 123);
+    if (defined $err) {
+        return { results => undef, error => $err };
+    }
+
+    return { results => 1 };
+}
+
+sub no_interface_tagged {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $port = $params->{'port'}{'value'};
+    my $vlan = $params->{'vlan'}{'value'};
+
+    if (!$self->device->connected) {
+        $self->logger->error("Error device is not connected.");
+    }
+
+    my ($res, $err) = $self->device->no_interface_tagged('ethernet 15/2', 123);
+    if (defined $err) {
+        return { results => undef, error => $err };
+    }
+
+    return { results => 1 };
+}
+
 
 =head2 start
 

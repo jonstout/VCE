@@ -14,7 +14,11 @@ our $provisioning_services;
 
 if($ENV{'TESTING'}){
     $provisioning_services = VCE::Services::Provisioning->new( config_file => $ENV{'CONFIG_FILE'},
-                                                               network_model_file => $ENV{'NETWORK_MODEL_FILE'} );
+                                                               network_model_file => $ENV{'NETWORK_MODEL_FILE'},
+                                                               rabbit_mq => { user => 'guest',
+                                                                              pass => 'guest',
+                                                                              host => 'localhost',
+                                                                              port => '5672'} );
 }else{
     $provisioning_services = VCE::Services::Provisioning->new(  );
 }
