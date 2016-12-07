@@ -9,6 +9,7 @@ use Moo;
 extends 'VCE::Device';
 
 use GRNOC::Comm;
+use GRNOC::NetConf::Device;
 
 has comm => (is => 'rwp');
 has conn => (is => 'rwp');
