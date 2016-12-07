@@ -175,7 +175,7 @@ sub interface_tagged {
         $self->logger->error("Error device is not connected.");
     }
 
-    my ($res, $err) = $self->device->interface_tagged('ethernet 15/2', 123);
+    my ($res, $err) = $self->device->interface_tagged($port, $vlan);
     if (defined $err) {
         return { results => undef, error => $err };
     }
@@ -195,7 +195,7 @@ sub no_interface_tagged {
         $self->logger->error("Error device is not connected.");
     }
 
-    my ($res, $err) = $self->device->no_interface_tagged('ethernet 15/2', 123);
+    my ($res, $err) = $self->device->no_interface_tagged($port, $vlan);
     if (defined $err) {
         return { results => undef, error => $err };
     }

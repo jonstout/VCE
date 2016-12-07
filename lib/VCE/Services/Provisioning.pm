@@ -10,8 +10,7 @@ use Moo;
 use VCE;
 
 use GRNOC::Log;
-use GRNOC::RabbitMQ;
-use GRNOC::WebService::Client;
+use GRNOC::RabbitMQ::Client;
 use GRNOC::WebService::Dispatcher;
 use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
@@ -40,13 +39,13 @@ sub BUILD{
     $self->_set_vce( VCE->new( config_file => $self->config_file,
                                network_model_file => $self->network_model_file  ) );
 
-    $self->switch = GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
-                                                  pass => $self->rabbit_mq->{'pass'},
-                                                  host => $self->rabbit_mq->{'host'},
-                                                  timeout => 30,
-                                                  port => $self->rabbit_mq->{'port'},
-                                                  exchange => 'VCE',
-                                                  topic => 'VCE.Switch.RPC' );
+    $self->_set_switch( GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
+						      pass => $self->rabbit_mq->{'pass'},
+						      host => $self->rabbit_mq->{'host'},
+						      timeout => 30,
+						      port => $self->rabbit_mq->{'port'},
+						      exchange => 'VCE',
+						      topic => 'VCE.Switch.RPC' ));
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
@@ -201,7 +200,7 @@ sub provision_vlan{
         foreach my $e (@{$details->{'endpoints'}}) {
             my $port   = $e->{'port'};
             my $switch = $e->{'switch'};
-            my $vlan   = $e->{'vlan'};
+            my $vlan   = $e->{'tag'};
 
             $status = $self->_send_vlan_add( $port, $switch, $vlan );
         }
@@ -256,12 +255,12 @@ sub edit_vlan{
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Circuit does not validate"}};
         }
 
-        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+        $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         my $status = undef;
         foreach my $e (@{$details->{'endpoints'}}) {
             my $port   = $e->{'port'};
             my $switch = $e->{'switch'};
-            my $vlan   = $e->{'vlan'};
+            my $vlan   = $e->{'tag'};
 
             $status = $self->_send_vlan_remove( $port, $switch, $vlan );
         }
@@ -285,7 +284,7 @@ sub edit_vlan{
             foreach my $e (@{$details->{'endpoints'}}) {
                 my $port   = $e->{'port'};
                 my $switch = $e->{'switch'};
-                my $vlan   = $e->{'vlan'};
+                my $vlan   = $e->{'tag'};
 
                 $status = $self->_send_vlan_add( $port, $switch, $vlan );
             }
@@ -325,7 +324,7 @@ sub delete_vlan{
             foreach my $e (@{$details->{'endpoints'}}) {
                 my $port   = $e->{'port'};
                 my $switch = $e->{'switch'};
-                my $vlan   = $e->{'vlan'};
+                my $vlan   = $e->{'tag'};
 
                 $status = $self->_send_vlan_remove( $port, $switch, $vlan );
             }

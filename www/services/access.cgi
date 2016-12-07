@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Data::Dumper;
-use lib '/home/aragusa/VCE/lib';
 
 use VCE::Services::Access;
 

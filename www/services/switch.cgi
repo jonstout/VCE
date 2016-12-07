@@ -3,8 +3,6 @@
 use strict;
 use warnings;
 
-use lib '/home/aragusa/VCE/lib';
-
 use VCE::Services::Switch;
 
 our $switch_services;
