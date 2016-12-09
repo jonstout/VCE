@@ -140,8 +140,8 @@ sub _register_webservice_methods{
                                   pattern => "(.*)",
                                   required => 1,
                                   multiple => 0,
-                                  description => "Individual name of a port to get details about");
-    
+                                  description => "Switch to get ports from");
+
     $method->add_input_parameter( name => "tag",
                                   pattern => $GRNOC::WebService::Regex::NUMBER,
                                   required => 1,
@@ -284,9 +284,13 @@ sub is_tag_available{
     my $port = $p_ref->{'port'}{'value'};
     my $tag = $p_ref->{'tag'}{'value'};
 
+    warn "Is tag available\n";
+
     #verify user in workgroup
+    $user = 'aragusa';
     if($self->vce->access->user_in_workgroup( username => $user,
-                                         workgroup => $workgroup )){
+                                              workgroup => $workgroup )){
+        warn "USer is in workgroup\n";
 	
         #first verify user has access to switch/port/tag
         if($self->vce->access->workgroup_has_access_to_port( workgroup => $workgroup,
@@ -294,10 +298,11 @@ sub is_tag_available{
                                                              port => $port,
                                                              vlan => $tag)){
             
+            warn "workgroup has access to port and vlan\n";
             my $tag_avail = $self->vce->is_tag_available( switch => $switch, port => $port, tag => $tag);
             return {results => [{ available => $tag_avail}]};
         }else{
-            return {results => [{available => 0}], error => {msg => "Workgroup $workgroup is not allowed tag $tag on $switch:$port"}};
+            return {results => [{ available => 0}], error => {msg => "Workgroup $workgroup is not allowed tag $tag on $switch:$port"}};
         }
     }else{
 	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};

@@ -79,9 +79,9 @@ sub has_access{
 					   workgroup => $params{'workgroup'}));
     
     return 0 if(!$self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-						     switch => $params{'switch'},
-						     port => $params{'port'},
-						     vlan => $params{'vlan'}));
+                                                      switch => $params{'switch'},
+                                                      port => $params{'port'},
+                                                      vlan => $params{'vlan'}));
        
     $self->logger->debug("User " . $params{'username'} . " has access via workgroup " . $params{'workgroup'} . " has access to switch:port " . $params{'switch'} . ":" . $params{'port'});
     return 1;

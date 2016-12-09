@@ -283,53 +283,47 @@ sub is_tag_available{
         return;
     }
 
-    if(!defined($params{'port'})){
-        $self->logger->error("is_tag_available: Port not specified");
-        return;
-    }
-
     if(!defined($params{'tag'})){
         $self->logger->error("is_tag_available: tag not specified");
         return;
     }
-
-    return $self->network_model->check_tag_availability( switch => $params{'switch'},
-                                                         port => $params{'port'},
-                                                         tag => $params{'tag'});
+    
+    return $self->network_model->check_tag_availability( switch => $params{'switch'},                                                         
+                                                         vlan => $params{'tag'});
     
 }
 
 =head2 validate_circuit
-
+    
 =cut
 
 sub validate_circuit{
     my $self = shift;
     my %params = @_;
-
-    if($#{$params{'switch'}} != $#{$params{'port'}} || $#{$params{'switch'}} != $#{$params{'tag'}}){
-        $self->logger->error("Number of switches, ports and tags doesn't match... our endpoints are jacked");
-        return;
-    }
-
-    if($#{$params{'switch'}} < 1){
+    
+    
+    
+    if($#{$params{'port'}} < 1){
         $self->logger->error("Not enough endpoints");
         return;
     }
-
+    
+    my $vlan;
+    
     #validate endpoints and create ep object
-    for(my $i=0; $i <= $#{$params{'switch'}}; $i++){
+    for(my $i=0; $i <= $#{$params{'port'}}; $i++){
         
         $self->logger->error("Checking access to port");
         
         if(!$self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                         switch => $params{'switch'}->[$i],
+                                                         switch => $params{'switch'},
                                                          port => $params{'port'}->[$i],
-                                                         vlan => $params{'tag'}->[$i])){
-            $self->logger->error("Workgroup " . $params{'workgroup'} . " does not have access to tag " . $params{'tag'}->[$i] . " on " . $params{'switch'}->[$i] . ":" . $params{'port'}->[$i]);
+                                                         vlan => $params{'vlan'})){
+            $self->logger->error("Workgroup " . $params{'workgroup'} . " does not have access to tag " . $params{'vlan'} . " on " . $params{'switch'} . ":" . $params{'port'}->[$i]);
             return;
         }
     }
+
     return 1;
 }
 
@@ -340,28 +334,26 @@ sub validate_circuit{
 sub provision_vlan{
     my $self = shift;
     my %params = @_;
-
-
+    
     if($self->validate_circuit( %params )){
 
         my @eps;
-        for(my $i=0; $i <= $#{$params{'switch'}}; $i++){
-            push(@eps,{switch => $params{'switch'}->[$i],
-                       port => $params{'port'}->[$i],
-                       vlan => $params{'tag'}->[$i]});
+        for(my $i=0; $i <= $#{$params{'port'}}; $i++){
+            push(@eps,{ port => $params{'port'}->[$i]});
         }
-
+        
         $self->logger->error("Provisioning VLAN in network model");
         
         #ok we made it this far... provision!
         my $id = $self->network_model->add_vlan( description => $params{'description'},
                                                  workgroup => $params{'workgroup'},
+                                                 vlan => $params{'vlan'},
+                                                 switch => $params{'switch'},
                                                  endpoints => \@eps,
-                                                 username => $params{'username'},
-                                                 vlan_id => $params{'vlan_id'});
+                                                 username => $params{'username'});
         return $id;
     }
-
+    
     return;
 }
 
@@ -401,8 +393,11 @@ sub delete_vlan{
 sub refresh_state{
     my $self = shift;
     my %params = @_;
-
+    
     $self->network_model->reload_state();
+
+
 }
+
 
 1;
