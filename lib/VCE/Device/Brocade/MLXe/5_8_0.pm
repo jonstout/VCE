@@ -9,8 +9,10 @@ use Moo;
 extends 'VCE::Device';
 
 use GRNOC::Comm;
+use GRNOC::NetConf::Device;
 
 has comm => (is => 'rwp');
+has conn => (is => 'rwp');
 
 =head2 BUILD
 
@@ -52,8 +54,19 @@ sub connect{
 	return;
     }
 
+    my $conn = GRNOC::NetConf::Device->new(username => $self->username,
+                                           password => $self->password,
+                                           host     => $self->hostname,
+                                           port     => 830,
+                                           type     => 'Brocade',
+                                           model    => 'MLXe',
+                                           version  => '5.8.0');
+    $self->_set_conn($conn);
+
     return;
 }
+
+
 
 =head2 get_interfaces
 
@@ -81,6 +94,93 @@ sub get_interfaces{
     }
 
 }
+
+=head2 interface_tagged
+
+Using netconf connection $conn add interface $iface to VLAN
+$vlan_id. Returns a response and error; The error is undef if nothing
+failed.
+
+=cut
+sub interface_tagged {
+    my $self    = shift;
+    my $iface   = shift;
+    my $vlan_id = shift;
+
+    my $req = "
+<nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
+  <nc:edit-config>
+    <nc:target>
+      <nc:running/>
+    </nc:target>
+    <nc:default-operation>merge</nc:default-operation>
+    <nc:config>
+      <brcd:netiron-config>
+        <brcd:vlan-config>
+          <brcd:vlan>
+            <brcd:vlan-id>$vlan_id</brcd:vlan-id>
+            <brcd:tagged>$iface</brcd:tagged>
+          </brcd:vlan>
+        </brcd:vlan-config>
+      </brcd:netiron-config>
+    </nc:config>
+  </nc:edit-config>
+</nc:rpc>";
+
+    $self->conn->send($req);
+
+    my $res = $self->conn->recv();
+    my $err = undef;
+
+    if (!defined $res->{'nc:ok'}) {
+        $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
+    }
+    return $res, $err;
+}
+
+=head2 no_interface_tagged
+
+Using netconf connection $conn remove interface $iface from VLAN
+$vlan_id. Returns a response and error; The error is undef if nothing
+failed.
+
+=cut
+sub no_interface_tagged {
+    my $self    = shift;
+    my $iface   = shift;
+    my $vlan_id = shift;
+
+    my $req = "
+<nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
+  <nc:edit-config>
+    <nc:target>
+      <nc:running/>
+    </nc:target>
+    <nc:default-operation>merge</nc:default-operation>
+    <nc:config>
+      <brcd:netiron-config>
+        <brcd:vlan-config>
+          <brcd:vlan>
+            <brcd:vlan-id>$vlan_id</brcd:vlan-id>
+            <brcd:tagged nc:operation=\"delete\">$iface</brcd:tagged>
+          </brcd:vlan>
+        </brcd:vlan-config>
+      </brcd:netiron-config>
+    </nc:config>
+  </nc:edit-config>
+</nc:rpc>";
+
+    $self->conn->send($req);
+
+    my $res = $self->conn->recv();
+    my $err = undef;
+
+    if (!defined $res->{'nc:ok'}) {
+        $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
+    }
+    return $res, $err;
+}
+
 
 sub _get_interface{
     my $self = shift;

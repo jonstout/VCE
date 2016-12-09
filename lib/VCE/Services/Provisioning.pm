@@ -10,7 +10,7 @@ use Moo;
 use VCE;
 
 use GRNOC::Log;
-use GRNOC::RabbitMQ;
+use GRNOC::RabbitMQ::Client;
 use GRNOC::WebService::Dispatcher;
 use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
@@ -20,9 +20,11 @@ use Data::Dumper;
 has vce=> (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
+has switch => (is => 'rwp');
 
 has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
 has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+has rabbit_mq => (is => 'rwp');
 
 =head2 BUILD
 
@@ -36,6 +38,14 @@ sub BUILD{
 
     $self->_set_vce( VCE->new( config_file => $self->config_file,
                                network_model_file => $self->network_model_file  ) );
+
+    $self->_set_switch( GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
+						      pass => $self->rabbit_mq->{'pass'},
+						      host => $self->rabbit_mq->{'host'},
+						      timeout => 30,
+						      port => $self->rabbit_mq->{'port'},
+						      exchange => 'VCE',
+						      topic => 'VCE.Switch.RPC' ));
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
@@ -185,7 +195,15 @@ sub provision_vlan{
             return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
         }
         
-        my $status = $self->_send_vlan_add( vlan_id => $vlan_id );                                        
+        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+        my $status  = undef;
+        foreach my $e (@{$details->{'endpoints'}}) {
+            my $port   = $e->{'port'};
+            my $switch = $e->{'switch'};
+            my $vlan   = $e->{'tag'};
+
+            $status = $self->_send_vlan_add( $port, $switch, $vlan );
+        }
         
         if($status){
             
@@ -237,8 +255,15 @@ sub edit_vlan{
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Circuit does not validate"}};
         }
 
+        $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+        my $status = undef;
+        foreach my $e (@{$details->{'endpoints'}}) {
+            my $port   = $e->{'port'};
+            my $switch = $e->{'switch'};
+            my $vlan   = $e->{'tag'};
 
-        my $status = $self->_send_vlan_remove( vlan_id => $vlan_id);
+            $status = $self->_send_vlan_remove( $port, $switch, $vlan );
+        }
         
         if(!$status){
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
@@ -254,7 +279,15 @@ sub edit_vlan{
                                         port => $ports, 
                                         tag => $tags);
             
-            $status = $self->_send_vlan_add( vlan_id => $vlan_id);
+            my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+            my $status  = undef;
+            foreach my $e (@{$details->{'endpoints'}}) {
+                my $port   = $e->{'port'};
+                my $switch = $e->{'switch'};
+                my $vlan   = $e->{'tag'};
+
+                $status = $self->_send_vlan_add( $port, $switch, $vlan );
+            }
 
             if(!$status){
                 return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
@@ -287,7 +320,15 @@ sub delete_vlan{
         
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         if($details->{'workgroup'} eq $workgroup){
-            my $status = $self->_send_vlan_remove( vlan_id => $vlan_id);
+            my $status = undef;
+            foreach my $e (@{$details->{'endpoints'}}) {
+                my $port   = $e->{'port'};
+                my $switch = $e->{'switch'};
+                my $vlan   = $e->{'tag'};
+
+                $status = $self->_send_vlan_remove( $port, $switch, $vlan );
+            }
+
             if(!$status){
                 return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
             }else{
@@ -303,14 +344,30 @@ sub delete_vlan{
 }
 
 sub _send_vlan_add{
-    my $self = shift;
+    my $self   = shift;
+    my $port   = shift;
+    my $switch = shift;
+    my $vlan   = shift;
+
+    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
+    if (exists $response->{'error'}) {
+        $self->logger->error($response->{'error'});
+    }
 
     return 1;
 }
 
 sub _send_vlan_remove{
-    my $self = shift;
-    
+    my $self   = shift;
+    my $port   = shift;
+    my $switch = shift;
+    my $vlan   = shift;
+
+    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
+    if (exists $response->{'error'}) {
+        $self->logger->error($response->{'error'});
+    }
+
     return 1;
 }
 

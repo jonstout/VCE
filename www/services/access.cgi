@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Data::Dumper;
-use lib '/home/aragusa/VCE/lib';
 
 use VCE::Services::Access;
 
@@ -19,7 +18,8 @@ if(!defined($access_services)){
         $access_services = VCE::Services::Access->new( config_file => $ENV{'CONFIG_FILE'},
                                                        network_model_file => $ENV{'NETWORK_MODEL_FILE'} );
     }else{
-        $access_services = VCE::Services::Access->new(  );	
+        $access_services = VCE::Services::Access->new( config_file => '/etc/vce/access_policy.xml',
+                                                       network_model_file => '/var/run/vce/network_model.json' );
     }
 }
 
