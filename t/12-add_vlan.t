@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 19;
+use Test::More tests => 17;
 use Test::Deep;
 
 use VCE;
@@ -27,12 +27,10 @@ ok($#{$vlans} == -1, "New configuration created!");
 my $vlan_id = $vce->network_model->add_vlan( description => '12-addvlan circuit 1',
                                              workgroup => 'ajco',
                                              username => 'aragusa',
-                                             endpoints => [{ switch => 'foobar',
-                                                             port => 'eth0/1',
-                                                             vlan => 101},
-                                                           {switch => 'foobar',
-                                                            port => 'eth0/2',
-                                                            vlan => 101}]);
+                                             vlan => 101,
+                                             switch => 'foobar',
+                                             endpoints => [{ port => 'eth0/1'},
+                                                           { port => 'eth0/2'}]);
 
 ok(defined($vlan_id), "VLAN was create!");
 
@@ -42,20 +40,18 @@ ok(defined($vlan_details), "VLAN Was found in the configuration");
 ok($vlan_details->{'workgroup'} eq 'ajco', "proper workgroup");
 ok($vlan_details->{'username'} eq 'aragusa', "proper user");
 ok($vlan_details->{'description'} eq '12-addvlan circuit 1');
+ok($vlan_details->{'vlan'} == 101, "proper vlan tag");
+ok($vlan_details->{'switch'} eq 'foobar', "proper switch");
 ok($#{$vlan_details->{'endpoints'}} == 1, "proper number of endpoints");
 
-ok($vlan_details->{'endpoints'}->[0]->{'switch'} eq 'foobar', "proper switch for ep 1");
 ok($vlan_details->{'endpoints'}->[0]->{'port'} eq 'eth0/1', "proper port for ep 1");
-ok($vlan_details->{'endpoints'}->[0]->{'tag'} eq '101', "proper tag for ep 1");
-
-ok($vlan_details->{'endpoints'}->[1]->{'switch'} eq 'foobar', "proper switch for ep 2");
 ok($vlan_details->{'endpoints'}->[1]->{'port'} eq 'eth0/2', "proper port for ep 2");
-ok($vlan_details->{'endpoints'}->[1]->{'tag'} eq '101', "proper tag for ep 2");
 
 
 $vlan_id = $vce->network_model->add_vlan( description => '12-addvlan circuit 2 should fail because vlan_id already there',
                                           workgroup => 'ajco',
                                           username => 'aragusa',
+                                          switch => 'foobar',
                                           vlan_id => $vlan_id,
                                           endpoints => [{ switch => 'foobar',
                                                           port => 'eth0/1',
@@ -69,24 +65,24 @@ ok(!defined($vlan_id), "VLAN with this ID already exists couldn't add");
 $vlan_id = $vce->network_model->add_vlan( description => '12-addvlan circuit 3 should fail',
                                           workgroup => 'ajco',
                                           username => 'aragusa',
-                                          endpoints => [{ switch => 'foobar',
-                                                          port => 'eth0/1',
-                                                          vlan => 101},
-                                                        {switch => 'foobar',
-                                                         port => 'eth0/2',
-                                                         vlan => 101}]);
+                                          vlan => 101,
+                                          switch => 'foobar',
+                                          endpoints => [{ port => 'eth0/1'  },
+                                                        { port => 'eth0/2' }]);
 
 ok(!defined($vlan_id), "Prevented provisoning of vlan tag already in use");
 
 $vlan_id = $vce->network_model->add_vlan( description => '12-addvlan circuit 4 should fail because vlan_id already there',
                                           workgroup => 'ajco',
                                           username => 'aragusa',
-                                          endpoints => [{ switch => 'foobar',
-                                                          port => 'eth0/1',
-                                                          vlan => 102},
-                                                        {switch => 'foobar',
-                                                         port => 'eth0/2',
-                                                         vlan => 102}]);
+                                          switch => 'foobar',
+                                          vlan => 102,
+                                          endpoints => [{ 
+                                                          port => 'eth0/1'
+                                                        },
+                                                        {
+                                                         port => 'eth0/2'
+                                                         }]);
 ok(defined($vlan_id), "Was able to create a second vlan with different VLAN IDs");
 
 my $str;

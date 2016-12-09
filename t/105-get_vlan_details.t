@@ -30,6 +30,8 @@ cmp_deeply($vlan, {
                 'status' => 'Active',
                 'create_time' => 1479158369,
                 'description' => 'test',
+                'switch' => 'foobar',
+                'vlan' => '102',
                 'endpoints' => [
                     {
                         'switch' => 'foobar',
@@ -63,6 +65,8 @@ cmp_deeply($vlan, {
                 'status' => 'Active',
                 'create_time' => 1479153788,
                 'description' => 'test',
+                'switch' => 'foobar',
+                'vlan' => 101,
                 'endpoints' => [
                     {
                         'switch' => 'foobar',
@@ -112,6 +116,8 @@ cmp_deeply($vlan, {
                 'create_time' => 1479158359,
                 'description' => 'test',
                 'vlan_id' => '2806baa4-173c-4bdd-b552-c063a82e232f',
+                'vlan' => 10,
+                'switch' => 'foobar',
                 'username' => 'aragusa',
                 'endpoints' => [
                     {

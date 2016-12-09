@@ -41,12 +41,10 @@ ok($#{$vlans} == -1, "New configuration created!");
 my $vlan_id = $vce->network_model->add_vlan( description => '13-delete_vlan circuit 1',
                                              workgroup => 'ajco',
                                              username => 'aragusa',
-                                             endpoints => [{ switch => 'foobar',
-                                                             port => 'eth0/1',
-                                                             vlan => 101},
-                                                           {switch => 'foobar',
-                                                            port => 'eth0/2',
-                                                            vlan => 101}]);
+                                             switch => 'foobar',
+                                             vlan => 101,
+                                             endpoints => [{ port => 'eth0/1'},
+                                                           { port => 'eth0/2'}]);
 
 ok(defined($vlan_id), "VLAN was create!");
 
@@ -62,12 +60,10 @@ ok($#vlan_ids == 0, "JSON has proper number of vlans");
 $vlan_id = $vce->network_model->add_vlan( description => '12-delete_vlan circuit 2',
                                           workgroup => 'ajco',
                                           username => 'aragusa',
-                                          endpoints => [{ switch => 'foobar',
-                                                          port => 'eth0/1',
-                                                          vlan => 102},
-                                                        {switch => 'foobar',
-                                                         port => 'eth0/2',
-                                                         vlan => 102}]);
+                                          switch => 'foobar',
+                                          vlan => 102,
+                                          endpoints => [{ port => 'eth0/1'},
+                                                        { port => 'eth0/2'}]);
 
 ok(defined($vlan_id), "Second circuit created!");
 

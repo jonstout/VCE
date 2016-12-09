@@ -85,7 +85,7 @@ sub add_vlan{
     my $self = shift;
     my %params = @_;
 
-    $self->logger->error("Adding a VLAN");
+    $self->logger->debug("Adding a VLAN");
 
     my $obj = {};
     if(!defined($params{'vlan_id'})){
@@ -97,42 +97,44 @@ sub add_vlan{
         }
         $obj->{'vlan_id'} = $params{'vlan_id'};
     }
+
+    return if(!defined($params{'switch'}));
+    return if(!defined($params{'vlan'}));
+    return if(!defined($params{'username'}));
+    return if(!defined($params{'workgroup'}));
+    return if(!defined($params{'endpoints'}));
+
     $obj->{'description'} = $params{'description'};
     $obj->{'workgroup'} = $params{'workgroup'};
     $obj->{'username'} = $params{'username'};
+    $obj->{'switch'} = $params{'switch'};
+    $obj->{'vlan'} = $params{'vlan'};
     $obj->{'create_time'} = time();
     $obj->{'endpoints'} = [];
     $obj->{'status'} = "Active";
     
-    $self->logger->error("All base parts ready");
 
+    $self->logger->debug("All base parts ready");
+
+    if(!$self->check_tag_availability( switch => $obj->{'switch'},
+                                       vlan => $obj->{'vlan'})){
+        $self->logger->error("VLAN is already in use on switch");
+        return;
+    }
     foreach my $ep (@{$params{'endpoints'}}){
-        #validate that the endpoint is not in use!
-        
-        if($self->check_tag_availability( switch => $ep->{'switch'},
-                                          port => $ep->{'port'},
-                                          tag => $ep->{'vlan'})){
-            
-            my $ep_obj = {};
-            $ep_obj->{'switch'} = $ep->{'switch'};
-            $ep_obj->{'port'} = $ep->{'port'};
-            $ep_obj->{'tag'} = $ep->{'vlan'};
-
-            push(@{$obj->{'endpoints'}}, $ep_obj);
-        }else{
-            $self->logger->error("Endpoint " . $ep->{'switch'} . ":" . $ep->{'port'} . " tag " . $ep->{'vlan'} . " is already in use");
-            return;
-        }
+        my $ep_obj = {};
+        $ep_obj->{'port'} = $ep->{'port'};
+        push(@{$obj->{'endpoints'}}, $ep_obj);
     }
 
-    $self->logger->error("processed endpoints");
-
+    $self->logger->debug("processed endpoints");
+    
     $self->nm->{'vlans'}->{$obj->{'vlan_id'}} = $obj;
-
-    $self->logger->error("Writing network model");
-
+    
+    $self->logger->debug("Writing network model");
+    
     $self->_write_network_model();
-
+    
     return $obj->{'vlan_id'};
 }
 
@@ -151,8 +153,8 @@ sub check_tag_availability{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'tag'})){
-	$self->logger->error("check_tag_availability: tag not defined");
+    if(!defined($params{'vlan'})){
+	$self->logger->error("check_tag_availability: vlan not defined");
         return;
     }
     
@@ -161,22 +163,31 @@ sub check_tag_availability{
         return;
     }
     
-    if(!defined($params{'port'})){
-        $self->logger->error("check_tag_availability: port not defined");
-        return;
-    }
-
     foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
-        foreach my $ep (@{$self->nm->{'vlans'}->{$vlan}->{'endpoints'}}){
-            if($ep->{'switch'} eq $params{'switch'} && $ep->{'port'} eq $params{'port'} && $ep->{'tag'} eq $params{'tag'}){
-                #no it is not available in use by this vlan
-                return 0;
-            }
+        my $v = $self->nm->{'vlans'}{$vlan};
+        if($v->{'switch'} eq $params{'switch'} && $v->{'vlan'} eq $params{'vlan'}){
+            return 0;
         }
     }
+    
+#this code presumes you can do push/pop tags... however MLXe can't
+#    if(!defined($params{'port'})){
+#        $self->logger->error("check_tag_availability: port not defined");
+#        return;
+#    }
+#    
+#         
+#    foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
+#        foreach my $ep (@{$self->nm->{'vlans'}->{$vlan}->{'endpoints'}}){
+#            if($ep->{'switch'} eq $params{'switch'} && $ep->{'port'} eq $params{'port'} && $ep->{'tag'} eq $params{'tag'}){
+#                #no it is not available in use by this vlan
+#                return 0;
+#            }
+#        }
+#    }
+    
 
     #yep its available
-
     return 1;
 }
 
