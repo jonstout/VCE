@@ -163,6 +163,9 @@ sub get_interfaces{
     
 }
 
+=head2 interface_tagged
+
+=cut
 sub interface_tagged {
     my $self   = shift;
     my $method = shift;
@@ -183,6 +186,9 @@ sub interface_tagged {
     return { results => 1 };
 }
 
+=head2 no_interface_tagged
+
+=cut
 sub no_interface_tagged {
     my $self   = shift;
     my $method = shift;

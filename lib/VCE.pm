@@ -144,6 +144,7 @@ sub _process_config{
 	    
 	    $p->{'tags'} = \%tags;
 	    $s->{'ports'}->{$port} = $p;
+            $p->{'description'} = $switch->{'port'}->{$port}->{'description'};
 	    $p->{'owner'} = $switch->{'port'}->{$port}->{'owner'};
 	}
 
@@ -207,10 +208,10 @@ sub get_available_ports{
 	if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
 							switch => $params{'switch'},
 							port => $port)){
-            my $tags = $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
+            my $details = $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
                                                        switch => $params{'switch'},
                                                        port => $port);
-	    push(@ports, {port => $port, tags => $tags});
+	    push(@ports, {port => $port, tags => $details->{'tags'}, description => $details->{'description'}});
 	}
     }
 

@@ -80,10 +80,19 @@ sub get_interfaces{
 	my %interfaces;
 	my $interfaces_brief = $self->comm->issue_command('show interfaces brief');
 	my $ints = $self->_process_interfaces($interfaces_brief);
+
 	foreach my $int (@$ints){
 	    my $int_details = $self->_get_interface( name => $int->{'port_name'});
 	    next if(!defined($int_details));
-	    $interfaces{$int_details->{'name'}} = $int_details;
+
+            # Brocades dont report same port name as used in query
+            $int->{'port_name'} = 'ethernet ' . $int->{'port_name'};
+            
+            # Save state information
+            $int_details->{'status'} = $int->{'state'};
+            $int_details->{'port_name'} = $int->{'port_name'};
+
+	    $interfaces{$int_details->{'port_name'}} = $int_details;
 	}
 	return \%interfaces;
     }else{
@@ -259,6 +268,7 @@ sub _process_interfaces{
 	$line =~ /(\S+)\s+(\S+)\s+(\S+)(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/g;
 
 	my $int = {};
+        $int->{'source'} = $line;
 	$int->{'port_name'} = $1;
 	$int->{'state'} = $2;
 	$int->{'port_state'} = $3;
@@ -268,8 +278,7 @@ sub _process_interfaces{
 	$int->{'tag'} = $7;
 	$int->{'priority'} = $8;
 	$int->{'mac'} = $9;
-	$int->{'name'} = $10;
-	$int->{'type'} = $11;
+	$int->{'type'} = $10;
 
 	push(@interfaces,$int);
     }

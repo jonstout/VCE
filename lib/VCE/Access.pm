@@ -291,8 +291,10 @@ sub get_tags_on_port{
             push(@available_tags, $vlan);
         }
     }
-    return \@available_tags;
-    
+
+    my $description = $self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'description'};
+
+    return { tags =>\@available_tags, description => $description };
 }
 
 =head2 get_workgroup_switches

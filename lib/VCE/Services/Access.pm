@@ -10,7 +10,7 @@ use Moo;
 use VCE;
 
 use GRNOC::Log;
-use GRNOC::RabbitMQ;
+use GRNOC::RabbitMQ::Client;
 use GRNOC::WebService::Dispatcher;
 use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
@@ -18,9 +18,11 @@ use GRNOC::WebService::Regex;
 has vce=> (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
+has switch => (is => 'rwp');
 
 has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
 has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+has rabbit_mq => (is => 'rwp');
 
 =head2 BUILD
 
@@ -34,6 +36,14 @@ sub BUILD{
 
     $self->_set_vce( VCE->new( config_file => $self->config_file,
                                network_model_file => $self->network_model_file  ) );
+
+    $self->_set_switch( GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
+						      pass => $self->rabbit_mq->{'pass'},
+						      host => $self->rabbit_mq->{'host'},
+						      timeout => 30,
+						      port => $self->rabbit_mq->{'port'},
+						      exchange => 'VCE',
+						      topic => 'VCE.Switch.RPC' ));
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
@@ -206,7 +216,7 @@ sub get_workgroups{
     my $self = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-    
+
     $self->logger->debug("Fetching workgroups for user: " . $user);
     return {results => [{workgroups => $self->vce->get_workgroups( username => $user )}]};
 }
@@ -231,6 +241,11 @@ sub get_ports{
 					      workgroup => $workgroup )){
 	
 	my $p = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch, ports => $ports);
+        my $switch_ports = $self->switch->get_interfaces(interface_name => $ports);
+
+        foreach my $port (@{$p}) {
+            $port->{'data'} = $switch_ports->{'results'}->{$port->{'port'}};
+        }
 	return {results => [{ ports => $p}]};
     }else{
 	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
@@ -287,7 +302,6 @@ sub is_tag_available{
     warn "Is tag available\n";
 
     #verify user in workgroup
-    $user = 'aragusa';
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
         warn "USer is in workgroup\n";
