@@ -15,16 +15,16 @@
   </switch>
 
   <workgroup name="edco"  description="this is edcos exchange point access workgroup">
-    <user id="ebalas" />
-    <user id="stan" />
+    <user id="ebalas" name="Ed" email="ebalas@globalnoc.iu.edu" />
+    <user id="stan" name="Stan" email="stan@globalnoc.iu.edu" />
   </workgroup>
 
   <workgroup name="ajco"  description="this is edcos exchange point access workgroup">
-    <user id="aragusa"/>
+    <user id="aragusa" name="AJ" email="aragusa@globalnoc.iu.edu" />
   </workgroup>
 
   <workgroup name="admin" admin="1" description="admin workgroup">
-    <user id="ebalas" />
+    <user id="ebalas" name="Ed" email="ebalas@globalnoc.iu.edu" />
   </workgroup>
 
 

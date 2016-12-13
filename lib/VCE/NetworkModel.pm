@@ -85,7 +85,7 @@ sub add_vlan{
     my $self = shift;
     my %params = @_;
 
-    $self->logger->debug("Adding a VLAN");
+    $self->logger->error("Adding a VLAN");
 
     my $obj = {};
     if(!defined($params{'vlan_id'})){
@@ -114,7 +114,7 @@ sub add_vlan{
     $obj->{'status'} = "Active";
     
 
-    $self->logger->debug("All base parts ready");
+    $self->logger->error("All base parts ready");
 
     if(!$self->check_tag_availability( switch => $obj->{'switch'},
                                        vlan => $obj->{'vlan'})){

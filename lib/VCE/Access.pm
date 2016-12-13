@@ -324,5 +324,41 @@ sub get_workgroup_switches{
     return \@switches;
 }
 
+sub get_workgroup_users{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_workgroup_switches: workgroup not specified");
+        return;
+    }
+
+    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
+        my @users = keys (%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}});
+        return \@users;
+    }
+
+    return;
+
+
+}
+
+
+sub get_workgroup_description{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_workgroup_switches: workgroup not specified");
+        return;
+    }
+
+    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
+        return $self->config->{'workgroups'}->{$params{'workgroup'}}->{'description'};
+    }
+
+    return;
+}
+
 
 1;

@@ -55,6 +55,19 @@ sub _register_webservice_methods{
 
     $d->register_method($method);
 
+    $method = GRNOC::WebService::Method->new(
+        name => "get_workgroup_details",
+        description => "returns the details of a workgroup",
+        callback => sub{ return $self->get_workgroup_details(@_) });
+    
+    $method->add_input_parameter( name => "workgroup",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Workgroup name");
+    
+    $d->register_method($method);
+
 
     $method = GRNOC::WebService::Method->new(
         name => "get_switches",
@@ -209,6 +222,30 @@ sub get_workgroups{
     
     $self->logger->debug("Fetching workgroups for user: " . $user);
     return {results => [{workgroups => $self->vce->get_workgroups( username => $user )}]};
+}
+
+=head2 get_workgroup_details
+
+=cut
+
+sub get_workgroup_details{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+    
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
+
+    my $user = $ENV{'REMOTE_USER'};
+    if($self->vce->access->user_in_workgroup( username => $user,
+                                              workgroup => $workgroup)){
+
+        my $obj = $self->vce->get_workgroup_details( workgroup => $workgroup);
+        
+        return {results => [workgroup => $obj]};
+    }else{
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+
 }
 
 =head2 get_ports

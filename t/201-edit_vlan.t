@@ -2,9 +2,9 @@
 
 use strict;
 use warnings;
-use Test::More skip_all => "Busted";
+#use Test::More skip_all => "Busted";
 
-#use Test::More tests => 23;
+use Test::More tests => 23;
 use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;
@@ -22,7 +22,7 @@ my $provisioner = GRNOC::WebService::Client->new( url => 'http://localhost:8529/
                                                   realm => 'VCE',
                                                   uid => 'aragusa',
                                                   passwd => 'unittester',
-                                                  debug => 0,
+                                                  debug => 1,
                                                   timeout => 60 );
 
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
@@ -31,11 +31,12 @@ ok(defined($vlans), "Got a response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Expected circuits found!");
 
 my $vlan = $provisioner->add_vlan( description => "Automated test suite!",
-                                    switch => ['foobar','foobar'],
-                                    port => ['eth0/1','eth0/2'],
-                                    tag => ['104','104'],
-                                    workgroup => 'ajco');
+                                   switch => 'foobar',
+                                   port => ['eth0/1','eth0/2'],
+                                   vlan => '104',
+                                   workgroup => 'ajco');
 
+warn Data::Dumper::Dumper($vlan);
 ok(defined($vlan), "got a response");
 ok($vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
 ok(defined($vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
@@ -60,15 +61,13 @@ cmp_deeply($vlan_details,{
                 'workgroup' => 'ajco',
                 'status' => 'Active',
                 'description' => 'Automated test suite!',
+                'switch' => 'foobar',
+                'vlan' => '104',
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/2'
                     }
                     ],
@@ -80,10 +79,12 @@ cmp_deeply($vlan_details,{
 
 my $edit_vlan = $provisioner->edit_vlan( description => "Automated test suite!",
                                          vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
-                                         switch => ['foobar','foobar'],
+                                         switch => 'foobar',
                                          port => ['eth0/1','eth0/2'],
-                                         tag => ['105','104'],
+                                         vlan => '105',
                                          workgroup => 'ajco');
+
+warn Data::Dumper::Dumper($edit_vlan);
 
 ok(defined($edit_vlan), "got a response");
 ok($edit_vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
@@ -104,15 +105,13 @@ cmp_deeply($vlan_details,{
                 'workgroup' => 'ajco',
                 'status' => 'Active',
                 'description' => 'Automated test suite!',
+                'switch' => 'foobar',
+                'vlan' => '105',
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '105',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/2'
                     }
                     ],
@@ -126,9 +125,9 @@ cmp_deeply($vlan_details,{
 
 my $edit_vlan2 = $provisioner->edit_vlan( description => "Automated test suite!",
                                           vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
-                                          switch => ['foobar','foobar'],
+                                          switch => 'foobar',
                                           port => ['eth0/1','eth0/2'],
-                                          tag => ['99','104'],
+                                          vlan => '104',
                                           workgroup => 'ajco');
 
 ok(defined($edit_vlan2), "Got a response");
@@ -150,15 +149,13 @@ cmp_deeply($vlan_details,{
                 'workgroup' => 'ajco',
                 'status' => 'Active',
                 'description' => 'Automated test suite!',
+                'switch' => 'foobar',
+                'vlan' => '105',
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '105',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/2'
                     }
                     ],
@@ -170,9 +167,9 @@ cmp_deeply($vlan_details,{
 
 my $edit_vlan3 = $provisioner->edit_vlan( description => "Automated test suite!",
                                           vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
-                                          switch => ['foobar','foobar'],
+                                          switch => 'foobar',
                                           port => ['eth0/1','eth0/2'],
-                                          tag => ['104','104'],
+                                          tag => '104',
                                           workgroup => 'edco');
 
 ok(defined($edit_vlan3), "Got a valid response");
@@ -188,9 +185,9 @@ my $provisioner2 = GRNOC::WebService::Client->new( url => 'http://localhost:8529
 
 my $edit_vlan4 = $provisioner2->edit_vlan( description => "Automated test suite!",
                                            vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
-                                           switch => ['foobar','foobar'],
+                                           switch => 'foobar',
                                            port => ['eth0/1','eth0/2'],
-                                           tag => ['99','99'],
+                                           tag => '99',
                                            workgroup => 'edco');
 
 ok(defined($edit_vlan4), "Got a valid response");

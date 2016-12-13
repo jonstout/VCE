@@ -3,9 +3,9 @@
 use strict;
 use warnings;
 
-use Test::More skip_all => "Busted";
+#use Test::More skip_all => "Busted";
 
-#use Test::More tests => 30;
+use Test::More tests => 30;
 use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;

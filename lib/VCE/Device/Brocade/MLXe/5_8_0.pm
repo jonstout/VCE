@@ -80,12 +80,14 @@ sub get_interfaces{
 	my %interfaces;
 	my $interfaces_brief = $self->comm->issue_command('show interfaces brief');
 	my $ints = $self->_process_interfaces($interfaces_brief);
+        my $raw = "";
 	foreach my $int (@$ints){
 	    my $int_details = $self->_get_interface( name => $int->{'port_name'});
 	    next if(!defined($int_details));
-	    $interfaces{$int_details->{'name'}} = $int_details;
+	    $interfaces{$int_details->{'parsed'}->{'name'}} = $int_details->{'parsed'};
+            $raw .= $int_details->{'raw'};
 	}
-	return \%interfaces;
+	return {interfaces => \%interfaces, raw => $raw};
     }else{
 	$self->logger->error("not currently connected to the device");
 	return;
@@ -188,12 +190,14 @@ sub _get_interface{
     if($params{'name'} =~ /\d+\/\d+/){
 	$int_details = $self->comm->issue_command("show interface ethernet" . $params{'name'});
     }elsif( $params{'name'} =~ /mgmt(\d+)/){
-	$self->comm->issue_command("show interface management " . $1);
+	$int_details = $self->comm->issue_command("show interface management " . $1);
     }else{
-	$self->comm->issue_command("show interface " . $params{'name'});
+	$int_details = $self->comm->issue_command("show interface " . $params{'name'});
     }
 
     return if(!defined($int_details));
+
+    
 
     my $int = {};
     foreach my $line (split(/\n/,$int_details)){
@@ -243,7 +247,7 @@ sub _get_interface{
 
     }
 
-    return $int;
+    return {parsed => $int, raw => $int_details};
     
 }
 

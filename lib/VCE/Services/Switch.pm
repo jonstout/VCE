@@ -82,11 +82,11 @@ sub get_interfaces{
     my $interfaces = $self->rabbit_client->get_interfaces( interface_name => $p_ref->{'interface_name'}{'value'} )->{'results'};
 
     my @ints;
-    foreach my $int (keys(%{$interfaces})){
-	push(@ints,$interfaces->{$int});
+    foreach my $int (keys(%{$interfaces->{'interfaces'}})){
+	push(@ints,$interfaces->{'interfaces'}{$int});
     }
 
-    return {results => \@ints};
+    return {results => [{interfaces => \@ints, raw => $interfaces->{'raw'}}]};
 }
 
 =head2 handle_request
