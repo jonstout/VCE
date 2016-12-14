@@ -243,7 +243,32 @@ sub _get_interface{
 	}else{
 	    $line =~ /(\S+)\s/;
 	    $int->{'name'} = $1;
-	}
+            next if(!defined($int->{'name'}));
+            $int->{'name'} =~ s/100GigabitEthernet/ethernet/;
+            $int->{'name'} =~ s/10GigabitEthernet/ethernet/;
+            $int->{'name'} =~ s/GigabitEthernet/ethernet/;
+
+            $line =~ /is (\S+), line protocol is (\S+)/;
+            $int->{'admin_status'} = $1;
+            $int->{'status'} = $2;
+
+            if($int->{'admin_status'} eq 'disabled'){
+                $int->{'admin_status'} = 0;
+            }else{
+                $int->{'admin_status'} = 1;
+            }
+
+            if(defined($int->{'status'})){
+                
+                if($int->{'status'} eq 'up'){
+                    $int->{'status'} = 1;
+                }elsif($int->{'status'} eq 'down'){
+                    $int->{'status'} = 0;
+                }else{
+                    $int->{'status'} = 'unknown';
+                }
+            }
+        }
 
     }
 

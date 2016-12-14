@@ -26,6 +26,7 @@ has port => (is => 'rwp');
 has hostname => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
+has op_state => (is => 'rwp');
 
 =head2 BUILD
 
@@ -56,6 +57,8 @@ sub BUILD{
     $self->_register_rpc_methods( $dispatcher );
 
     $self->_set_dispatcher($dispatcher);
+
+    $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 300, cb => sub { $self->_gather_operational_status() });
 
     return $self;
 }
@@ -108,7 +111,25 @@ sub _register_rpc_methods{
 				  description => "Name of the interface to gather data about",
 				  required => 0,
 				  multiple => 1,
-				  pattern => $GRNOC::WebService::Regex::NAME );
+				  pattern => $GRNOC::WebService::Regex::NAME_ID );
+    $d->register_method($method);
+
+    $method = GRNOC::RabbitMQ::Method->new( name => "get_interface_status",
+                                            callback => sub { return $self->get_interface_status( @_ )  },
+                                            description => "Get the device interfaces" );
+
+    $method->add_input_parameter( name => "interface",
+                                  description => "Name of the interface to gather data about",
+                                  required => 1,
+                                  multiple => 0,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID );
+    $d->register_method($method);
+
+    
+    $method = GRNOC::RabbitMQ::Method->new( name => "get_device_status",
+                                            callback => sub { return $self->get_device_status( @_ )  },
+                                            description => "Get the device status" );
+
     $d->register_method($method);
 
 
@@ -209,6 +230,70 @@ sub no_interface_tagged {
     }
 
     return { results => 1 };
+}
+
+=head2 get_device_status
+
+=cut
+
+sub get_device_status{
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    return { status => $self->device->connected()};
+}
+
+=head2 get_interface_status
+
+=cut
+
+sub get_interface_status{
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $interface = $params->{'interface'}{'value'};
+
+    if(!defined($interface)){
+        $self->logger->error("No Interface defined");
+        return {status => undef, error => {msg => "No state specified"}};
+    }
+
+    if(!defined($self->op_state)){
+        $self->logger->error("No operational state specified yet!!");
+        return { status => undef, error => {msg => "No operational status yet, probably not connected to device"}};
+    }
+
+    if(!defined($self->op_state->{'ports'}{$interface})){
+        $self->logger->error("NO Port named: " . $interface);
+        return { status => undef, error => {msg => "No interface was found by that name on the device"}};
+    }
+
+    return {status => $self->op_state->{'ports'}{$interface}{'status'}};
+
+}
+
+=head2 _gather_operational_status
+
+=cut
+
+sub _gather_operational_status{
+    my $self = shift;
+
+    my $operational_status = {ports => {}};
+
+    if($self->device->connected()){
+        
+        my $interfaces = $self->device->get_interfaces(  );
+        foreach my $interface (keys (%{$interfaces->{'interfaces'}})){
+            $self->logger->error("Interface: " . $interface);
+            $operational_status->{'ports'}->{$interface} = $interfaces->{'interfaces'}->{$interface};
+        }
+        
+    }
+
+    $self->_set_op_state($operational_status);
 }
 
 

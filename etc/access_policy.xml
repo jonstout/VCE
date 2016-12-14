@@ -1,6 +1,6 @@
 <accessPolicy>
 
-  <switch name="foobar"  ip="managementip" username="username" password="password">
+  <switch name="foobar"  ip="managementip" username="username" password="password" description="Foo">
 
     <port name="eth0/1" owner="edco">
       <tags start="1" end="100" workgroup="edco"/>
