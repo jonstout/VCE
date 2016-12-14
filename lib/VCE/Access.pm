@@ -406,4 +406,16 @@ sub get_switch_ports{
     
 }
 
+sub get_switches{
+    my $self = shift;
+
+    my @switches;
+    foreach my $s (keys %{$self->config->{'switches'}}){
+        push(@switches, $self->config->{'switches'}->{$s});
+    }
+
+    return \@switches;
+
+}
+
 1;

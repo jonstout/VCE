@@ -249,11 +249,10 @@ sub get_vlans{
                 push(@final, $vlan);
             }
         }
-
         return \@final;
-    } else {
-        return \@vlans;
     }
+
+    return \@vlans;
 }
 
 =head2 get_vlan_details

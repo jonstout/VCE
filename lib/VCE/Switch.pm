@@ -27,6 +27,7 @@ has hostname => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
 has op_state => (is => 'rwp');
+has name => (is => 'rwp');
 
 =head2 BUILD
 
@@ -38,35 +39,64 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::Switch");
     $self->_set_logger($logger);
 
+    $0 = "VCE(" . $self->name . ")";
 
-    $self->_connect_to_device();
-
-    if(!defined($self->device)){
-	$self->logger->error("Error connecting to device");
-	return;
-    }
-
+    $self->logger->error("Creating Dispatcher");
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( host => $self->rabbit_mq->{'host'},
-						       port => $self->rabbit_mq->{'port'},
-						       user => $self->rabbit_mq->{'user'},
-						       pass => $self->rabbit_mq->{'pass'},
-						       exchange => 'VCE',
-						       queue => 'VCE-Switch',
-						       topic => 'VCE.Switch.RPC');
+                                                       port => $self->rabbit_mq->{'port'},
+                                                       user => $self->rabbit_mq->{'user'},
+                                                       pass => $self->rabbit_mq->{'pass'},
+                                                       exchange => 'VCE',
+                                                       queue => 'VCE-Switch',
+                                                       topic => 'VCE.Switch.RPC');
+
 
     $self->_register_rpc_methods( $dispatcher );
 
     $self->_set_dispatcher($dispatcher);
 
+    $self->logger->error("Connecting to device");
+
+    $self->_connect_to_device();
+
+    if(!defined($self->device)){
+	$self->logger->error("Error connecting to device");
+    }
+
+    $SIG{'TERM'} = sub {
+        $self->logger->info( "Received SIG TERM." );
+        $self->stop();
+    };
+
+    $self->logger->error("Creating timers");
+
     $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 300, cb => sub { $self->_gather_operational_status() });
+
+    $self->{'reconnect_timer'} = AnyEvent->timer(after => 10, interval => 10, cb => sub { $self->_reconnect_to_device() });
 
     return $self;
 }
 
+sub _reconnect_to_device{
+    my $self = shift;
+    
+    if(defined($self->device) && $self->device->connected()){
+	$self->logger->debug("Already connected");
+	return;
+    }
 
+    $self->logger->info("Attempt to connect");
+    $self->device->connect();
+
+    return;
+    
+    
+}
 
 sub _connect_to_device{
     my $self = shift;
+
+    $self->logger->debug("connecting to device");
 
     if($self->vendor eq 'Brocade'){
 	if($self->type eq 'MLXe'){
@@ -76,10 +106,11 @@ sub _connect_to_device{
 								  hostname => $self->hostname,
 								  port => $self->port);
 
+		$self->_set_device($dev);
 		$dev->connect();
 		if($dev->connected){
 		    $self->logger->debug( "Successfully connected to device!" );
-		    $self->_set_device($dev);
+		    return 1;
 		}else{
 		    $self->logger->error( "Error connecting to device");
 		    return;
@@ -319,8 +350,18 @@ sub _gather_operational_status{
 
 sub start{
     my $self = shift;
-    $self->dispatcher->start_consuming();
-    return;
+    
+    if(!defined($self->dispatcher)){
+	$self->logger->error("Dispatcher is not connected");
+    }else{
+	$self->dispatcher->start_consuming();
+	return;
+    }
+}
+
+sub stop{
+    my $self = shift;
+    $self->dispatcher->stop_consuming();
 }
 
 

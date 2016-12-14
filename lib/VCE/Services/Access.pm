@@ -391,7 +391,14 @@ sub get_vlans{
                                               workgroup => $workgroup )){
         
         my $vlans = $self->vce->network_model->get_vlans( workgroup => $workgroup);
-        return {results => [{vlans => $vlans}]};
+
+        my @vlans;
+        foreach my $vlan (@$vlans){
+            my $vlan_details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan );
+            push(@vlans, $vlan_details);
+        }
+
+        return {results => [{vlans => \@vlans}]};
     }else{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
