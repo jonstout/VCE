@@ -1,6 +1,7 @@
 <accessPolicy>
-
-  <switch name="foobar"  ip="managementip" username="username" password="password">
+  <rabbit host="localhost" port="5672" user="guest" pass="guest" exchange="VCE" />
+  <switch name="foobar"  ip="managementip" username="username" password="password"
+          ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0"  >
 
     <port name="eth0/1" owner="edco">
       <tags start="1" end="100" workgroup="edco"/>
