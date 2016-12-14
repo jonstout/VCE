@@ -145,6 +145,13 @@ sub _process_config{
 	my $s = {};
 	$s->{'name'} = $switch->{'name'};
 	$s->{'description'} = $switch->{'description'};
+        $s->{'ssh_port'} = $switch->{'ssh_port'};
+        $s->{'vendor'} = $switch->{'vendor'};
+        $s->{'model'} = $switch->{'model'};
+        $s->{'version'} = $switch->{'version'};
+        $s->{'username'} = $switch->{'username'};
+        $s->{'password'} = $switch->{'password'};
+        $s->{'ip'} = $switch->{'ip'};
 
 	my %ports;
 	foreach my $port (keys(%{$switch->{'port'}})){
@@ -552,5 +559,10 @@ sub refresh_state{
 
 }
 
+sub get_all_switches{
+    my $self = shift;
+
+    return $self->access->get_switches();
+}
 
 1;
