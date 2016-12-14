@@ -263,7 +263,7 @@ sub edit_vlan{
         my $status = undef;
         foreach my $e (@{$details->{'endpoints'}}) {
             my $port   = $e->{'port'};
-            $status = $self->_send_vlan_remove( $port, $switch, $vlan );
+            $status = $self->_send_vlan_remove( $port, $switch, $details->{'vlan'} );
         }
         
         if(!$status){

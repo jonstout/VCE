@@ -486,6 +486,7 @@ sub provision_vlan{
         
         #ok we made it this far... provision!
         my $id = $self->network_model->add_vlan( description => $params{'description'},
+                                                 vlan_id => $params{'vlan_id'},
                                                  workgroup => $params{'workgroup'},
                                                  vlan => $params{'vlan'},
                                                  switch => $params{'switch'},
@@ -526,6 +527,12 @@ sub delete_vlan{
 
 }
 
+=head2 get_workgroup_details
+
+get a workgroups details and return them
+
+=cut
+
 sub get_workgroup_details{
     my $self = shift;
     my %params = @_;
@@ -558,6 +565,12 @@ sub refresh_state{
 
 
 }
+
+=head2 get_all_switches
+
+returns all configured switches (only used by the vce process to find all switches to created)
+
+=cut
 
 sub get_all_switches{
     my $self = shift;

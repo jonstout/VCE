@@ -343,6 +343,10 @@ sub start{
     }
 }
 
+=head2 stop
+
+=cut
+
 sub stop{
     my $self = shift;
     $self->dispatcher->stop_consuming();

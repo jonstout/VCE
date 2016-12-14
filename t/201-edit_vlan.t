@@ -36,7 +36,6 @@ my $vlan = $provisioner->add_vlan( description => "Automated test suite!",
                                    vlan => '104',
                                    workgroup => 'ajco');
 
-warn Data::Dumper::Dumper($vlan);
 ok(defined($vlan), "got a response");
 ok($vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
 ok(defined($vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");

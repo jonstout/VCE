@@ -324,6 +324,10 @@ sub get_workgroup_switches{
     return \@switches;
 }
 
+=head2 get_workgroup_users
+
+=cut
+
 sub get_workgroup_users{
     my $self = shift;
     my %params = @_;
@@ -343,6 +347,10 @@ sub get_workgroup_users{
 
 }
 
+=head2 get_workgroup_description
+
+=cut
+
 
 sub get_workgroup_description{
     my $self = shift;
@@ -361,6 +369,10 @@ sub get_workgroup_description{
 }
 
 
+=head2 get_switch_description
+
+=cut
+
 sub get_switch_description{
     my $self = shift;
     my %params = @_;
@@ -377,6 +389,10 @@ sub get_switch_description{
     return;
 
 }
+
+=head2 get_switch_ports
+
+=cut
 
 sub get_switch_ports{
     my $self = shift;
@@ -405,6 +421,10 @@ sub get_switch_ports{
     return \@ports;
     
 }
+
+=head2 get_switches
+
+=cut
 
 sub get_switches{
     my $self = shift;
