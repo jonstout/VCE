@@ -241,9 +241,9 @@ sub get_vlans{
 	    }
 	}
     }
-    
-    my @final;
-    if(defined($params{'switch'})){
+
+    if (defined $params{'switch'}) {
+        my @final;
         foreach my $vlan (@vlans){
             if($self->nm->{'vlans'}->{$vlan}->{'switch'} eq $params{'switch'}){
                 push(@final, $vlan);

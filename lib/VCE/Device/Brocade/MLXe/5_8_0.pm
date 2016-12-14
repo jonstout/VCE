@@ -188,7 +188,7 @@ sub _get_interface{
 
     my $int_details;
     if($params{'name'} =~ /\d+\/\d+/){
-	$int_details = $self->comm->issue_command("show interface ethernet" . $params{'name'});
+	$int_details = $self->comm->issue_command("show interface ethernet " . $params{'name'});
     }elsif( $params{'name'} =~ /mgmt(\d+)/){
 	$int_details = $self->comm->issue_command("show interface management " . $1);
     }else{
@@ -244,9 +244,9 @@ sub _get_interface{
 	    $line =~ /(\S+)\s/;
 	    $int->{'name'} = $1;
             next if(!defined($int->{'name'}));
-            $int->{'name'} =~ s/100GigabitEthernet/ethernet/;
-            $int->{'name'} =~ s/10GigabitEthernet/ethernet/;
-            $int->{'name'} =~ s/GigabitEthernet/ethernet/;
+            $int->{'name'} =~ s/100GigabitEthernet/ethernet /;
+            $int->{'name'} =~ s/10GigabitEthernet/ethernet /;
+            $int->{'name'} =~ s/GigabitEthernet/ethernet /;
 
             $line =~ /is (\S+), line protocol is (\S+)/;
             $int->{'admin_status'} = $1;
