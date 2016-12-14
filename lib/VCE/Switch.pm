@@ -125,6 +125,10 @@ sub _register_rpc_methods{
                                   pattern => $GRNOC::WebService::Regex::NAME_ID );
     $d->register_method($method);
 
+    $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces_op",
+                                            callback => sub { return $self->get_interfaces_op( @_ )  },
+                                            description => "Get the device interfaces" );
+    $d->register_method($method);
     
     $method = GRNOC::RabbitMQ::Method->new( name => "get_device_status",
                                             callback => sub { return $self->get_device_status( @_ )  },
@@ -182,6 +186,18 @@ sub get_interfaces{
 	return;
     }
     
+}
+
+sub get_interfaces_op {
+    my $self = shift;
+    my $m_ref = shift;
+    my $p_ref = shift;
+
+    if (!defined $self->op_state->{'ports'}) {
+        return {results => {}};
+    }
+
+    return {results => $self->op_state->{'ports'}};
 }
 
 =head2 interface_tagged

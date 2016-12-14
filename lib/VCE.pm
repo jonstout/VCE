@@ -160,6 +160,7 @@ sub _process_config{
 	    $p->{'tags'} = \%tags;
 	    $s->{'ports'}->{$port} = $p;
 	    $p->{'owner'} = $switch->{'port'}->{$port}->{'owner'};
+            $p->{'description'} = $switch->{'port'}->{$port}->{'description'};
         }
 
 	$switches{$switch->{'name'}} = $s;
@@ -298,6 +299,26 @@ sub get_switches{
     }
 
     return \@res;
+}
+
+=head2 get_interfaces_operational_state
+
+=cut
+sub get_interfaces_operational_state {
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_interfaces_operational_state: Workgroup not specified");
+        return;
+    }
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_interfaces_operational_state: Switch not specified");
+        return;
+    }
+    
+    return $self->device_client->get_interfaces_op()->{'results'};
 }
 
 =head2 get_switches_operational_state

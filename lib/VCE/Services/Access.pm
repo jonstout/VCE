@@ -236,6 +236,7 @@ sub get_workgroup_details{
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
     my $user = $ENV{'REMOTE_USER'};
+
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup)){
 
