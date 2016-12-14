@@ -242,7 +242,16 @@ sub get_vlans{
 	}
     }
     
-    return \@vlans;
+    my @final;
+    if(defined($params{'switch'})){
+        foreach my $vlan (@vlans){
+            if($self->nm->{'vlans'}->{$vlan}->{'switch'} eq $params{'switch'}){
+                push(@final, $vlan);
+            }
+        }
+    }
+
+    return \@final;
 }
 
 =head2 get_vlan_details

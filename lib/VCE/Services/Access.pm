@@ -363,7 +363,9 @@ sub get_switches{
 
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
+
         my $switches = $self->vce->get_switches( workgroup => $workgroup);
+
         return {results => [{switch => $switches}]};
     }else{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};

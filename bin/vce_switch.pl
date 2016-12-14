@@ -27,10 +27,10 @@ my $switch = VCE::Switch->new( username => $username,
 			       type => 'MLXe',
 			       version => '5.8.0',
 			       port => 22,
-			       rabbit_mq => {user => 'guest',
-					     pass => 'guest',
-					     host => 'localhost',
-					     port => 5672});
+                               rabbit_mq => { host => 'localhost',
+                                              user => 'guest',
+                                              pass => 'guest',
+                                              port => 5672});
 
 if(defined($switch)){
     $switch->start();

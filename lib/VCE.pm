@@ -41,7 +41,7 @@ use warnings;
 use Moo;
 use GRNOC::Log;
 use GRNOC::Config;
-use GRNOC::RabbitMQ;
+use GRNOC::RabbitMQ::Client;
 
 use VCE::Access;
 use VCE::NetworkModel;
@@ -58,6 +58,10 @@ has access => (is => 'rwp');
 has network_model => (is => 'rwp');
 
 has state => (is => 'rwp');
+
+has device_client => (is => 'rwp');
+
+has rabbit_mq => (is => 'rwp');
 
 =head1 SYNOPSIS
 This is a module to provide a simplified object oriented way to connect to
@@ -92,6 +96,13 @@ sub BUILD{
 
     $self->_set_network_model( VCE::NetworkModel->new( file => $self->network_model_file ));
     
+    $self->_set_device_client( GRNOC::RabbitMQ::Client->new( host => $self->rabbit_mq->{'host'},
+                                                             port => $self->rabbit_mq->{'port'},
+                                                             user => $self->rabbit_mq->{'user'},
+                                                             pass => $self->rabbit_mq->{'pass'},
+                                                             exchange => 'VCE',
+                                                             topic => 'VCE.Switch.RPC'));
+    
     return $self;
 }
 
@@ -102,6 +113,10 @@ sub _process_config{
     
     my %workgroups;
     my %users;
+
+    my $rabbitMQ = $config->get('/accessPolicy/rabbit')->[0];
+    $self->logger->error("RabbitMQ: " . Data::Dumper::Dumper($rabbitMQ));
+    $self->_set_rabbit_mq($rabbitMQ);
 
     my $wgs = $config->get('/accessPolicy/workgroup');
     foreach my $workgroup (@$wgs){
@@ -129,7 +144,7 @@ sub _process_config{
 	$self->logger->debug("Processing switch: " . Data::Dumper::Dumper($switch));
 	my $s = {};
 	$s->{'name'} = $switch->{'name'};
-	
+	$s->{'description'} = $switch->{'description'};
 
 	my %ports;
 	foreach my $port (keys(%{$switch->{'port'}})){
@@ -145,7 +160,7 @@ sub _process_config{
 	    $p->{'tags'} = \%tags;
 	    $s->{'ports'}->{$port} = $p;
 	    $p->{'owner'} = $switch->{'port'}->{$port}->{'owner'};
-	}
+        }
 
 	$switches{$switch->{'name'}} = $s;
 	
@@ -266,7 +281,125 @@ sub get_switches{
     }
 
     my $switches = $self->access->get_workgroup_switches( workgroup => $params{'workgroup'});
+
+    my @res;
+    foreach my $switch (@$switches){
+
+        my $vlans = $self->network_model->get_vlans( workgroup => $params{'workgroup'},
+                                                     switch => $switch);
+
+        my $ports = $self->access->get_switch_ports( workgroup => $params{'workgroup'},
+                                                     switch => $switch);
+        
+        push(@res,{ name => $switch,
+                    description => $self->access->get_switch_description( switch => $switch),
+                    vlans => $vlans,
+                    ports => $ports});
+    }
+
+    return \@res;
+}
+
+=head2 get_switches_operational_state
+
+=cut
+
+sub get_switches_operational_state{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_tags_on_port: Workgroup not specified");
+        return;
+    }
+
+    my $switches = $self->get_switches( workgroup => $params{'workgroup'});
+
+    foreach my $switch (@$switches){
+        my %int_state;
+        $switch->{'status'} = $self->_get_switch_status( switch => $switch );
+        my $up_ports = 0;
+        my @ports;
+        foreach my $port (@{$switch->{'ports'}}){
+            my $obj = {};
+            $obj->{'name'} = $port;
+            $obj->{'status'} = $self->_get_interface_status( switch => $switch,
+                                                             interface => $port );
+            $int_state{$port} = $obj->{'status'};
+            if($obj->{'status'} eq 'Up'){
+                $int_state{$port} = 1;
+                $up_ports++;
+            }else{
+                $int_state{$port} = 0;
+            }
+            push(@ports,$obj);
+        }
+        $switch->{'up_ports'} = $up_ports;
+        $switch->{'total_ports'} = scalar(@ports);
+        $switch->{'ports'} = \@ports;
+        my @vlans;
+        my $up_vlans=0;
+        foreach my $vlan (@{$switch->{'vlans'}}){
+            my $is_up = 1;
+            my $vlan = $self->network_model->get_vlan_details( vlan_id => $vlan );
+            foreach my $interface (@{$vlan->{'endpoints'}}){
+                if($int_state{$interface}){
+
+                }else{
+                    $is_up = 0;
+                }
+            }
+
+            push(@vlans, { vlan => $vlan, status => $is_up, endpoints => $vlan->{'endpoints'}});
+
+            if($is_up){
+                $up_vlans++;
+            }
+        }
+        $switch->{'up_vlans'} = $up_vlans;
+        $switch->{'total_vlans'} = scalar(@vlans);
+        $switch->{'vlans'} = \@vlans;
+    }
+
+            
     return $switches;
+}
+
+
+
+sub _get_switch_status{
+    my $self = shift;
+    my %params = @_;
+
+    my $state = $self->device_client->get_device_status()->{'results'};
+    $self->logger->error("SWITCH STATUS: " . Data::Dumper::Dumper($state));
+    if(!defined($state)){
+        return "Unknown";
+    }
+    if($state->{'status'} == 1){
+        return "Up";
+    }else{
+        return "Down";
+    }
+}
+
+sub _get_interface_status{
+    my $self = shift;
+    my %params = @_;
+
+    my $state = $self->device_client->get_interface_status( interface => $params{'interface'})->{'results'};
+    $self->logger->error("Interface Status: " . Data::Dumper::Dumper($state));
+    if(!defined($state)){
+        return "Unknown";
+    }
+    if($state->{'status'} == 1){
+        return 'Up';
+    }elsif($state->{'status'} == 0){
+        return 'Down';
+    }else{
+        return 'Unknown';
+    }
+
 }
 
 =head2 is_tag_available

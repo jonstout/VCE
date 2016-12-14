@@ -349,7 +349,7 @@ sub get_workgroup_description{
     my %params = @_;
 
     if(!defined($params{'workgroup'})){
-        $self->logger->error("get_workgroup_switches: workgroup not specified");
+        $self->logger->error("get_workgroup_description: workgroup not specified");
         return;
     }
 
@@ -360,5 +360,50 @@ sub get_workgroup_description{
     return;
 }
 
+
+sub get_switch_description{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_switch_description: workgroup not specified");
+        return;
+    }
+
+    if(defined($self->config->{'switches'}->{$params{'switch'}})){
+        return $self->config->{'switches'}->{$params{'switch'}}->{'description'};
+    }
+
+    return;
+
+}
+
+sub get_switch_ports{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_switch_description: workgroup not specified");
+        return;
+    }
+
+
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_workgroup_switches: workgroup not specified");
+        return;
+    }
+
+    my @ports;
+    foreach my $port (keys %{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}}){
+        if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+                                                switch => $params{'switch'},
+                                                port => $port)){
+            push(@ports, $port);
+        }
+    }
+
+    return \@ports;
+    
+}
 
 1;
