@@ -179,6 +179,7 @@ sub provision_vlan{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
+
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
     my $ports = $p_ref->{'port'}{'value'};
