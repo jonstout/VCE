@@ -79,7 +79,7 @@ sub _register_webservice_methods{
     $method->add_input_parameter( name => "switch",
                                   pattern => $GRNOC::WebService::Regex::NAME,
                                   required => 1,
-                                  multiple => 1,
+                                  multiple => 0,
                                   description => "Switch for the port to provision on");
 
     $method->add_input_parameter( name => "port",
@@ -88,10 +88,10 @@ sub _register_webservice_methods{
                                   multiple => 1,
                                   description => "Individual name of a port to provision on");
 
-    $method->add_input_parameter( name => "tag",
+    $method->add_input_parameter( name => "vlan",
                                   pattern => $GRNOC::WebService::Regex::NUMBER,
                                   required => 1,
-                                  multiple => 1,
+                                  multiple => 0,
                                   description => "VLAN Tag to provision on");
 
     $d->register_method($method);    
@@ -115,7 +115,7 @@ sub _register_webservice_methods{
     $method->add_input_parameter( name => "switch",
                                   pattern => $GRNOC::WebService::Regex::NAME,
                                   required => 1,
-                                  multiple => 1,
+                                  multiple => 0,
                                   description => "Switch for the port to provision on");
 
     $method->add_input_parameter( name => "port",
@@ -124,10 +124,10 @@ sub _register_webservice_methods{
                                   multiple => 1,
                                   description => "Individual name of a port to provision on");
 
-    $method->add_input_parameter( name => "tag",
+    $method->add_input_parameter( name => "vlan",
                                   pattern => $GRNOC::WebService::Regex::NUMBER,
                                   required => 1,
-                                  multiple => 1,
+                                  multiple => 0,
                                   description => "VLAN Tag to provision on");
 
     $method->add_input_parameter( name => "vlan_id",
@@ -178,19 +178,23 @@ sub provision_vlan{
     my $m_ref = shift;
     my $p_ref = shift;
 
-    #my $user = $ENV{'REMOTE_USER'};
-    my $user = "aragusa";
+    my $user = $ENV{'REMOTE_USER'};
     my $workgroup = $p_ref->{'workgroup'}{'value'};
-    my $switches = $p_ref->{'switch'}{'value'};
+    my $switch = $p_ref->{'switch'}{'value'};
     my $ports = $p_ref->{'port'}{'value'};
-    my $tags = $p_ref->{'tag'}{'value'};
+    my $vlan = $p_ref->{'vlan'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
 
     #verify user in workgroup
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
 
-        my $vlan_id = $self->vce->provision_vlan( workgroup => $workgroup, description => $description, username => $user,  switch => $switches, port => $ports, tag => $tags);
+        my $vlan_id = $self->vce->provision_vlan( workgroup => $workgroup, 
+                                                  description => $description, 
+                                                  username => $user,  
+                                                  switch => $switch, 
+                                                  port => $ports, 
+                                                  vlan => $vlan);
         if(!defined($vlan_id)){
             return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
         }
@@ -229,9 +233,9 @@ sub edit_vlan{
     my $user = $ENV{'REMOTE_USER'};
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
-    my $switches = $p_ref->{'switch'}{'value'};
+    my $switch = $p_ref->{'switch'}{'value'};
     my $ports = $p_ref->{'port'}{'value'};
-    my $tags = $p_ref->{'tag'}{'value'};
+    my $vlan = $p_ref->{'vlan'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
     my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
@@ -247,11 +251,11 @@ sub edit_vlan{
 
         #first validate new circuit before we remove the old!
         if(!$self->vce->validate_circuit( workgroup => $workgroup,
-                                         description => $description,
-                                         username => $user,
-                                         switch => $switches,
-                                         port => $ports,
-                                         tag => $tags )){
+                                          description => $description,
+                                          username => $user,
+                                          switch => $switch,
+                                          port => $ports,
+                                          vlan => $vlan )){
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Circuit does not validate"}};
         }
 
@@ -259,9 +263,6 @@ sub edit_vlan{
         my $status = undef;
         foreach my $e (@{$details->{'endpoints'}}) {
             my $port   = $e->{'port'};
-            my $switch = $e->{'switch'};
-            my $vlan   = $e->{'tag'};
-
             $status = $self->_send_vlan_remove( $port, $switch, $vlan );
         }
         
@@ -275,17 +276,15 @@ sub edit_vlan{
                                         workgroup => $workgroup, 
                                         description => $description, 
                                         username => $user,  
-                                        switch => $switches, 
+                                        switch => $switch, 
                                         port => $ports, 
-                                        tag => $tags);
+                                        vlan => $vlan);
             
             my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
             my $status  = undef;
             foreach my $e (@{$details->{'endpoints'}}) {
                 my $port   = $e->{'port'};
-                my $switch = $e->{'switch'};
-                my $vlan   = $e->{'tag'};
-
+                
                 $status = $self->_send_vlan_add( $port, $switch, $vlan );
             }
 
@@ -321,11 +320,11 @@ sub delete_vlan{
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         if($details->{'workgroup'} eq $workgroup){
             my $status = undef;
+            my $switch = $details->{'switch'};
+            my $vlan = $details->{'vlan'};
             foreach my $e (@{$details->{'endpoints'}}) {
                 my $port   = $e->{'port'};
-                my $switch = $e->{'switch'};
-                my $vlan   = $e->{'tag'};
-
+                
                 $status = $self->_send_vlan_remove( $port, $switch, $vlan );
             }
 
@@ -349,10 +348,10 @@ sub _send_vlan_add{
     my $switch = shift;
     my $vlan   = shift;
 
-    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
-    if (exists $response->{'error'}) {
-        $self->logger->error($response->{'error'});
-    }
+#    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
+#    if (exists $response->{'error'}) {
+#        $self->logger->error($response->{'error'});
+#    }
 
     return 1;
 }
@@ -363,10 +362,10 @@ sub _send_vlan_remove{
     my $switch = shift;
     my $vlan   = shift;
 
-    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
-    if (exists $response->{'error'}) {
-        $self->logger->error($response->{'error'});
-    }
+#    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
+#    if (exists $response->{'error'}) {
+#        $self->logger->error($response->{'error'});
+#    }
 
     return 1;
 }

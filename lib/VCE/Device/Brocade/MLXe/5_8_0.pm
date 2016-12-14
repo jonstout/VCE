@@ -72,34 +72,36 @@ sub connect{
 
 =cut
 
-sub get_interfaces{
+sub get_interfaces {
     my $self = shift;
     my %params = @_;
 
-    if($self->connected){
-	my %interfaces;
-	my $interfaces_brief = $self->comm->issue_command('show interfaces brief');
-	my $ints = $self->_process_interfaces($interfaces_brief);
+    if ($self->connected) {
+        my %interfaces;
+        my $interfaces_brief = $self->comm->issue_command('show interfaces brief');
+        my $ints = $self->_process_interfaces($interfaces_brief);
+        my $raw = "";
 
-	foreach my $int (@$ints){
-	    my $int_details = $self->_get_interface( name => $int->{'port_name'});
-	    next if(!defined($int_details));
+        foreach my $int (@$ints) {
+            my $int_details = $self->_get_interface( name => $int->{'port_name'});
+            next if(!defined($int_details));
 
             # Brocades dont report same port name as used in query
             $int->{'port_name'} = 'ethernet ' . $int->{'port_name'};
             
             # Save state information
-            $int_details->{'status'} = $int->{'state'};
-            $int_details->{'port_name'} = $int->{'port_name'};
+            $int_details->{'parsed'}->{'status'} = $int->{'state'};
+            $int_details->{'parsed'}->{'port_name'} = $int->{'port_name'};
 
-	    $interfaces{$int_details->{'port_name'}} = $int_details;
-	}
-	return \%interfaces;
-    }else{
-	$self->logger->error("not currently connected to the device");
-	return;
+            $interfaces{$int_details->{'parsed'}->{'port_name'}} = $int_details->{'parsed'};
+            $raw .= $int_details->{'raw'};
+        }
+
+        return {interfaces => \%interfaces, raw => $raw};
+    } else {
+        $self->logger->error("not currently connected to the device");
+        return undef;
     }
-
 }
 
 =head2 interface_tagged
@@ -197,12 +199,14 @@ sub _get_interface{
     if($params{'name'} =~ /\d+\/\d+/){
 	$int_details = $self->comm->issue_command("show interface ethernet" . $params{'name'});
     }elsif( $params{'name'} =~ /mgmt(\d+)/){
-	$self->comm->issue_command("show interface management " . $1);
+	$int_details = $self->comm->issue_command("show interface management " . $1);
     }else{
-	$self->comm->issue_command("show interface " . $params{'name'});
+	$int_details = $self->comm->issue_command("show interface " . $params{'name'});
     }
 
     return if(!defined($int_details));
+
+    
 
     my $int = {};
     foreach my $line (split(/\n/,$int_details)){
@@ -252,7 +256,7 @@ sub _get_interface{
 
     }
 
-    return $int;
+    return {parsed => $int, raw => $int_details};
     
 }
 

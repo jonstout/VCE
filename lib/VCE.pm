@@ -387,6 +387,26 @@ sub delete_vlan{
 
 }
 
+sub get_workgroup_details{
+    my $self = shift;
+    my %params = @_;
+    
+    if(!defined($params{'workgroup'})){
+        $self->logger->error("get_workgroup_details: workgroup not specified");
+        return;
+    }
+
+    my $workgroup = $params{'workgroup'};
+
+    my $obj = {};
+    $obj->{'name'} = $workgroup;
+    $obj->{'description'} = $self->access->get_workgroup_description( workgroup => $workgroup);
+    $obj->{'users'} = $self->access->get_workgroup_users( workgroup => $workgroup);
+    $obj->{'switches'} = $self->access->get_workgroup_switches( workgroup => $workgroup);
+
+    return $obj;
+}
+
 =head2 refresh_state
 
 =cut
