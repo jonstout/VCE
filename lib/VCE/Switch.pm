@@ -219,6 +219,10 @@ sub get_interfaces{
     
 }
 
+=head2 get_interfaces_op
+
+=cut
+
 sub get_interfaces_op {
     my $self = shift;
     my $m_ref = shift;
@@ -358,6 +362,10 @@ sub start{
 	return;
     }
 }
+
+=head2 stop
+
+=cut
 
 sub stop{
     my $self = shift;

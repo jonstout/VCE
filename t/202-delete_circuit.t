@@ -32,10 +32,10 @@ ok(defined($vlans), "Got a response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Expected circuits found!");
 
 my $vlan = $provisioner->add_vlan( description => "Automated test suite!",
-                                    switch => ['foobar','foobar'],
-                                    port => ['eth0/1','eth0/2'],
-                                    tag => ['104','104'],
-                                    workgroup => 'ajco');
+                                   switch => 'foobar',
+                                   port => ['eth0/1','eth0/2'],
+                                   vlan => '104',
+                                   workgroup => 'ajco');
 
 ok(defined($vlan), "got a response");
 ok($vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
@@ -61,15 +61,13 @@ cmp_deeply($vlan_details,{
                 'workgroup' => 'ajco',
                 'status' => 'Active',
                 'description' => 'Automated test suite!',
+                'switch' => 'foobar',
+                'vlan' => '104',
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/2'
                     }
                     ],
@@ -90,9 +88,9 @@ ok(defined($vlans), "Got a valid response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Looks like we successfully deleted it");
 
 $vlan = $provisioner->add_vlan( description => "Automated test suite!",
-                                switch => ['foobar','foobar'],
+                                switch => 'foobar',
                                 port => ['eth0/1','eth0/2'],
-                                tag => ['104','104'],
+                                vlan => '104',
                                 workgroup => 'ajco');
 
 ok(defined($vlan), "got a response");
@@ -119,15 +117,13 @@ cmp_deeply($vlan_details,{
                 'workgroup' => 'ajco',
                 'status' => 'Active',
                 'description' => 'Automated test suite!',
+                'switch' => 'foobar',
+                'vlan' => '104',
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '104',
                         'port' => 'eth0/2'
                     }
                     ],
