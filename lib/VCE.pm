@@ -480,9 +480,16 @@ sub validate_circuit{
                                                          switch => $params{'switch'},
                                                          port => $params{'port'}->[$i],
                                                          vlan => $params{'vlan'})){
+            
             $self->logger->error("Workgroup " . $params{'workgroup'} . " does not have access to tag " . $params{'vlan'} . " on " . $params{'switch'} . ":" . $params{'port'}->[$i]);
             return;
         }
+    }
+
+    if(!$self->network_model->check_tag_availability( switch => $params{'switch'},
+                                                     vlan => $params{'vlan'} )){
+        $self->logger->error("VLAN: " . $params{'vlan'} . " is already in use on switch: " . $params{'switch'});
+        return;
     }
 
     return 1;

@@ -105,12 +105,12 @@ sub add_vlan{
     return if(!defined($params{'endpoints'}));
 
     $obj->{'description'} = $params{'description'};
-    $obj->{'workgroup'} = $params{'workgroup'};
-    $obj->{'username'} = $params{'username'};
-    $obj->{'switch'} = $params{'switch'};
-    $obj->{'vlan'} = $params{'vlan'};
+    $obj->{'workgroup'}   = $params{'workgroup'};
+    $obj->{'username'}    = $params{'username'};
+    $obj->{'switch'}      = $params{'switch'};
+    $obj->{'vlan'}        = $params{'vlan'};
     $obj->{'create_time'} = time();
-    $obj->{'endpoints'} = [];
+    $obj->{'endpoints'}   = [];
     $obj->{'status'} = "Active";
     
 

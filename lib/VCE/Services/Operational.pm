@@ -116,6 +116,9 @@ sub get_workgroup_operational_status{
 
 }
 
+=head2 get_interfaces_operational_status
+
+=cut
 
 sub get_interfaces_operational_status {
     my $self = shift;

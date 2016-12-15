@@ -4,7 +4,7 @@ use strict;
 use warnings;
 #use Test::More skip_all => "Busted";
 
-use Test::More tests => 23;
+use Test::More tests => 28;
 use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;
@@ -22,7 +22,7 @@ my $provisioner = GRNOC::WebService::Client->new( url => 'http://localhost:8529/
                                                   realm => 'VCE',
                                                   uid => 'aragusa',
                                                   passwd => 'unittester',
-                                                  debug => 1,
+                                                  debug => 0,
                                                   timeout => 60 );
 
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
@@ -83,8 +83,6 @@ my $edit_vlan = $provisioner->edit_vlan( description => "Automated test suite!",
                                          vlan => '105',
                                          workgroup => 'ajco');
 
-warn Data::Dumper::Dumper($edit_vlan);
-
 ok(defined($edit_vlan), "got a response");
 ok($edit_vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
 ok(defined($edit_vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
@@ -121,6 +119,20 @@ cmp_deeply($vlan_details,{
            });
 
 
+my $new_vlan = $provisioner->add_vlan( description => "Automated test suite!",
+                                switch => 'foobar',
+                                port => ['eth0/1','eth0/2'],
+                                vlan => '104',
+                                workgroup => 'ajco');
+
+ok(defined($new_vlan), "got a response");
+ok($new_vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
+ok(defined($new_vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
+
+$vlans = $client->get_vlans( workgroup => 'ajco');
+
+ok(defined($vlans), "Got a valid response");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have anoterh VLAN!");
 
 my $edit_vlan2 = $provisioner->edit_vlan( description => "Automated test suite!",
                                           vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
@@ -168,7 +180,7 @@ my $edit_vlan3 = $provisioner->edit_vlan( description => "Automated test suite!"
                                           vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                           switch => 'foobar',
                                           port => ['eth0/1','eth0/2'],
-                                          tag => '104',
+                                          vlan => '104',
                                           workgroup => 'edco');
 
 ok(defined($edit_vlan3), "Got a valid response");
@@ -186,7 +198,7 @@ my $edit_vlan4 = $provisioner2->edit_vlan( description => "Automated test suite!
                                            vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                            switch => 'foobar',
                                            port => ['eth0/1','eth0/2'],
-                                           tag => '99',
+                                           vlan => '99',
                                            workgroup => 'edco');
 
 ok(defined($edit_vlan4), "Got a valid response");
