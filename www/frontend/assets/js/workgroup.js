@@ -18,7 +18,7 @@ function loadWorkgroups() {
         workgroupName = cookie.workgroup;
     }
     
-    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/access.cgi?method=get_workgroups';
+    var url = 'api/access.cgi?method=get_workgroups';
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             var workgroups = data.results[0].workgroups;

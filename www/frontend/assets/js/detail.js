@@ -2,7 +2,7 @@ function loadSwitch() {
     var cookie = Cookies.getJSON('vce');
     var sw = cookie.switch;
     
-    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/operational.cgi?method=get_workgroup_operational_status';
+    var url = 'api/operational.cgi?method=get_workgroup_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
@@ -52,7 +52,7 @@ function loadPorts() {
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
     
-    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/operational.cgi?method=get_interfaces_operational_status';
+    var url = 'api/operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
@@ -102,7 +102,7 @@ function loadVlans() {
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
     
-    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/access.cgi?method=get_vlans';
+    var url = 'api/access.cgi?method=get_vlans';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
