@@ -84,3 +84,11 @@
   opacity:0.6;
 }
 
+button#workgroup_select.btn.btn-default.btn-xs.dropdown-toggle.col-md-12 {
+  text-align:left;
+}
+
+button#workgroup_select.btn.btn-default.btn-xs.dropdown-toggle.col-xs-12.cold-md-4 {
+  text-align:left;
+}
+
