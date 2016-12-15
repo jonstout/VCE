@@ -1,7 +1,7 @@
 function loadSwitch(sw) {
     var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/operational.cgi?method=get_workgroup_operational_status';
     url += '&workgroup=' + 'ajco';
-    fetch(url, {method: 'get'}).then(function(response) {
+    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             var switches = data.results[0].workgroups;
 
@@ -52,7 +52,7 @@ function loadPorts() {
     var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + 'ajco';
     url += '&switch=' + name;
-    fetch(url, {method: 'get'}).then(function(response) {
+    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             var table = document.getElementById("port_table");
             table.innerHTML = "";
@@ -102,7 +102,7 @@ function loadVlans() {
     var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/access.cgi?method=get_vlans';
     url += '&workgroup=' + 'ajco';
     url += '&switch=' + name;
-    fetch(url, {method: 'get'}).then(function(response) {
+    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             var vlans = data.results[0].vlans;
             var table = document.getElementById("vlan_table");

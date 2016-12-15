@@ -20,7 +20,7 @@ function setHeader(switches) {
 
         var link = document.createElement("a");
         link.setAttribute('href', 'details.html#');
-        link.setAttribute('onclick', selectSwitch)
+        link.setAttribute('onclick', selectSwitch);
         link.innerHTML = switches[i];
 
         li.appendChild(link);

@@ -1,19 +1,15 @@
 function loadCookie() {
-    var text = document.cookie;
-    if (text === '') {
-        text = '{}';
+    cookie = Cookies.getJSON('vce');
+    if (cookie === undefined) {
+        console.log('setting cookie');
+        Cookies.set('vce', {workgroup: 'ajco', switches: ['foobar']});
     }
-    
-    var cookie = JSON.parse(text);
-    cookie.workgroup = 'ajco';
-    cookie.switches  = ['foobar'];
-    
-    document.cookie = JSON.stringify(cookie);
-    return cookie;
 }
 
 window.onload = function() {
-    cookie = loadCookie();
+    loadCookie();
+    cookie = Cookies.getJSON('vce');
+    
     setHeader(cookie.switches);
     
     var url = window.location;
@@ -26,7 +22,8 @@ window.onload = function() {
         setInterval(loadVlans, 30000);
     } else {
         loadSwitches();
-        loadWorkgroup(cookie.workgroup);
+        loadWorkgroup();
+        loadWorkgroups();
         
         setInterval(loadSwitches, 15000);
     }
