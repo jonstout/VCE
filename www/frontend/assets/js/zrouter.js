@@ -13,7 +13,7 @@ window.onload = function() {
     setHeader(cookie.switches);
     
     var url = window.location;
-    if (url.pathname === '/details.html') {
+    if (url.pathname === '/vce/details.html') {
         loadPorts();
         loadVlans();
         loadSwitch();
