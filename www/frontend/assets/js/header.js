@@ -1,12 +1,8 @@
-function selectSwitch(obj) {
-    var text = document.cookie;
-    if (text === '') {
-        text = '{}';
-    }
-    var cookie = JSON.parse(text);
+function selectSwitch(e) {
+    cookie = Cookies.getJSON('vce');
+    cookie.switch = e.target.innerHTML;
+    Cookies.set('vce', cookie);
     
-    cookie.switch = obj;
-    document.cookie = JSON.stringify(cookie);
     window.location.href = "http://127.0.0.1:55868/details.html";
 }
 
@@ -19,9 +15,9 @@ function setHeader(switches) {
         li.setAttribute('role', 'presentation');
 
         var link = document.createElement("a");
-        link.setAttribute('href', 'details.html');
-        link.setAttribute('onclick', selectSwitch);
         link.innerHTML = switches[i];
+        link.setAttribute('href', 'details.html');
+        link.addEventListener("click", selectSwitch, false);
 
         li.appendChild(link);
         dropd.appendChild(li);

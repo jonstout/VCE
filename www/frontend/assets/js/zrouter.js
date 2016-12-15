@@ -16,14 +16,18 @@ window.onload = function() {
     if (url.pathname === '/details.html') {
         loadPorts();
         loadVlans();
-        loadSwitch(cookie.switch);
+        loadSwitch();
         
         setInterval(loadPorts, 30000);
         setInterval(loadVlans, 30000);
     } else {
+        // Get all workgroups for this user.
+        // If the workgroup has not yet been set,
+        // use the first found.
+        loadWorkgroups();
+        
         loadSwitches();
         loadWorkgroup();
-        loadWorkgroups();
         
         setInterval(loadSwitches, 15000);
     }

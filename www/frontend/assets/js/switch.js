@@ -57,6 +57,9 @@ function loadSwitches() {
             }
             
             setHeader(switchNames);
+            
+            cookie.switches = switchNames;
+            Cookies.set('vce', cookie);
         });
     });
 }

@@ -11,8 +11,12 @@ function selectWorkgroup(e) {
 }
 
 function loadWorkgroups() {
+    var workgroupName;
+    
     cookie = Cookies.getJSON('vce');
-    var workgroupName = cookie.workgroup;
+    if (cookie != undefined) {
+        workgroupName = cookie.workgroup;
+    }
     
     var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/access.cgi?method=get_workgroups';
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
@@ -20,11 +24,10 @@ function loadWorkgroups() {
             var workgroups = data.results[0].workgroups;
             
             var selectedWorkgroup = document.getElementById('workgroup_select');
-            if (workgroupName === null || workgroupName === undefined) {
-                selectedWorkgroup.innerHTML = workgroups[0] + ' ▾';
-            } else {
-                selectedWorkgroup.innerHTML = workgroupName;
+            if (workgroupName === null) {
+                workgroupName = workgroups[0];
             }
+            selectedWorkgroup.innerHTML = workgroups[0] + ' ▾';
             
             var workgroupList = document.getElementById('workgroup_select_list');
             workgroupList.innerHTML = '';
@@ -40,6 +43,9 @@ function loadWorkgroups() {
                 li.appendChild(link);
                 workgroupList.appendChild(li);
             }
+            
+            cookie.workgroup = workgroupName;
+            Cookies.set('vce', cookie);
         });
     });
 }
