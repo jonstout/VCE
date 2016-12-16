@@ -6,7 +6,7 @@ function loadVlanDropdown() {
     var crumb = document.getElementById("switch_name_crumb");
     crumb.innerHTML = name;
     
-    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/operational.cgi?method=get_interfaces_operational_status';
+    var url = 'api/operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
@@ -77,7 +77,7 @@ function createVlan(e) {
     console.log(a);
     console.log(z);
     
-    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/provisioning.cgi?method=add_vlan';
+    var url = 'api/provisioning.cgi?method=add_vlan';
     url += '&workgroup=' + workgroup;
     url += '&description=' + text;
     url += '&switch' + name;
