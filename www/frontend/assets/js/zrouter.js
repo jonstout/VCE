@@ -6,6 +6,8 @@ function loadCookie() {
     }
 }
 
+// The var $allow_credentials in Method.pm must be set to 'true'
+// for cors.
 window.onload = function() {
     loadCookie();
     cookie = Cookies.getJSON('vce');
@@ -13,17 +15,18 @@ window.onload = function() {
     setHeader(cookie.switches);
     
     var url = window.location;
-    if (url.pathname === '/vce/details.html') {
+    if (url.pathname.indexOf('details.html') > -1) {
         loadPorts();
         loadVlans();
         loadSwitch();
         
         setInterval(loadPorts, 30000);
         setInterval(loadVlans, 30000);
+    } else if (url.pathname.indexOf('create.html') > -1) {
+        loadVlanDropdown();
+        configureButtons();
     } else {
-        // Get all workgroups for this user.
-        // If the workgroup has not yet been set,
-        // use the first found.
+        // Must be run first
         loadWorkgroups();
         
         loadSwitches();

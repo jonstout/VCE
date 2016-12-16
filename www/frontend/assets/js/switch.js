@@ -3,7 +3,7 @@ function loadWorkgroup() {
     cookie = Cookies.getJSON('vce');
     var workgroupName = cookie.workgroup;
     
-    var url = 'api/access.cgi?method=get_workgroup_details';
+    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/access.cgi?method=get_workgroup_details';
     url += '&workgroup=' + workgroupName;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
@@ -28,7 +28,7 @@ function loadSwitches() {
     cookie = Cookies.getJSON('vce');
     var workgroupName = cookie.workgroup;
     
-    var url = 'api/operational.cgi?method=get_workgroup_operational_status';
+    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/operational.cgi?method=get_workgroup_operational_status';
     url += '&workgroup=' + workgroupName;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {

@@ -10,6 +10,8 @@ function selectWorkgroup(e) {
     loadSwitches(e.target.innerHTML);
 }
 
+// Get all workgroups for this user. If the workgroup has not yet been set,
+// use the first found.
 function loadWorkgroups() {
     var workgroupName;
     
@@ -18,7 +20,7 @@ function loadWorkgroups() {
         workgroupName = cookie.workgroup;
     }
     
-    var url = 'api/access.cgi?method=get_workgroups';
+    var url = 'https://jonstout-dev.grnoc.iu.edu/vce/api/access.cgi?method=get_workgroups';
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             var workgroups = data.results[0].workgroups;

@@ -92,3 +92,7 @@ button#workgroup_select.btn.btn-default.btn-xs.dropdown-toggle.col-xs-12.cold-md
   text-align:left;
 }
 
+button.btn.btn-success {
+  margin:10px;
+}
+
