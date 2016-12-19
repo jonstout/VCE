@@ -4,6 +4,14 @@ function loadCookie() {
         console.log('setting cookie');
         Cookies.set('vce', {workgroup: 'ajco', switches: ['foobar']});
     }
+    /*
+    {
+        workgroup:      'ajco' // Name of the currently active workgroup
+        switches:       ['sw'] // An array of all switches available to user
+        switch:         'sw'   // Name of the currently selected switch
+        selectedVlanId: ''     // Currently selected VLAN ID
+    }
+    */
 }
 
 // The var $allow_credentials in Method.pm must be set to 'true'
@@ -25,6 +33,12 @@ window.onload = function() {
     } else if (url.pathname.indexOf('create.html') > -1) {
         loadVlanDropdown();
         configureButtons();
+    } else if (url.pathname.indexOf('edit.html') > -1) {
+        loadVlanDropdown()
+        .then(
+            loadVlanDetails
+        );
+        configureEditButtons();
     } else {
         // Must be run first
         loadWorkgroups();

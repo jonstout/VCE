@@ -6,10 +6,10 @@ function loadVlanDropdown() {
     var crumb = document.getElementById("switch_name_crumb");
     crumb.innerHTML = name;
     
-    var url = 'api/operational.cgi?method=get_interfaces_operational_status';
+    var url = baseUrl + 'operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
-    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+    return fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             var ports = data.results[0].ports;
             
@@ -77,7 +77,7 @@ function createVlan(e) {
     console.log(a);
     console.log(z);
     
-    var url = 'api/provisioning.cgi?method=add_vlan';
+    var url = baseUrl + 'provisioning.cgi?method=add_vlan';
     url += '&workgroup=' + workgroup;
     url += '&description=' + text;
     url += '&switch' + name;
