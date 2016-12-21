@@ -1,0 +1,1 @@
+{"vlans":{"0f9315ab-8985-4994-bf6d-bdca350534ff":{"status":"Active","create_time":1481666313,"vlan":"101","description":"13-delete_vlan circuit 1","endpoints":[{"port":"eth0/1"},{"port":"eth0/2"}],"username":"aragusa","vlan_id":"0f9315ab-8985-4994-bf6d-bdca350534ff","workgroup":"ajco","switch":"foobar"}}}

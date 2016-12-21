@@ -1,0 +1,8 @@
+*~
+Makefile.old
+t/TEST
+MYMETA.json
+MYMETA.yml
+Makefile
+blib/
+pm_to_blib
