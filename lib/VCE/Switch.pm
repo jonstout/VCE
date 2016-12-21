@@ -39,7 +39,7 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::Switch");
     $self->_set_logger($logger);
 
-    $0 = "VCE(" . $self->name . ")";
+    $0 = "VCE(" . $self->username . ")";
 
     $self->logger->error("Creating Dispatcher");
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( host => $self->rabbit_mq->{'host'},
