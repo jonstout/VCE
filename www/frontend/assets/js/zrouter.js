@@ -4,8 +4,18 @@ function loadCookie() {
         console.log('setting cookie');
         Cookies.set('vce', {workgroup: 'ajco', switches: ['foobar']});
     }
+    /*
+    {
+        workgroup:      'ajco' // Name of the currently active workgroup
+        switches:       ['sw'] // An array of all switches available to user
+        switch:         'sw'   // Name of the currently selected switch
+        selectedVlanId: ''     // Currently selected VLAN ID
+    }
+    */
 }
 
+// The var $allow_credentials in Method.pm must be set to 'true'
+// for cors.
 window.onload = function() {
     loadCookie();
     cookie = Cookies.getJSON('vce');
@@ -13,17 +23,24 @@ window.onload = function() {
     setHeader(cookie.switches);
     
     var url = window.location;
-    if (url.pathname === '/vce/details.html') {
+    if (url.pathname.indexOf('details.html') > -1) {
         loadPorts();
         loadVlans();
         loadSwitch();
         
         setInterval(loadPorts, 30000);
         setInterval(loadVlans, 30000);
+    } else if (url.pathname.indexOf('create.html') > -1) {
+        loadVlanDropdown();
+        configureButtons();
+    } else if (url.pathname.indexOf('edit.html') > -1) {
+        loadVlanDropdown()
+        .then(
+            loadVlanDetails
+        );
+        configureEditButtons();
     } else {
-        // Get all workgroups for this user.
-        // If the workgroup has not yet been set,
-        // use the first found.
+        // Must be run first
         loadWorkgroups();
         
         loadSwitches();

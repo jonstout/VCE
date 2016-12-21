@@ -2,7 +2,7 @@ function loadSwitch() {
     var cookie = Cookies.getJSON('vce');
     var sw = cookie.switch;
     
-    var url = 'api/operational.cgi?method=get_workgroup_operational_status';
+    var url = baseUrl + 'operational.cgi?method=get_workgroup_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
@@ -52,7 +52,7 @@ function loadPorts() {
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
     
-    var url = 'api/operational.cgi?method=get_interfaces_operational_status';
+    var url = baseUrl + 'operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
@@ -88,21 +88,43 @@ function loadPorts() {
     });
 }
 
+function navigateOnSelect(e) {
+    var command = e.target.selectedOptions[0].value;
+    
+    var cookie    = Cookies.getJSON('vce');
+    var name      = cookie.switch;
+    var vlanId    = cookie.selectedVlanId;
+    var workgroup = cookie.workgroup;
+    
+    if (command === 'add_vlan') {
+        window.location.href = 'create.html';
+    }
+    
+    if (command === 'edit_vlan') {
+        window.location.href = 'edit.html';
+    }
+    
+    if (command === 'delete_vlan') {
+        var url = baseUrl + 'provisioning.cgi?method=delete_vlan';
+        url += '&workgroup=' + workgroup;
+        url += '&vlan_id=' + vlanId;
+
+        fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+            response.json().then(function(data) {
+                window.location.href = 'details.html';
+            });
+        });
+    }
+}
+
 function loadVlans() {
-    var mock = [
-        {
-            vlan: 1234,
-            description: 'description',
-            ports: ['eth1/1', 'eth2/1'],
-            status: 'Up',
-            id: 'b81653bf-f393-4d65-938d-d887c8caf608'
-        }
-    ];
+    var create = document.getElementById('vlan_command');
+    create.addEventListener("change", navigateOnSelect, false);
     
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
     
-    var url = 'api/access.cgi?method=get_vlans';
+    var url = baseUrl + 'access.cgi?method=get_vlans';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
@@ -110,11 +132,11 @@ function loadVlans() {
             var vlans = data.results[0].vlans;
             var table = document.getElementById("vlan_table");
             table.innerHTML = '';
-            console.log(vlans);
             
             for (var i = 0; i < vlans.length; i++) {
                 var row = table.insertRow(0);
-                row.id = vlans[i];
+                row.id = vlans[i].vlan_id;
+                row.setAttribute('class', 'clickable-row');
 
                 var vlan = row.insertCell(0);
                 vlan.innerHTML = vlans[i].vlan;
@@ -138,6 +160,14 @@ function loadVlans() {
                 var select = row.insertCell(4);
                 select.innerHTML = '';
             }
+            
+            $('#vlan_table').on('click', '.clickable-row', function(e) {
+                $(this).addClass('active').siblings().removeClass('active');
+                
+                var cookie = Cookies.getJSON('vce');
+                cookie.selectedVlanId = $(this)[0].id;
+                Cookies.set('vce', cookie);
+            });
         });
     });
 }
