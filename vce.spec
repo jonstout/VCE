@@ -52,6 +52,12 @@ rm -rf $RPM_BUILDR_ROOT
 
 cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
+# Executables
+%{__install} -d -p %{buildroot}%{_bindir}
+
+%{__install} bin/vce.pl %{buildroot}%{_bindir}
+%{__install} bin/vce_switch.pl %{buildroot}%{_bindir}
+
 %{_fixperms} $RPM_BUILD_ROOT/*
 
 # %check
@@ -62,6 +68,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644, root, root, -)
+
 %{perl_vendorlib}/VCE.pm
 %{perl_vendorlib}/VCE/Access.pm
 %{perl_vendorlib}/VCE/Device.pm
@@ -77,7 +84,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/vce/www/api/operational.cgi
 %{_datadir}/vce/www/api/provisioning.cgi
 %{_datadir}/vce/www/api/switch.cgi
-
 %{_datadir}/vce/www/frontend/
+
+%{_bindir}/vce.pl
+%{_bindir}/vce_switch.pl
 
 %changelog
