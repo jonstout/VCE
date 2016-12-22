@@ -10,9 +10,15 @@ Source: %{name}-%{version}.tar.gz
 BuildRequires: perl
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+Requires: perl-Apache-Test
 Requires: perl-Devel-Cover
+Requires: perl-GRNOC-Comm
+Requires: perl-GRNOC-Config
+Requires: perl-GRNOC-Log
 Requires: perl-GRNOC-NetConf <= 2.0
 Requires: perl-GRNOC-RabbitMQ <= 2.0
+Requires: perl-GRNOC-WebService-Client
+Requires: perl-Moo
 Requires: perl-Test-Deep
 
 %description
