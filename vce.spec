@@ -10,8 +10,10 @@ Source: %{name}-%{version}.tar.gz
 BuildRequires: perl
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+Requires: perl-Devel-Cover
 Requires: perl-GRNOC-NetConf <= 2.0
 Requires: perl-GRNOC-RabbitMQ <= 2.0
+Requires: perl-Test-Deep
 
 %description
 Installs VCE and its prerequisites.
