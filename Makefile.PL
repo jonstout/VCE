@@ -10,9 +10,12 @@ sub MY::postamble { << 'END'; }
 rpm:    dist
 	rpmbuild -ta vce-$(VERSION).tar.gz
 
-test_jenkins :
-	PERL5OPT=-MDevel::Cover=-db,$FindBin::Bin/cover_db make test PERL_TEST_HARNESS_DUMP_TAP=$FindBin::Bin/tap/
+TEST_VERBOSE=1
+test_jenkins : pure_all
+	$(FULLPERL) t/TEST $(TEST_VERBOSE)
 END
+# test_jenkins :
+# 	PERL5OPT=-MDevel::Cover=-db,$FindBin::Bin/cover_db make test PERL_TEST_HARNESS_DUMP_TAP=$FindBin::Bin/tap/
 
 WriteMakefile(
     NAME                => 'vce',
