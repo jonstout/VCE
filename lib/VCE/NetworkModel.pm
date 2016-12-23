@@ -67,7 +67,7 @@ sub _write_network_model{
     my $self = shift;
 
     my $json = encode_json($self->nm);
-    open(my $fh, ">", $self->file);
+    open(my $fh, ">", $self->file) or die "Couldn't open: $!";
     print $fh $json;
     close($fh);
     
