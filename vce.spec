@@ -86,6 +86,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -d -p %{buildroot}%{_var}/run/vce
 
 %{__install} etc/access_policy.xml %{buildroot}%{_sysconfdir}/vce/access_policy.xml
+%{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
 %{__install} etc/network_model.json %{buildroot}%{_var}/run/vce/network_model.json
 
 # Final Step
@@ -117,4 +118,5 @@ rm -rf $RPM_BUILD_ROOT
 %{_initddir}/vce
 
 %config(noreplace) %{_sysconfdir}/vce/access_policy.xml
+%config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_var}/run/vce/network_model.json
