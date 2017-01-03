@@ -67,20 +67,21 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 # Executables
 %{__install} -d -p %{buildroot}%{_bindir}
 
-%{__install} bin/vce.pl %{buildroot}%{_bindir}
-%{__install} bin/vce_switch.pl %{buildroot}%{_bindir}
+%{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 
+
+# Init Scripts
+%{__install} -d -p %{buildroot}%{_initddir}
+
+%{__install} -m 544 etc/vce.init %{buildroot}%{_initddir}/vce
+
+# Final Step
 %{_fixperms} $RPM_BUILD_ROOT/*
-
-# %check
-# make test
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(644, root, root, -)
-
 %{perl_vendorlib}/VCE.pm
 %{perl_vendorlib}/VCE/Access.pm
 %{perl_vendorlib}/VCE/Device.pm
@@ -98,7 +99,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/vce/www/api/switch.cgi
 %{_datadir}/vce/www/frontend/
 
-%{_bindir}/vce.pl
-%{_bindir}/vce_switch.pl
+%{_bindir}/vce
 
-%changelog
+%{_initddir}/vce
