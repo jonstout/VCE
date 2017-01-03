@@ -10,6 +10,8 @@ Source: %{name}-%{version}.tar.gz
 BuildRequires: perl
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+Requires(pre): /usr/sbin/useradd, /usr/bin/getent
+
 Requires: perl-Apache-Test
 Requires: perl-Devel-Cover
 Requires: perl-GRNOC-CLI
@@ -34,6 +36,10 @@ Installs VCE and its prerequisites.
 %build
 %{__perl} Makefile.PL PREFIX="%{buildroot}%{_prefix}" INSTALLDIRS="vendor"
 make
+
+%pre
+/usr/bin/getent group vce || /usr/sbin/groupadd -r vce
+/usr/bin/getent passwd vce || /usr/sbin/useradd -r -s /sbin/nologin -g vce vce
 
 %install
 rm -rf $RPM_BUILDR_ROOT

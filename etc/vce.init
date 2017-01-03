@@ -23,7 +23,7 @@ fi
 name=vce
 exec_file=/usr/bin/$name
 options=""
-username=jonstout
+username=vce
 lockfile=/var/lock/subsys/$name
 command="$exec_file $options"
 PIDFILE=/var/run/$name.pid
