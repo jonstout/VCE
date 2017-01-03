@@ -1,8 +1,9 @@
 bin/vce.pl
-bin/vce_switch.pl
 etc/access_policy.xml
 etc/apache_logging.conf
 etc/logging.conf
+etc/network_model.json
+etc/vce.init
 lib/VCE.pm
 lib/VCE/Access.pm
 lib/VCE/Device.pm

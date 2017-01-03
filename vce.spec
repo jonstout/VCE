@@ -81,6 +81,13 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
 %{__install} -m 544 etc/vce.init %{buildroot}%{_initddir}/vce
 
+# Configuration Files
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce
+%{__install} -d -p %{buildroot}%{_var}/run/vce
+
+%{__install} etc/access_policy.xml %{buildroot}%{_sysconfdir}/vce/access_policy.xml
+%{__install} etc/network_model.json %{buildroot}%{_var}/run/vce/network_model.json
+
 # Final Step
 %{_fixperms} $RPM_BUILD_ROOT/*
 
@@ -108,3 +115,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/vce
 
 %{_initddir}/vce
+
+%config(noreplace) %{_sysconfdir}/vce/access_policy.xml
+%config(noreplace) %{_var}/run/vce/network_model.json
