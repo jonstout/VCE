@@ -10,6 +10,8 @@ Source: %{name}-%{version}.tar.gz
 BuildRequires: perl
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
+Requires(pre): /usr/sbin/useradd, /usr/bin/getent
+
 Requires: perl-Apache-Test
 Requires: perl-Devel-Cover
 Requires: perl-GRNOC-CLI
@@ -34,6 +36,10 @@ Installs VCE and its prerequisites.
 %build
 %{__perl} Makefile.PL PREFIX="%{buildroot}%{_prefix}" INSTALLDIRS="vendor"
 make
+
+%pre
+/usr/bin/getent group vce || /usr/sbin/groupadd -r vce
+/usr/bin/getent passwd vce || /usr/sbin/useradd -r -s /sbin/nologin -g vce vce
 
 %install
 rm -rf $RPM_BUILDR_ROOT
@@ -67,20 +73,31 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 # Executables
 %{__install} -d -p %{buildroot}%{_bindir}
 
-%{__install} bin/vce.pl %{buildroot}%{_bindir}
-%{__install} bin/vce_switch.pl %{buildroot}%{_bindir}
+%{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 
+
+# Init Scripts
+%{__install} -d -p %{buildroot}%{_initddir}
+
+%{__install} -m 544 etc/vce.init %{buildroot}%{_initddir}/vce
+
+# Configuration Files
+%{__install} -d -p %{buildroot}%{_sysconfdir}/httpd/conf.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce
+%{__install} -d -p %{buildroot}%{_var}/run/vce
+
+%{__install} etc/apache-vce.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/vce.conf
+%{__install} etc/access_policy.xml %{buildroot}%{_sysconfdir}/vce/access_policy.xml
+%{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
+%{__install} etc/network_model.json %{buildroot}%{_var}/run/vce/network_model.json
+
+# Final Step
 %{_fixperms} $RPM_BUILD_ROOT/*
-
-# %check
-# make test
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
-%defattr(644, root, root, -)
-
 %{perl_vendorlib}/VCE.pm
 %{perl_vendorlib}/VCE/Access.pm
 %{perl_vendorlib}/VCE/Device.pm
@@ -98,7 +115,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/vce/www/api/switch.cgi
 %{_datadir}/vce/www/frontend/
 
-%{_bindir}/vce.pl
-%{_bindir}/vce_switch.pl
+%{_bindir}/vce
 
-%changelog
+%{_initddir}/vce
+
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/vce.conf
+%config(noreplace) %{_sysconfdir}/vce/access_policy.xml
+%config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
+%config(noreplace) %{_var}/run/vce/network_model.json

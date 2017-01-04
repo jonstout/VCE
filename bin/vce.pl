@@ -114,7 +114,7 @@ GetOptions( 'config=s' => \$config_file,
 usage() if $help;
 
 if(!$nofork){
-    my $daemon = Proc::Daemon->new( pid_file => "/var/run/vce/vce.pid");
+    my $daemon = Proc::Daemon->new( pid_file => "/var/run/vce.pid");
 
     my $pid = $daemon->Init();
     if ( !$pid ) {
