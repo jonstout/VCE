@@ -4,6 +4,7 @@ etc/apache_logging.conf
 etc/logging.conf
 etc/network_model.json
 etc/vce.init
+etc/apache-vce.conf
 lib/VCE.pm
 lib/VCE/Access.pm
 lib/VCE/Device.pm
