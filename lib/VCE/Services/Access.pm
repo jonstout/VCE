@@ -242,7 +242,7 @@ sub get_workgroup_details{
 
         my $obj = $self->vce->get_workgroup_details( workgroup => $workgroup);
         
-        return {results => [workgroup => $obj]};
+        return {results => [$obj]};
     }else{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
