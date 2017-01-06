@@ -325,7 +325,6 @@ sub is_tag_available{
     warn "Is tag available\n";
 
     #verify user in workgroup
-    $user = 'aragusa';
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
         warn "USer is in workgroup\n";
