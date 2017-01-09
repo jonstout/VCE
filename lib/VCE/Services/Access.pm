@@ -355,7 +355,7 @@ sub get_port_commands{
     }
 }
 
-=head2 get_port_commands
+=head2 get_vlan_commands
 
 =cut
 
