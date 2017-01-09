@@ -80,9 +80,6 @@ function loadPorts() {
                 } else {
                     status.innerHTML = 'Down';
                 }
-                
-                var select = row.insertCell(4);
-                select.innerHTML = '';
             }
         });
     });
@@ -156,9 +153,6 @@ function loadVlans() {
 
                 var status = row.insertCell(3);
                 status.innerHTML = vlans[i].status;
-
-                var select = row.insertCell(4);
-                select.innerHTML = '';
             }
             
             $('#vlan_table').on('click', '.clickable-row', function(e) {

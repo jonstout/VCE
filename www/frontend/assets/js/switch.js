@@ -7,7 +7,7 @@ function loadWorkgroup() {
     url += '&workgroup=' + workgroupName;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
-            var workgroup = data.results[1];
+            var workgroup = data.results[0];
             
             var name = document.getElementById('workgroup_name');
             name.innerHTML = workgroup.name;
