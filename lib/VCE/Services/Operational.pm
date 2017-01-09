@@ -26,6 +26,22 @@ has rabbit_mq => (is => 'rwp');
 
 =head2 BUILD
 
+=over 4
+
+=item vce
+
+=item logger
+
+=item dispatcher
+
+=item config_file
+
+=item network_model_file
+
+=item rabbit_mq
+
+=back
+
 =cut
 
 sub BUILD{
