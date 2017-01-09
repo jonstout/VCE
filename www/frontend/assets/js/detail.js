@@ -119,7 +119,7 @@ function navigateOnSelect(e) {
 
 function loadVlans() {
     var create = document.getElementById('vlan_command');
-    create.addEventListener("change", navigateOnSelect, false);
+    create.addEventListener("click", navigateOnSelect, false);
     
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
