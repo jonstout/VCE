@@ -24,6 +24,22 @@ has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.j
 
 =head2 BUILD
 
+=over 4
+
+=item config_file
+
+=item logger
+
+=item dispatcher
+
+=item network_model
+
+=item vce
+
+=item network_model_file
+
+=back
+
 =cut
 
 sub BUILD{

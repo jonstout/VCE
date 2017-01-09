@@ -12,11 +12,17 @@ use GRNOC::Comm;
 use GRNOC::NetConf::Device;
 
 has comm => (is => 'rwp');
+
 has conn => (is => 'rwp');
 
 =head2 BUILD
 
-=cut
+=over 4
+
+=item comm
+=item conn
+
+=back    
 
 sub BUILD{
     my ($self) = @_;

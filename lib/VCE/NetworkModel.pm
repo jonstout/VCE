@@ -20,6 +20,18 @@ has uuid => (is => 'rwp');
 
 creates a new NetworkModel object
 
+=over 4
+
+=item logger
+
+=item file
+
+=item nm
+
+=item uuid
+
+=back
+
 =cut
 
 sub BUILD{

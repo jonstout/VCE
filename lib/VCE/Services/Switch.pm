@@ -22,6 +22,20 @@ has rabbit_mq => (is => 'rwp');
 
 =head2 BUILD
 
+=over 4
+
+=item access
+
+=item dispatcher
+
+=item logger
+
+=item rabbit_client
+
+=item rabbit_mq
+
+=back
+
 =cut
 
 sub BUILD{
