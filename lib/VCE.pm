@@ -172,7 +172,7 @@ sub _process_config{
         $s->{'username'} = $switch->{'username'};
         $s->{'password'} = $switch->{'password'};
         $s->{'ip'} = $switch->{'ip'};
-
+	$s->{'commands'} = _process_command_config($switch->{'commands'}->[0]);
 	my %ports;
 	foreach my $port (keys(%{$switch->{'port'}})){
 	    my $p = {};
@@ -197,6 +197,42 @@ sub _process_config{
 
     $cfg->{'switches'} = \%switches;
     $self->_set_config($cfg);
+}
+
+=head2 _process_command_config
+
+=cut
+
+sub _process_command_config{
+    my $config = shift;
+
+    my $cfg = {};
+
+    foreach my $type ("system","port","vlan"){
+	my %commands = %{$config->{$type}->[0]->{'command'}};
+	foreach my $cmd (keys(%commands)){
+	    
+	    my $val = {name => $cmd,
+		       interaction => $commands{$cmd}{'interaction'},
+		       actual_command => $commands{$cmd}{'content'},
+		       type => $commands{$cmd}{'type'},
+		       configure => $commands{$cmd}{'configure'},
+		       context => $commands{$cmd}{'context'}};
+	    
+	    if(!defined($val->{'configure'})){
+		delete $val->{'configure'};
+	    }
+
+	    if(!defined($val->{'context'})){
+		delete $val->{'context'};
+	    }
+	    
+	    push(@{$cfg->{$type}},$val);
+
+	}
+    }
+
+    return $cfg;
 }
 
 =head2 get_workgroups
@@ -240,8 +276,6 @@ sub get_available_ports{
 	$self->logger->error("get_available_ports: Switch not specified");
 	return;
     }
-
-
 
     my @ports;
 

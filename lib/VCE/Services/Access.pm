@@ -212,6 +212,78 @@ sub _register_webservice_methods{
 
     $d->register_method($method);
 
+
+    $method = GRNOC::WebService::Method->new(
+        name => "get_switch_commands",
+        description => "returns the commands that can be run on a switch",
+        callback => sub{ return $self->get_switch_commands(@_) });
+
+    $method->add_input_parameter( name => "workgroup",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Workgroup name");
+
+    $method->add_input_parameter( name => "switch",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Switch to get the commands that can be run");
+
+    $d->register_method($method);
+
+
+    $method = GRNOC::WebService::Method->new(
+        name => "get_port_commands",
+        description => "returns the commands that can be run on a vlan",
+        callback => sub{ return $self->get_port_commands(@_) });
+    
+    $method->add_input_parameter( name => "workgroup",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Workgroup name");
+    
+    $method->add_input_parameter( name => "switch",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Switch to get the commands that can be run");
+    
+    $method->add_input_parameter( name => "port",
+                                  pattern => "(.*)",
+                                  required => 1,
+                                  multiple => 0,
+				  description => "port to get the commands that can be run");
+    
+
+    $d->register_method($method);
+
+    $method = GRNOC::WebService::Method->new(
+        name => "get_vlan_commands",
+        description => "returns the commands that can be run on a vlan",
+        callback => sub{ return $self->get_vlan_commands(@_) });
+
+    $method->add_input_parameter( name => "workgroup",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Workgroup name");
+
+    $method->add_input_parameter( name => "switch",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Switch to get the commands that can be run");
+
+    $method->add_input_parameter( name => "vlan_id",
+                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "port to get the commands that can be run");
+
+
+    $d->register_method($method);
 }
 
 =head2 handle_request
@@ -225,6 +297,94 @@ sub handle_request{
 
     $self->dispatcher->handle_request();
 }
+
+
+=head2 get_switch_commands
+
+=cut
+
+sub get_switch_commands{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $switch = $p_ref->{'switch'}{'value'};
+    if($self->vce->access->user_in_workgroup( username => $user,
+                                              workgroup => $workgroup)){
+
+	if(scalar($self->vce->get_available_ports( workgroup => $workgroup, switch => $switch)) >= 1){
+	    return {results => $self->vce->access->get_switch_commands( switch => $switch )};
+	}else{
+	    return {results => [], error => {msg => "Workgroup not authorized for switch $switch"}};
+	}
+    }else{
+	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+}
+
+=head2 get_port_commands
+
+=cut
+
+sub get_port_commands{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+    
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
+    
+    my $user = $ENV{'REMOTE_USER'};
+    
+    my $switch = $p_ref->{'switch'}{'value'};
+    my $port = $p_ref->{'port'}{'value'};
+
+    if($self->vce->access->user_in_workgroup( username => $user,
+                                              workgroup => $workgroup)){
+
+        if($self->vce->access->workgroup_has_access_to_port( workgroup => $workgroup, switch => $switch, port => $port)){
+            return {results => $self->vce->access->get_port_commands( switch => $switch, port => $port )};
+        }else{
+            return {results => [], error => {msg => "Workgroup not authorized for switch:port $switch:$port"}};
+        }
+    }else{
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+}
+
+=head2 get_vlan_commands
+
+=cut
+
+sub get_vlan_commands{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $vlan = $p_ref->{'vlan_id'}{'value'};
+
+    if($self->vce->access->user_in_workgroup( username => $user,
+                                              workgroup => $workgroup)){
+	
+	my $vlan = $self->vce->network_model->get_vlan_details( vlan_id => $vlan);
+	
+        if($vlan->{'workgroup'} eq $workgroup){
+            return {results => $self->vce->access->get_vlan_commands( vlan_id => $vlan )};
+        }else{
+            return {results => [], error => {msg => "Workgroup not authorized for vlan: $vlan"}};
+        }
+    }else{
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+}
+
 
 
 =head2 get_workgroups
