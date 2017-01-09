@@ -3,7 +3,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use Test::More skip_all => "Skipping";
+#use Test::More tests => 1;
 
 use GRNOC::WebService::Client;
 use Data::Dumper;

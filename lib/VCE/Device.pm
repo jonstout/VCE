@@ -19,6 +19,22 @@ has hostname => (is => 'rwp');
 
 =head2 BUILD
 
+=over 4
+
+=item hostname
+
+=item logger
+
+=item username
+
+=item password
+
+=item port
+
+=item connected
+
+=back
+
 =cut
 
 sub BUILD{

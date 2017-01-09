@@ -31,6 +31,38 @@ has name => (is => 'rwp');
 
 =head2 BUILD
 
+=over 4
+
+=item logger
+
+=item device
+
+=item type
+
+=item vendor
+
+=item version
+
+=item username
+
+=item password
+
+=item port
+
+=item hostname
+
+=item dispatcher
+
+=item rabbit_mq
+
+=item op_state
+
+=item op_state
+
+=item name
+
+=back
+
 =cut
 
 sub BUILD{

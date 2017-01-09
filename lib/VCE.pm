@@ -78,9 +78,29 @@ Some examples:
 
 =cut
 
+=over 4
+
+=item access
+
+=item config
+
+=item config_file
+
+=item device_client
+
+=item logger
+
+=item network_model
+
+=item network_model_file
+
+=item rabbit_mq
+
+=item state
+
+=back 
+
 =head2 BUILD
-
-
 
 =cut
 

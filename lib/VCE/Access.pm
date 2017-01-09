@@ -36,6 +36,14 @@ has logger => (is => 'rwp');
 
 =head2 BUILD
 
+=over 4
+
+=item config
+
+=item logger
+
+=back
+
 =cut
 
 sub BUILD{
