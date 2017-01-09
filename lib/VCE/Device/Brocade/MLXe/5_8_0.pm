@@ -90,6 +90,9 @@ sub get_interfaces{
 	foreach my $int (@$ints){
 	    my $int_details = $self->_get_interface( name => $int->{'port_name'});
 	    next if(!defined($int_details));
+            next if(!defined($int_details->{'parsed'}->{'name'}));
+            warn Data::Dumper::Dumper(%interfaces);
+            warn Data::Dumper::Dumper($int_details);
 	    $interfaces{$int_details->{'parsed'}->{'name'}} = $int_details->{'parsed'};
             $raw .= $int_details->{'raw'};
 	}
@@ -203,8 +206,6 @@ sub _get_interface{
 
     return if(!defined($int_details));
 
-    
-
     my $int = {};
     foreach my $line (split(/\n/,$int_details)){
 	if($line =~ /^\s/){
@@ -247,35 +248,38 @@ sub _get_interface{
             }
 
 	}else{
-	    $line =~ /(\S+)\s/;
-	    $int->{'name'} = $1;
-            next if(!defined($int->{'name'}));
-            $int->{'name'} =~ s/100GigabitEthernet/ethernet /;
-            $int->{'name'} =~ s/10GigabitEthernet/ethernet /;
-            $int->{'name'} =~ s/GigabitEthernet/ethernet /;
-
-            $line =~ /is (\S+), line protocol is (\S+)/;
-            $int->{'admin_status'} = $1;
-            $int->{'status'} = $2;
-
-            if($int->{'admin_status'} eq 'disabled'){
-                $int->{'admin_status'} = 0;
-            }else{
-                $int->{'admin_status'} = 1;
-            }
-
-            if(defined($int->{'status'})){
+            if($line =~ /line protocol/){
+                $line =~ /(\S+)\s/;
+                $int->{'name'} = $1;
+                next if(!defined($int->{'name'}));
+                $int->{'name'} =~ s/100GigabitEthernet/ethernet /;
+                $int->{'name'} =~ s/10GigabitEthernet/ethernet /;
+                $int->{'name'} =~ s/GigabitEthernet/ethernet /;
                 
-                if($int->{'status'} eq 'up'){
-                    $int->{'status'} = 1;
-                }elsif($int->{'status'} eq 'down'){
-                    $int->{'status'} = 0;
+                $line =~ /is (\S+), line protocol is (\S+)/;
+                $int->{'admin_status'} = $1;
+                $int->{'status'} = $2;
+                
+                if($int->{'admin_status'} eq 'disabled'){
+                    $int->{'admin_status'} = 0;
                 }else{
-                    $int->{'status'} = 'unknown';
+                    $int->{'admin_status'} = 1;
                 }
+                
+                if(defined($int->{'status'})){
+                    
+                    if($int->{'status'} eq 'up'){
+                        $int->{'status'} = 1;
+                    }elsif($int->{'status'} eq 'down'){
+                        $int->{'status'} = 0;
+                    }else{
+                        $int->{'status'} = 'unknown';
+                    }
+                }
+            }else{
+                next;
             }
         }
-
     }
 
     return {parsed => $int, raw => $int_details};
