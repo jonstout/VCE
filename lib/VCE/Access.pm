@@ -398,6 +398,59 @@ sub get_switch_description{
 
 }
 
+=head2 get_switch_commands
+
+=cut
+
+sub get_switch_commands{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_switch_commands: switch not specified");
+        return;
+    }
+
+    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}{'system'};
+
+}
+
+=head2 get_port_commands
+
+=cut
+
+sub get_port_commands{
+
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_port_commands: switch not specified");
+        return;
+    }
+
+    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'port'};
+}
+
+=head2 get_vlan_commands
+
+=cut
+
+sub get_vlan_commands{
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined($params{'vlan_id'})){
+        $self->logger->error("get_vlan_commands: vlan not specified");
+        return;
+    }
+
+    my $vlan = $self->vce->network_model->get_vlan( vlan_id => $params{'vlan_id'});
+
+    return $self->config->{'switches'}{$vlan->{'switch'}}->{'commands'}->{'vlan'};    
+
+}
+
 =head2 get_switch_ports
 
 =cut
