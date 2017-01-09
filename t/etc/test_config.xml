@@ -13,6 +13,31 @@
       <tags start="101" end="200" workgroup="ajco"/>
     </port>
 
+    <commands>
+      <system>
+        <command type='show' name='show version' interaction='cli'>show version</command>
+        <command name='show chassis' type='show' interaction='cli'>show chassis</command>
+        <command name='show cpu' type='show' interaction='cli'>show cpu-utilization</command>
+      </system>
+
+      <port>
+        <command name='show interface' type='show' interaction='cli' >show interface $PORT</command>
+        <command name='set port status' input='status' type='action' interaction='netconf'>
+          <NETCONF>XML GOES IN HERE</NETCONF>
+        </command>
+
+        <command name='set port descr' input='descr' type='action' interaction='cli' configure='true' context='interface $PORT'>port-name $DESCR</command>
+
+      </port>
+
+      <vlan>
+        <command type='show' name='show vlan' interaction='cli'>show vlan $VLAN_ID</command>
+        <command type='show' name='show vlan statistics' interaction='cli'>show vlan $VLAN_ID statistics</command>
+      </vlan>
+
+    </commands>
+
+
   </switch>
 
   <workgroup name="edco"  description="this is edcos exchange point access workgroup">
