@@ -222,19 +222,17 @@ sub provision_vlan{
         my $status  = undef;
         foreach my $e (@{$details->{'endpoints'}}) {
             my $port   = $e->{'port'};
-            my $switch = $e->{'switch'};
-            my $vlan   = $e->{'tag'};
-
-            $status = $self->_send_vlan_add( $port, $switch, $vlan );
+            my $switch = $switch;
+            my $vlan   = $vlan;
+            $status = $self->_send_vlan_add($port, $switch, $vlan);
         }
         
         if($status){
-            
             return {results => [{success => 1, vlan_id => $vlan_id}]};
-        }else{
+        } else {
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
         }
-    }else{
+    } else {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 }
@@ -366,6 +364,7 @@ sub _send_vlan_add{
     my $port   = shift;
     my $switch = shift;
     my $vlan   = shift;
+    $self->logger->info("Adding vlan $vlan to port $port on $switch");
 
    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
    if (exists $response->{'error'}) {
