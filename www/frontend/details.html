@@ -54,8 +54,8 @@
                 <div>
                     <ul class="nav nav-tabs">
                         <li><a href="#tab-4" role="tab" data-toggle="tab">Switch</a></li>
-                        <li class="active"><a href="#tab-3" role="tab" data-toggle="tab">VLANs </a></li>
-                        <li id="port_tab"><a href="#tab-2" role="tab" data-toggle="tab">Ports </a></li>
+                        <li><a href="#tab-3" role="tab" data-toggle="tab">VLANs </a></li>
+                        <li class="active" id="port_tab"><a href="#tab-2" role="tab" data-toggle="tab">Ports </a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade" role="tabpanel" id="tab-4">
@@ -64,23 +64,23 @@
                                     <tbody id="switch_detail_table">
                                         <tr>
                                             <td><strong>Name</strong> </td>
-                                            <td id="switch_name">sw.guam </td>
+                                            <td id="switch_name"> </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Description</strong></td>
-                                            <td id="switch_description">My dog's breath smells like catfood.</td>
+                                            <td id="switch_description"> </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Status</strong> </td>
-                                            <td id="switch_status">Up </td>
+                                            <td id="switch_status"> </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Your VLANS</strong></td>
-                                            <td id="switch_vlans">3/4 </td>
+                                            <td id="switch_vlans"> </td>
                                         </tr>
                                         <tr>
                                             <td><strong>Your Ports</strong></td>
-                                            <td id="switch_ports">2/2 </td>
+                                            <td id="switch_ports"> </td>
                                         </tr>
                                     </tbody>
                                     <caption>Details:</caption>
@@ -129,7 +129,7 @@
                             </div>
                             <p>First tab content.</p>
                         </div>
-                        <div class="tab-pane fade" role="tabpanel" id="tab-2">
+                        <div class="tab-pane fade in active" role="tabpanel" id="tab-2">
                             <form class="form-horizontal">
                                 <div class="form-group">
                                     <div class="col-sm-4">
@@ -160,52 +160,7 @@
                                                 <th>select </th>
                                             </tr>
                                         </thead>
-                                        <tbody id="port_table">
-                                            <tr>
-                                                <td>eth1/1 </td>
-                                                <td>to tokyo</td>
-                                                <td>123,111,1 </td>
-                                                <td>Up </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>eth1/2 </td>
-                                                <td>seat foobominatola</td>
-                                                <td>1, 2,3,4</td>
-                                                <td>Up </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                            <tr class="warning">
-                                                <td>eth8/1 </td>
-                                                <td>monkey pox</td>
-                                                <td>666,1134 </td>
-                                                <td>Up </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                            <tr class="danger">
-                                                <td class="danger">eth9/1 </td>
-                                                <td>anchor bait</td>
-                                                <td>1134,1135 </td>
-                                                <td>Down </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                        </tbody>
+                                        <tbody id="port_table"></tbody>
                                         <caption>Operational Status:</caption>
                                     </table>
                                 </div>
@@ -216,7 +171,7 @@
                             <div></div>
                             <p>Second tab content.</p>
                         </div>
-                        <div class="tab-pane fade in active" role="tabpanel" id="tab-3">
+                        <div class="tab-pane fade" role="tabpanel" id="tab-3">
                             <p> </p>
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -247,52 +202,7 @@
                                                 <th>select </th>
                                             </tr>
                                         </thead>
-                                        <tbody id="vlan_table">
-                                            <tr>
-                                                <td>123 </td>
-                                                <td>to tokyo</td>
-                                                <td>eth1/1,eth2/1 </td>
-                                                <td>2/2 </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>124 </td>
-                                                <td>seat foobominatola</td>
-                                                <td>eth2/8,eth1/1 </td>
-                                                <td>2/2 </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                            <tr class="warning">
-                                                <td>666 </td>
-                                                <td>monkey pox</td>
-                                                <td>eth8/1, eth1/1 </td>
-                                                <td>1/2 </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                            <tr class="danger">
-                                                <td class="danger">1134 </td>
-                                                <td>anchor bait</td>
-                                                <td>eth8/1, eth7/2</td>
-                                                <td>0/2 </td>
-                                                <td>
-                                                    <fieldset>
-                                                        <input type="checkbox">
-                                                    </fieldset>
-                                                </td>
-                                            </tr>
-                                        </tbody>
+                                        <tbody id="vlan_table"></tbody>
                                         <caption>Operational Status:</caption>
                                     </table>
                                 </div>
