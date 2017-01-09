@@ -4,7 +4,6 @@ package VCE::Device::Brocade::MLXe::5_8_0;
 
 use strict;
 use warnings;
-
 use Moo;
 extends 'VCE::Device';
 
@@ -194,7 +193,6 @@ sub _get_interface{
     }else{
 	$int_details = $self->comm->issue_command("show interface " . $params{'name'});
     }
-
     return if(!defined($int_details));
 
     
@@ -285,7 +283,7 @@ sub _process_interfaces{
 	next if($line =~ /Port/);
 	next if($line eq '');
 
-	$line =~ /(\S+)\s+(\S+)\s+(\S+)(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/g;
+	$line =~ /(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/g;
 
 	my $int = {};
 	$int->{'port_name'} = $1;

@@ -349,10 +349,10 @@ sub _send_vlan_add{
     my $switch = shift;
     my $vlan   = shift;
 
-#    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
-#    if (exists $response->{'error'}) {
-#        $self->logger->error($response->{'error'});
-#    }
+   my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
+   if (exists $response->{'error'}) {
+       $self->logger->error($response->{'error'});
+   }
 
     return 1;
 }
@@ -363,10 +363,10 @@ sub _send_vlan_remove{
     my $switch = shift;
     my $vlan   = shift;
 
-#    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
-#    if (exists $response->{'error'}) {
-#        $self->logger->error($response->{'error'});
-#    }
+   my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
+   if (exists $response->{'error'}) {
+       $self->logger->error($response->{'error'});
+   }
 
     return 1;
 }
