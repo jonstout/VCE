@@ -15,6 +15,9 @@ has comm => (is => 'rwp');
 
 has conn => (is => 'rwp');
 
+has in_configure => (is => 'rwp', default => 0);
+has context => (is => 'rwp');
+
 =head2 BUILD
 
 =over 4
@@ -314,6 +317,110 @@ sub _process_interfaces{
     }
 
     return \@interfaces;
+}
+
+=head2 configure
+
+=cut
+
+sub configure{
+    my $self = shift;
+
+    if($self->in_configure){
+        $self->logger->info("Already in configure mode");
+        return 1;
+    }
+    
+    my $res = $self->comm->issue_command("configure terminal");
+    if($res){
+        $self->_set_in_configure(1);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+=head2 exit_configure
+
+=cut
+
+sub exit_configure{
+    my $self = shift;
+
+    if(!$self->in_configure){
+        $self->logger->info("Already NOT in configure mode");
+        return 1;
+    }
+
+    my $res = $self->comm->issue_command("exit");
+    if($res){
+        $self->_set_in_configure(1);
+        return 1;
+    }
+
+    return 0;
+
+}
+
+=head2 set_context
+
+=cut
+
+sub set_context{
+    my $self = shift;
+    my $context = shift;
+
+    if(defined($self->context)){
+        if($self->context eq $context){
+            $self->logger->info("Already in context $context");
+            return 1;
+        }else{
+            $self->logger->error("Already in a context " . $self->context);
+            return 0;
+        }
+    }
+
+    my $res = $self->comm->issue_command($context);
+    if($res){
+        $self->_set_context($context);
+        return 1;
+    }
+
+    return 0;
+}
+
+=head2 exit_context
+
+=cut
+
+sub exit_context{
+    my $self = shift;
+    
+    if(!defined($self->context)){
+        $self->logger->info("Not in a context");
+        return 1;
+    }
+
+    my $res = $self->comm->issue_command("exit");
+    if($res){
+        $self->_set_context();
+        return 1;
+    }
+
+    return 0;
+
+}
+
+=head2 issue_command
+
+=cut
+
+sub issue_command{
+    my $self = shift;
+    my $command = shift;
+
+    return $self->comm->issue_command($command);
 }
 
 1;

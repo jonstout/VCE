@@ -76,6 +76,56 @@ sub get_light_levels{
     return;
 }
 
+=head2 configure
+
+=cut
+
+sub configure{
+    my $self = shift;
+    $self->logger->error("configure has not been overridden");
+    return;
+}
+
+=head2 set_context
+
+=cut
+
+sub set_context{
+    my $self = shift;
+    $self->logger->error("set_context has not been overridden");
+    return;
+}
+
+=head2 exit_configure
+
+=cut
+
+sub exit_configure{
+    my $self = shift;
+    $self->logger->error("exit_configure has not been overridden");
+    return;
+}
+
+=head2 exit_context
+
+=cut
+
+sub exit_context{
+    my $self = shift;
+    $self->logger->error("exit context has not been overridden");
+    return;
+}
+
+=head2 issue_command
+
+=cut
+
+sub issue_command{
+    my $self = shift;
+    $self->logger->error("issue_command has not been overridden");
+    return;
+}
+
 
 
 1;
