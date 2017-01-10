@@ -32,6 +32,8 @@ has name => (is => 'rwp');
 
 =over 4
 
+=item vce
+
 =item logger
 
 =item device

@@ -22,7 +22,12 @@ has context => (is => 'rwp');
 =over 4
 
 =item comm
+
 =item conn
+
+=item context
+
+=item in_configure
 
 =back    
 

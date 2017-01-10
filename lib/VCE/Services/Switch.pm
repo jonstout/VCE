@@ -38,6 +38,8 @@ has template => (is => 'rwp');
 
 =item template
 
+=item vce
+
 =back
 
 =cut
@@ -236,7 +238,7 @@ sub _execute_command{
     if($res->{'error'}){
         return {success => 0, error => {msg => $res->{'error_message'}}};
     }else{
-        return { success => 1, raw => $res->{'results'}};
+        return { success => 1, raw => $res->{'results'}->{'raw'}};
     }
 
 }

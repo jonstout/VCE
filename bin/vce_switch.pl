@@ -21,7 +21,7 @@ my $password = $cli->get_password("password");
 
 my $switch = VCE::Switch->new( username => $username,
 			       password => $password,
-			       hostname => '156.56.6.220',
+			       hostname => '156.56.6.221',
 			       port => 22,
 			       vendor => 'Brocade',
 			       type => 'MLXe',
