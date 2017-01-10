@@ -213,10 +213,13 @@ sub _process_command_config{
 	foreach my $cmd (keys(%commands)){
 	    
 	    my $val = {name => $cmd,
-		       interaction => $commands{$cmd}{'interaction'},
-		       actual_command => $commands{$cmd}{'content'},
+		       method_name => $commands{$cmd}{'method_name'},
+                       interaction => $commands{$cmd}{'interaction'},
+		       actual_command => $commands{$cmd}{'cmd'}->[0],
 		       type => $commands{$cmd}{'type'},
 		       configure => $commands{$cmd}{'configure'},
+                       params => $commands{$cmd}{'parameter'},
+                       description => $commands{$cmd}{'description'},
 		       context => $commands{$cmd}{'context'}};
 	    
 	    if(!defined($val->{'configure'})){

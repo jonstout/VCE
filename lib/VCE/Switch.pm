@@ -198,6 +198,27 @@ sub _register_rpc_methods{
 
     $d->register_method($method);
 
+    $method = GRNOC::RabbitMQ::Method->new( name => "execute_command",
+                                            callback => sub { return $self->execute_command( @_ )  },
+                                            description => "executes a command" );
+    
+    $method->add_input_parameter( name        => "command",
+                                  description => "Actual command to run",
+                                  required    => 1,
+                                  pattern     => $GRNOC::WebService::Regex::TEXT );
+    
+    $method->add_input_parameter( name        => "context",
+                                  description => "Any context for the command",
+                                  required    => 0,
+                                  pattern     => $GRNOC::WebService::Regex::TEXT );
+
+    $method->add_input_parameter( name        => "config",
+                                  description => "Does this command need to be done in commadn mode",
+                                  required    => 1,
+                                  default     => 0,
+                                  pattern     => $GRNOC::WebService::Regex::BOOLEAN );
+
+    $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",
                                             callback => sub { return $self->interface_tagged( @_ )  },
@@ -397,6 +418,52 @@ sub stop{
     $self->dispatcher->stop_consuming();
 }
 
+=head2 execute_command
 
+=cut
+
+sub execute_command{
+    my $self = shift;
+    my $m_ref = shift;
+    my $p_ref = shift;
+
+    if($self->device->connected()){
+        
+        my $in_configure = 0;
+
+        if($p_ref->{'config'}{'value'}){
+            if(!$self->device->configure()){
+                return {success => 0, error => 1, error_msg => "Unable to get into configure mode"};
+            }else{
+                $in_configure = 1;
+            }
+        }
+
+        my $in_context = 0;
+
+        if(defined($p_ref->{'context'}{'value'})){
+            if(!$self->device->set_context( $p_ref->{'context'}{'value'} )){
+                $self->device->exit_configure();
+                return {success => 0, error => 1, error_msg => "Unable to enter the context"};
+            }
+        }
+
+        #ok we are now ready to send our command get the results!
+        my $res = $self->device->issue_command( $p_ref->{'command'}{'value'} );
+
+        if($in_context){
+            $self->device->exit_context();
+        }
+
+        if($in_configure){
+            $self->device->exit_configure();
+        }
+
+        return {success => 1, raw => $res};
+            
+
+    }
+
+}
 
 1;
