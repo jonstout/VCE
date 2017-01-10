@@ -7,7 +7,6 @@ use warnings;
 
 use Moo;
 use GRNOC::Log;
-
 use GRNOC::RabbitMQ::Method;
 use GRNOC::RabbitMQ::Dispatcher;
 use GRNOC::WebService::Regex;
@@ -238,17 +237,12 @@ sub get_interfaces{
     my $m_ref = shift;
     my $p_ref = shift;
 
-    warn Data::Dumper::Dumper($p_ref);
-
     if($self->device->connected){
-	
 	return $self->device->get_interfaces(  );
-	
     }else{
 	$self->logger->error("Error device is not connected");
 	return;
     }
-    
 }
 
 =head2 get_interfaces_op
@@ -354,7 +348,6 @@ sub get_interface_status{
     }
 
     return {status => $self->op_state->{'ports'}{$interface}{'status'}};
-
 }
 
 =head2 _gather_operational_status
