@@ -86,14 +86,14 @@
                                                         <td id="switch_ports"> </td>
                                                     </tr>
                                                 </tbody>
-                                                <caption>Details:</caption>
+                                                <caption>Status </caption>
                                             </table>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <form>
+                                        <form class="form-horizontal">
                                             <div class="form-group">
                                                 <label class="control-label">Commands </label>
                                                 <select class="form-control" id="switch_select">
@@ -116,125 +116,105 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" role="tabpanel" id="tab-1">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-condensed">
-                                    <thead>
-                                        <tr>
-                                            <th>Port </th>
-                                            <th>Description </th>
-                                            <th>Status </th>
-                                            <th>VLANs </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>eth1/1 </td>
-                                            <td>to Japan </td>
-                                            <td>Up </td>
-                                            <td>2/2 </td>
-                                        </tr>
-                                        <tr>
-                                            <td>eth1/2 </td>
-                                            <td>australia link 2</td>
-                                            <td>Up </td>
-                                            <td>1/1 </td>
-                                        </tr>
-                                        <tr class="warning">
-                                            <td>eth6/1 </td>
-                                            <td>cats breath</td>
-                                            <td>Up </td>
-                                            <td>3/4 </td>
-                                        </tr>
-                                        <tr class="danger">
-                                            <td class="danger">eth8/1 </td>
-                                            <td>anchor bait</td>
-                                            <td>Down </td>
-                                            <td>0/2 </td>
-                                        </tr>
-                                    </tbody>
-                                    <caption>Operational Status:</caption>
-                                </table>
-                            </div>
-                            <p>First tab content.</p>
-                        </div>
                         <div class="tab-pane fade" role="tabpanel" id="tab-2">
-                            <p> </p>
-                            <form class="form-horizontal">
-                                <div class="form-group">
-                                    <div class="col-sm-4">
-                                        <label class="control-label">Available Commands: </label>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <select class="form-control" id="port_select">
-                                            <option value=""></option>
-                                            <optgroup label="Show Commands" id="port_show_commands"></optgroup>
-                                            <optgroup label="Config Actions" id="port_action_commands"></optgroup>
-                                        </select>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <form class="form-horizontal">
+                                            <div class="form-group">
+                                                <label class="control-label">Commands </label>
+                                                <select class="form-control" id="port_select">
+                                                    <option value=""></option>
+                                                    <optgroup label="Show Commands" id="port_show_commands"></optgroup>
+                                                    <optgroup label="Config Actions" id="port_action_commands"></optgroup>
+                                                </select>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                                <div class="row" id="port_form_container"></div>
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-condensed">
-                                        <thead>
-                                            <tr>
-                                                <th>Port </th>
-                                                <th>Description </th>
-                                                <th>VLANS </th>
-                                                <th>Status </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="port_table"></tbody>
-                                        <caption>Operational Status:</caption>
-                                    </table>
+                                <div class="row">
+                                    <div class="col-md-12" id="port_form_container"></div>
                                 </div>
-                            </form>
-                            <hr>
-                            <h4 class="text-left">Results: </h4>
-                            <div class="well" id="port_response_well"></div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-condensed">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Port </th>
+                                                        <th>Description </th>
+                                                        <th>VLANS </th>
+                                                        <th>Status </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="port_table"></tbody>
+                                                <caption>Status</caption>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h4 class="text-left">Results </h4>
+                                        <div class="well" id="port_response_well"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="tab-pane fade" role="tabpanel" id="tab-3">
-                            <p> </p>
-                            <form class="form-horizontal">
-                                <div class="form-group">
-                                    <div class="col-sm-4">
-                                        <label class="control-label">Available Commands: </label>
-                                    </div>
-                                    <div class="col-sm-8">
-                                        <select class="form-control" id="vlan_select">
-                                            <option value="" selected=""></option>
-                                            <optgroup label="Show Commands" id="vlan_show_commands"></optgroup>
-                                            <optgroup label="Config Actions" id="vlan_action_commands">
-                                                <option value="add_vlan">Create</option>
-                                                <option value="edit_vlan">Edit</option>
-                                                <option value="delete_vlan">Delete</option>
-                                            </optgroup>
-                                        </select>
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <form class="form-horizontal">
+                                            <div class="form-group">
+                                                <label class="control-label">Commands </label>
+                                                <select class="form-control" id="vlan_select">
+                                                    <option value="" selected=""></option>
+                                                    <optgroup label="Show Commands" id="vlan_show_commands"></optgroup>
+                                                    <optgroup label="Config Actions" id="vlan_action_commands">
+                                                        <option value="add_vlan">Create</option>
+                                                        <option value="edit_vlan">Edit</option>
+                                                        <option value="delete_vlan">Delete</option>
+                                                    </optgroup>
+                                                </select>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                                <div class="row" id="vlan_form_container"></div>
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-condensed">
-                                        <thead>
-                                            <tr>
-                                                <th>VLAN </th>
-                                                <th>Description </th>
-                                                <th>Ports </th>
-                                                <th>Status </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="vlan_table"></tbody>
-                                        <caption>Operational Status:</caption>
-                                    </table>
+                                <div class="row">
+                                    <div class="col-md-12" id="vlan_form_container"></div>
                                 </div>
-                            </form>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-condensed">
+                                                <thead>
+                                                    <tr>
+                                                        <th>VLAN </th>
+                                                        <th>Description </th>
+                                                        <th>Ports </th>
+                                                        <th>Status </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="vlan_table"></tbody>
+                                                <caption>Status</caption>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h4>Results </h4>
+                                        <div class="well" id="vlan_response_well"><span> </span></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div></div>
     <div class="footer-dark">
         <footer>
             <div class="container">
@@ -248,7 +228,6 @@
                         <ul>
                             <li><a href="#">Report Issue</a></li>
                             <li><a href="#">Documentation </a></li>
-                            <li><a href="#">Request Access</a></li>
                         </ul>
                     </div>
                     <div class="col-md-3 col-md-pull-6 col-sm-4 item">
@@ -256,7 +235,6 @@
                         <ul>
                             <li><a href="#">Company</a></li>
                             <li><a href="#">Team</a></li>
-                            <li><a href="#">Careers</a></li>
                         </ul>
                     </div>
                 </div>
