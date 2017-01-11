@@ -28,10 +28,24 @@ function NewCommandForm(details, reponseFunc) {
         var group = document.createElement("div");
         group.setAttribute("class", "form-group");
         
-        var input = document.createElement("input");
+        var input = null;
         var label = document.createElement("label");
         
-        input.setAttribute("type", "text");
+        if (param.type == "select") {
+            input = document.createElement("select");
+            
+            console.log(param);
+            for (var j = 0; j < param.options.length; j++) {
+                var opt = document.createElement("option");
+                opt.innerHTML = param.options[j];
+                
+                input.appendChild(opt);
+            }
+        } else {
+            input = document.createElement("input");
+            input.setAttribute("type", "text");
+        }
+
         input.setAttribute("name", param.name);
         input.setAttribute("class", "form-control");
         
