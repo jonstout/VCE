@@ -257,7 +257,7 @@ sub _authorize_command{
             return 0;
         }
     }elsif($params{'command'}->{'type'} eq 'port'){
-        if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'}{'value'},
+        if($self->vce->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'}{'value'},
                                                         switch => $params{'switch'}{'value'},
                                                         port => $params{'port'}{'value'})){
             return 1;
