@@ -25,9 +25,11 @@ window.onload = function() {
     var url = window.location;
     if (url.pathname.indexOf('details.html') > -1) {
         loadPorts();
-        loadPortCommands();
         loadVlans();
         loadSwitch();
+        
+        loadPortCommands();
+        loadSwitchCommands();
         
         setInterval(loadPorts, 30000);
         setInterval(loadVlans, 30000);

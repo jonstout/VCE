@@ -53,38 +53,67 @@
             <div class="col-md-12">
                 <div>
                     <ul class="nav nav-tabs">
-                        <li><a href="#tab-4" role="tab" data-toggle="tab">Switch</a></li>
-                        <li class="active"><a href="#tab-3" role="tab" data-toggle="tab">VLANs </a></li>
+                        <li class="active"><a href="#tab-4" role="tab" data-toggle="tab">Switch</a></li>
+                        <li><a href="#tab-3" role="tab" data-toggle="tab">VLANs </a></li>
                         <li id="port_tab"><a href="#tab-2" role="tab" data-toggle="tab">Ports </a></li>
                     </ul>
                     <div class="tab-content">
-                        <div class="tab-pane fade" role="tabpanel" id="tab-4">
-                            <div class="table-responsive">
-                                <table class="table table-condensed">
-                                    <tbody id="switch_detail_table">
-                                        <tr>
-                                            <td><strong>Name</strong> </td>
-                                            <td id="switch_name"> </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Description</strong></td>
-                                            <td id="switch_description"> </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Status</strong> </td>
-                                            <td id="switch_status"> </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Your VLANS</strong></td>
-                                            <td id="switch_vlans"> </td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>Your Ports</strong></td>
-                                            <td id="switch_ports"> </td>
-                                        </tr>
-                                    </tbody>
-                                    <caption>Details:</caption>
-                                </table>
+                        <div class="tab-pane fade in active" role="tabpanel" id="tab-4">
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="table-responsive">
+                                            <table class="table table-condensed">
+                                                <tbody id="switch_detail_table">
+                                                    <tr>
+                                                        <td><strong>Name</strong> </td>
+                                                        <td id="switch_name"> </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Description</strong></td>
+                                                        <td id="switch_description"> </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Status</strong> </td>
+                                                        <td id="switch_status"> </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Your VLANS</strong></td>
+                                                        <td id="switch_vlans"> </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Your Ports</strong></td>
+                                                        <td id="switch_ports"> </td>
+                                                    </tr>
+                                                </tbody>
+                                                <caption>Details:</caption>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <form>
+                                            <div class="form-group">
+                                                <label class="control-label">Commands </label>
+                                                <select class="form-control" id="switch_select">
+                                                    <option value="" selected=""></option>
+                                                    <optgroup label="Show Commands" id="switch_show_commands"></optgroup>
+                                                    <optgroup label="Config Actions" id="switch_action_commands"></optgroup>
+                                                </select>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" id="switch_form_container"></div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h4>Results </h4>
+                                        <div class="well" id="switch_response_well"><span> </span></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="tab-pane fade" role="tabpanel" id="tab-1">
@@ -162,10 +191,9 @@
                             </form>
                             <hr>
                             <h4 class="text-left">Results: </h4>
-                            <div class="well"><span id="result_text"> </span></div>
-                            <div></div>
+                            <div class="well" id="port_response_well"></div>
                         </div>
-                        <div class="tab-pane fade in active" role="tabpanel" id="tab-3">
+                        <div class="tab-pane fade" role="tabpanel" id="tab-3">
                             <p> </p>
                             <form class="form-horizontal">
                                 <div class="form-group">

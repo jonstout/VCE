@@ -14,7 +14,7 @@
  * After submit, the results of a successful request will be
  * added to a pre tag, and placed in #result_text.
  */
-function NewCommandForm(details) {
+function NewCommandForm(details, reponseFunc) {
     var cookie = Cookies.getJSON('vce');
 
     // Create form and its input fields
@@ -89,12 +89,7 @@ function NewCommandForm(details) {
         fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
             response.json().then(function(data) {
                 console.log(data);
-                var result = document.getElementById("result_text");
-                result.innerHTML = "";
-                
-                var pre = document.createElement("pre");
-                pre.innerHTML = data.raw.raw;
-                result.appendChild(pre);
+                reponseFunc(data.raw);
             });
         });
     });
