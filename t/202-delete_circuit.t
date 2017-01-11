@@ -7,10 +7,63 @@ use warnings;
 
 use Test::More tests => 30;
 use Test::Deep;
+
 use GRNOC::WebService::Client;
+use AnyEvent::HTTP::LWP::UserAgent;
+use GRNOC::RabbitMQ;
+use GRNOC::RabbitMQ::Dispatcher;
+use GRNOC::RabbitMQ::Method;
+use JSON::XS;
 use Data::Dumper;
 
 `cp t/etc/nm1.json.orig t/etc/nm1.json`;
+
+
+sub make_request{
+    my $params = shift;
+    my $query = new CGI($params);
+    my $req = HTTP::Request->new( GET => "http://localhost:8529/vce/services/provisioning.cgi?" . $query->query_string() );
+    $req->authorization_basic( 'aragusa', 'unittester' );
+    return $req;
+}
+
+my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( user => 'guest',
+                                                   pass => 'guest',
+                                                   host => 'localhost',
+                                                   timeout => 30,
+                                                   port => 5672,
+                                                   exchange => 'VCE',
+                                                   topic => 'VCE.Switch.RPC' );
+
+
+my $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",
+                                           callback => sub { return {success => 1} },
+                                           description => "Add vlan tagged interface" );
+
+$method->add_input_parameter( name        => "port",
+                              description => "Name of the interface to add tag to",
+                              required    => 1,
+                              pattern     => $GRNOC::WebService::Regex::TEXT );
+
+$method->add_input_parameter( name        => "vlan",
+                              description => "VLAN number to use for tag",
+                              required    => 1,
+                              pattern     => $GRNOC::WebService::Regex::INTEGER );
+
+$dispatcher->register_method($method);
+
+$method = GRNOC::RabbitMQ::Method->new( name => "no_interface_tagged",
+                                        callback => sub { return {success => 1}},
+                                        description => "Remove vlan tagged interface" );
+$method->add_input_parameter( name        => "port",
+                              description => "Name of the interface to remove tag from",
+                              required    => 1,
+                              pattern     => $GRNOC::WebService::Regex::TEXT );
+$method->add_input_parameter( name        => "vlan",
+                              description => "VLAN number to use for tag",
+                              required    => 1,
+                              pattern     => $GRNOC::WebService::Regex::INTEGER );
+$dispatcher->register_method($method);
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
@@ -19,23 +72,34 @@ my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/s
                                              debug => 0,
                                              timeout => 60 );
 
+my $ua = AnyEvent::HTTP::LWP::UserAgent->new;
 my $provisioner = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/provisioning.cgi',
                                                   realm => 'VCE',
                                                   uid => 'aragusa',
                                                   passwd => 'unittester',
                                                   debug => 0,
-                                                  timeout => 60 );
+                                                  timeout => 5 );
 
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
 
 ok(defined($vlans), "Got a response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Expected circuits found!");
 
-my $vlan = $provisioner->add_vlan( description => "Automated test suite!",
-                                   switch => 'foobar',
-                                   port => ['eth0/1','eth0/2'],
-                                   vlan => '104',
-                                   workgroup => 'ajco');
+
+my $vlan;
+my $req = make_request({ method => 'add_vlan',
+                         description => "Automated test suite!",
+                         switch => 'foobar',
+                         port => ['eth0/1','eth0/2'],
+                         vlan => '104',
+                         workgroup => 'ajco'});
+
+my $response = $ua->simple_request_async($req)->recv;
+if($response->is_success){
+    my $content = $response->content;
+    $vlan = decode_json($content);
+}
+
 
 ok(defined($vlan), "got a response");
 ok($vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
@@ -77,8 +141,16 @@ cmp_deeply($vlan_details,{
         ]
            });
 
-my $delete = $provisioner->delete_vlan( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
-                                        workgroup => 'ajco');
+my $delete;
+$req = make_request({ method => 'delete_vlan',
+                      vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
+                      workgroup => 'ajco'});
+
+$response = $ua->simple_request_async($req)->recv;
+if($response->is_success){
+    my $content = $response->content;
+    $delete = decode_json($content);
+}
 
 ok($delete->{'results'}->[0]->{'success'} == 1, "Successfully delete the circuit");
 
@@ -87,11 +159,18 @@ $vlans = $client->get_vlans( workgroup => 'ajco');
 ok(defined($vlans), "Got a valid response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Looks like we successfully deleted it");
 
-$vlan = $provisioner->add_vlan( description => "Automated test suite!",
-                                switch => 'foobar',
-                                port => ['eth0/1','eth0/2'],
-                                vlan => '104',
-                                workgroup => 'ajco');
+$req = make_request({ method => 'add_vlan',
+                      description => "Automated test suite!",
+                      switch => 'foobar',
+                      port => ['eth0/1','eth0/2'],
+                      vlan => '104',
+                      workgroup => 'ajco'});
+
+$response = $ua->simple_request_async($req)->recv;
+if($response->is_success){
+    my $content = $response->content;
+    $vlan = decode_json($content);
+}
 
 ok(defined($vlan), "got a response");
 ok($vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");

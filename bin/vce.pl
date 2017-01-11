@@ -74,7 +74,6 @@ sub main{
         GRNOC::Log->new( config => '/etc/vce/logging.conf');
         my $logger = GRNOC::Log->get_logger("CHILD");
 	$logger->error("Creating switch!!!");
-	$logger->error(Dumper($switch));
 	my $s = VCE::Switch->new( username => $switch->{'username'},
                                   password => $switch->{'password'},
                                   hostname => $switch->{'ip'},
@@ -83,7 +82,7 @@ sub main{
                                   type => $switch->{'model'},
                                   version => $switch->{'version'},
                                   name => $switch->{'name'},
-                                  rabbit_mq => $vce->{'rabbit_mq'} );
+                                  rabbit_mq => $vce->rabbit_mq );
 
 	$logger->error("Switch Instance created!");
         

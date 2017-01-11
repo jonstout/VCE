@@ -8,6 +8,7 @@ URL: http://globalnoc.iu.edu
 Source: %{name}-%{version}.tar.gz
 
 BuildRequires: perl
+BuildRequires: perl-AnyEvent-HTTP-LWP-UserAgent
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 Requires(pre): /usr/sbin/useradd, /usr/bin/getent

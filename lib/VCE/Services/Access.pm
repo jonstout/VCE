@@ -323,18 +323,18 @@ sub get_switch_commands{
                                                 description => "switch to run the command on",
                                                 required => 1 });
 
-                foreach my $param (keys (%{$cmd->{'parameters'}})){
+                foreach my $param (keys (%{$cmd->{'params'}})){
                     
                     my $p = {};
                     
                     if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$cmd->{'parameters'}{$param}{'options'});
+                        @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
                     }else{
                         
                     }
-                    $p->{'type'} = $cmd->{'parameters'}{$param}{'type'};
+                    $p->{'type'} = $cmd->{'params'}{$param}{'type'};
                     $p->{'name'} = $param;
-                    $p->{'description'} = $cmd->{'parameters'}{$param}{'description'};
+                    $p->{'description'} = $cmd->{'params'}{$param}{'description'};
                     $p->{'required'} = 1;
                     push(@{$obj->{'parameters'}}, $p);
                 }
@@ -394,18 +394,18 @@ sub get_port_commands{
                                                 description => "port to run the command on",
                                                 required => 1 });
 
-                foreach my $param (keys (%{$cmd->{'parameters'}})){
-                    
+                foreach my $param (keys (%{$cmd->{'params'}})){
+                    warn Dumper($cmd->{'params'}{$param});
                     my $p = {};
                     
-                    if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$cmd->{'parameters'}{$param}{'options'});
+                    if($cmd->{'params'}{$param}{'type'} eq 'select'){
+                        @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
                     }else{
                         
                     }
-                    $p->{'type'} = $cmd->{'parameters'}{$param}{'type'};
+                    $p->{'type'} = $cmd->{'params'}{$param}{'type'};
                     $p->{'name'} = $param;
-                    $p->{'description'} = $cmd->{'parameters'}{$param}{'description'};
+                    $p->{'description'} = $cmd->{'params'}{$param}{'description'};
                     $p->{'required'} = 1;
                     push(@{$obj->{'parameters'}}, $p);
                 }
@@ -462,18 +462,18 @@ sub get_vlan_commands{
                                                 description => "vlan_id of the vlan to run the command on",
                                                 required => 1 });
 
-                foreach my $param (keys (%{$cmd->{'parameters'}})){
+                foreach my $param (keys (%{$cmd->{'params'}})){
 
                     my $p = {};
 
-                    if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$cmd->{'parameters'}{$param}{'options'});
+                    if($cmd->{'params'}{$param}{'type'} eq 'select'){
+                        @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
                     }else{
 
                     }
-                    $p->{'type'} = $cmd->{'parameters'}{$param}{'type'};
+                    $p->{'type'} = $cmd->{'params'}{$param}{'type'};
                     $p->{'name'} = $param;
-                    $p->{'description'} = $cmd->{'parameters'}{$param}{'description'};
+                    $p->{'description'} = $cmd->{'params'}{$param}{'description'};
                     $p->{'required'} = 1;
                     push(@{$obj->{'parameters'}}, $p);
                 }
