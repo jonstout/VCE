@@ -440,14 +440,12 @@ sub get_vlan_commands{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'vlan_id'})){
-        $self->logger->error("get_vlan_commands: vlan not specified");
+    if(!defined($params{'switch'})){
+        $self->logger->error("get_vlan_commands: switch not specified");
         return;
     }
 
-    my $vlan = $self->vce->network_model->get_vlan( vlan_id => $params{'vlan_id'});
-
-    return $self->config->{'switches'}{$vlan->{'switch'}}->{'commands'}->{'vlan'};    
+    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'vlan'};    
 
 }
 
