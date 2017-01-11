@@ -2,7 +2,7 @@ function loadCookie() {
     cookie = Cookies.getJSON('vce');
     if (cookie === undefined) {
         console.log('setting cookie');
-        Cookies.set('vce', {workgroup: 'ajco', switches: ['foobar']});
+        Cookies.set('vce', {workgroup: 'admin', switches: ['switch']});
     }
     /*
     {
@@ -27,6 +27,10 @@ window.onload = function() {
         loadPorts();
         loadVlans();
         loadSwitch();
+        
+        loadPortCommands();
+        loadSwitchCommands();
+        loadVlanCommands();
         
         setInterval(loadPorts, 30000);
         setInterval(loadVlans, 30000);
