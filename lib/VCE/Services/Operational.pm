@@ -145,19 +145,23 @@ sub get_interfaces_operational_status {
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
+    $self->logger->error("Calling get_interfaces_operational_status");
 
     #verify user in workgroup
     if ($self->vce->access->user_in_workgroup( username => $user,
                                                workgroup => $workgroup )) {
 	
         my $ports = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch, ports => undef);
-	my $port_info = $self->vce->get_interfaces_operational_state(workgroup => $workgroup, switch => $switch)->{'results'};
-
-        #return {results => [ $port_info ]};
+	my $port_info = $self->vce->get_interfaces_operational_state(workgroup => $workgroup, switch => $switch);
+        if (!defined $port_info) {
+            my $err = "Could not get interface state from device.";
+            $self->logger->error($err);
+            return {results => [], error => {msg => $err}};
+        }
 
         my $result = [];
         foreach my $port (@{$ports}) {
-            my $pdata = $port_info->{$port->{'port'}};
+            my $pdata = $port_info->{'results'}->{$port->{'port'}};
             $pdata->{'tags'} = $port->{'tags'};
             $pdata->{'description'} = $self->vce->config->{'switches'}->{$switch}->{'ports'}->{$port->{'port'}}->{'description'};
             push(@{$result}, $pdata);
