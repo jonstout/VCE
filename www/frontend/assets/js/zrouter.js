@@ -30,6 +30,7 @@ window.onload = function() {
         
         loadPortCommands();
         loadSwitchCommands();
+        loadVlanCommands();
         
         setInterval(loadPorts, 30000);
         setInterval(loadVlans, 30000);
