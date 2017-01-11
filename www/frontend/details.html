@@ -54,8 +54,8 @@
                 <div>
                     <ul class="nav nav-tabs">
                         <li><a href="#tab-4" role="tab" data-toggle="tab">Switch</a></li>
-                        <li><a href="#tab-3" role="tab" data-toggle="tab">VLANs </a></li>
-                        <li class="active" id="port_tab"><a href="#tab-2" role="tab" data-toggle="tab">Ports </a></li>
+                        <li class="active"><a href="#tab-3" role="tab" data-toggle="tab">VLANs </a></li>
+                        <li id="port_tab"><a href="#tab-2" role="tab" data-toggle="tab">Ports </a></li>
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade" role="tabpanel" id="tab-4">
@@ -129,7 +129,7 @@
                             </div>
                             <p>First tab content.</p>
                         </div>
-                        <div class="tab-pane fade in active" role="tabpanel" id="tab-2">
+                        <div class="tab-pane fade" role="tabpanel" id="tab-2">
                             <p> </p>
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -137,13 +137,14 @@
                                         <label class="control-label">Available Commands: </label>
                                     </div>
                                     <div class="col-sm-8">
-                                        <select class="form-control">
+                                        <select class="form-control" id="port_select">
                                             <option value=""></option>
-                                            <optgroup label="Show Commands"></optgroup>
-                                            <optgroup label="Config Actions"></optgroup>
+                                            <optgroup label="Show Commands" id="port_show_commands"></optgroup>
+                                            <optgroup label="Config Actions" id="port_action_commands"></optgroup>
                                         </select>
                                     </div>
                                 </div>
+                                <div class="row" id="port_form_container"></div>
                                 <div class="table-responsive">
                                     <table class="table table-striped table-condensed">
                                         <thead>
@@ -161,10 +162,10 @@
                             </form>
                             <hr>
                             <h4 class="text-left">Results: </h4>
-                            <div class="well"><span> </span></div>
+                            <div class="well"><span id="result_text"> </span></div>
                             <div></div>
                         </div>
-                        <div class="tab-pane fade" role="tabpanel" id="tab-3">
+                        <div class="tab-pane fade in active" role="tabpanel" id="tab-3">
                             <p> </p>
                             <form class="form-horizontal">
                                 <div class="form-group">
@@ -172,10 +173,10 @@
                                         <label class="control-label">Available Commands: </label>
                                     </div>
                                     <div class="col-sm-8">
-                                        <select class="form-control" id="vlan_command">
+                                        <select class="form-control" id="vlan_select">
                                             <option value="" selected=""></option>
-                                            <optgroup label="Show Commands"></optgroup>
-                                            <optgroup label="Config Actions">
+                                            <optgroup label="Show Commands" id="vlan_show_commands"></optgroup>
+                                            <optgroup label="Config Actions" id="vlan_action_commands">
                                                 <option value="add_vlan">Create</option>
                                                 <option value="edit_vlan">Edit</option>
                                                 <option value="delete_vlan">Delete</option>
@@ -183,6 +184,7 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="row" id="vlan_form_container"></div>
                                 <div class="table-responsive">
                                     <table class="table table-striped table-condensed">
                                         <thead>
@@ -240,6 +242,7 @@
     <script src="assets/js/create.js"></script>
     <script src="assets/js/detail.js"></script>
     <script src="assets/js/edit.js"></script>
+    <script src="assets/js/form.js"></script>
     <script src="assets/js/header.js"></script>
     <script src="assets/js/js.cookie.js"></script>
     <script src="assets/js/switch.js"></script>

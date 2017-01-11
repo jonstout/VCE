@@ -2,7 +2,7 @@ function loadCookie() {
     cookie = Cookies.getJSON('vce');
     if (cookie === undefined) {
         console.log('setting cookie');
-        Cookies.set('vce', {workgroup: 'ajco', switches: ['foobar']});
+        Cookies.set('vce', {workgroup: 'admin', switches: ['switch']});
     }
     /*
     {
@@ -25,6 +25,7 @@ window.onload = function() {
     var url = window.location;
     if (url.pathname.indexOf('details.html') > -1) {
         loadPorts();
+        loadPortCommands();
         loadVlans();
         loadSwitch();
         
