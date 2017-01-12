@@ -13,7 +13,8 @@ BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 Requires(pre): /usr/sbin/useradd, /usr/bin/getent
 
-Requires: perl-Apache-Test
+BuildRequires: httpd-devel
+BuildRequires: mod_perl-devel
 Requires: perl-Devel-Cover
 Requires: perl-GRNOC-CLI
 Requires: perl-GRNOC-Comm
