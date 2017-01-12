@@ -29,7 +29,7 @@ WriteMakefile(
     clean               => { FILES => 'vce-*' },
     );
 
-push(@ARGV, '-apxs', '/usr/sbin/apxs');
+push(@ARGV, '-apxs', (-e '/usr/bin/apxs') ? '/usr/bin/apxs' : '/usr/sbin/apxs');
 push(@ARGV, '-documentroot', "$FindBin::Bin/www/services/");
 push(@ARGV, '-maxclients', 4);
 

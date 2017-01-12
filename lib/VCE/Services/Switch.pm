@@ -121,7 +121,7 @@ sub _register_commands{
                 if($type eq 'vlan'){
                     $method->add_input_parameter( required => 1,
                                                   name => 'vlan_id',
-                                                  pattern => $GRNOC::WebService::Regex::TEXT,
+                                                  pattern => $GRNOC::WebService::Regex::NUMBER,
                                                   description => "the vlan to run the command for" );
                     
                 }
