@@ -11,7 +11,8 @@ use GRNOC::Log;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
-my $vce = VCE->new( config_file => './t/etc/test_config.xml');
+my $vce = VCE->new( config_file => './t/etc/test_config.xml',
+                    network_model_file => "t/etc/nm1.json");
 
 ok(defined($vce), "VCE Object created");
 
