@@ -26,7 +26,6 @@ Requires: perl-GRNOC-WebService-Client
 Requires: perl-Moo
 Requires: perl-Parallel-ForkManager
 Requires: perl-Test-Deep
-Requires: perl-Type-Tiny
 
 
 %description
