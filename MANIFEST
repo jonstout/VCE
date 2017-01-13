@@ -48,13 +48,6 @@ t/200-provision_vlan.t
 t/201-edit_vlan.t
 t/202-delete_circuit.t
 t/300-get_switch_interfaces.t
-t/conf/.htpasswd
-t/conf/apache_test_config.pm
-t/conf/extra.conf
-t/conf/extra.conf.in
-t/conf/httpd.conf
-t/conf/modperl_inc.pl
-t/conf/modperl_startup.pl
 t/etc/apache_logging.conf
 t/etc/nm1.json
 t/etc/nm1.json.orig
@@ -62,8 +55,6 @@ t/etc/nm2.json
 t/etc/nm3.json
 t/etc/nm4.json
 t/etc/test_config.xml
-t/logs/access_log
-t/logs/error_log
 t/TEST
 vce.spec
 www/assets/bootstrap/css/bootstrap.min.css

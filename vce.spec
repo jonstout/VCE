@@ -1,7 +1,7 @@
 Summary: Virtual Customer Equipment
 Name: vce
 Version: 0.1.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache
 Group: GRNOC
 URL: http://globalnoc.iu.edu
@@ -80,9 +80,10 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
-
+%{__install} -d -p %{buildroot}/usr/lib/systemd/scripts
+%{__install} -d -p %{buildroot}/etc/systemd/system
 %{__install} -m 544 etc/vce.init %{buildroot}/usr/lib/systemd/scripts/vce
-%{__install} -m 544 etc/vce.systemd %{buildroot}/etc/vce.service
+%{__install} -m 544 etc/vce.systemd %{buildroot}/etc/systemd/system/vce.service
 
 # Configuration Files
 %{__install} -d -p %{buildroot}%{_sysconfdir}/httpd/conf.d
@@ -121,10 +122,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_bindir}/vce
 
-%{_initddir}/vce
+/etc/systemd/system/vce.service
+/usr/lib/systemd/scripts/vce
 
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/vce.conf
 %config(noreplace) %{_sysconfdir}/vce/access_policy.xml
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
+%config(noreplace) %{_sysconfdir}/vce/logging.conf
 %attr(755,vce, -) %{_var}/run/vce/network_model.json
 %config(noreplace) %{_var}/run/vce/network_model.json
