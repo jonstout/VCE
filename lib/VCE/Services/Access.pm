@@ -312,7 +312,7 @@ sub get_switch_commands{
                 $obj->{'method_name'} = $cmd->{'method_name'};
                 $obj->{'name'} = $cmd->{'name'};
                 $obj->{'parameters'} = ();
-
+                $obj->{'type'} = $cmd->{'type'};
                 push(@{$obj->{'parameters'}}, { type => 'hidden',
                                                 name => 'workgroup',
                                                 description => "workgroup to run the command as",
@@ -377,6 +377,7 @@ sub get_port_commands{
                 my $obj = {};
                 $obj->{'method_name'} = $cmd->{'method_name'};
                 $obj->{'name'} = $cmd->{'name'};
+                $obj->{'type'} = $cmd->{'type'};
                 $obj->{'parameters'} = ();
                 
                 push(@{$obj->{'parameters'}}, { type => 'hidden',
@@ -447,7 +448,7 @@ sub get_vlan_commands{
             $obj->{'method_name'} = $cmd->{'method_name'};
             $obj->{'name'} = $cmd->{'name'};
             $obj->{'parameters'} = ();
-            
+            $obj->{'type'} = $cmd->{'type'};
             push(@{$obj->{'parameters'}}, { type => 'hidden',
                                             name => 'workgroup',
                                             description => "workgroup to run the command as",
