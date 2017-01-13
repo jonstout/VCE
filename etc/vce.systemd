@@ -1,0 +1,13 @@
+[Unit]
+Description=VCE Services
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/systemd/scripts/vce start
+ExecStop=/usr/lib/systemd/scripts/vce stop
+StandardOutput=journal
+PIDFile=/var/run/vce.pid
+
+[Install]
+WantedBy=multi-user.target

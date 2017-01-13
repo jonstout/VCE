@@ -134,6 +134,11 @@ sub _process_config{
     my %workgroups;
     my %users;
 
+    my $nm_model_file = $config->get('/accessPolicy/network_model');
+    if(defined($nm_model_file) && defined($nm_model_file->[0])){
+        $self->_set_network_model_file($config->get('/accessPolicy/network_model')->[0]->{'path'});
+    }
+
     my $rabbitMQ = $config->get('/accessPolicy/rabbit')->[0];
     $self->logger->error("RabbitMQ: " . Data::Dumper::Dumper($rabbitMQ));
     $self->_set_rabbit_mq($rabbitMQ);
