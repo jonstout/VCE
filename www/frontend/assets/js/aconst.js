@@ -1,1 +1,1 @@
-const baseUrl = 'vce/api/';
+const baseUrl = 'api/';
