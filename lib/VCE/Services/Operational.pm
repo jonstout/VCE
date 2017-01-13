@@ -162,7 +162,7 @@ sub get_interfaces_operational_status {
         my $result = [];
         foreach my $port (@{$ports}) {
             my $pdata = $port_info->{'results'}->{$port->{'port'}};
-            $pdata->{'tags'} = $port->{'tags'};
+            $pdata->{'tags'} = $self->vce->access->friendly_display_vlans($port->{'tags'});
             $pdata->{'description'} = $self->vce->config->{'switches'}->{$switch}->{'ports'}->{$port->{'port'}}->{'description'};
             push(@{$result}, $pdata);
         }
