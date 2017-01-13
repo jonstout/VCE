@@ -303,6 +303,50 @@ sub get_tags_on_port{
     
 }
 
+
+=head2 friendly_display_vlans
+
+=cut
+
+sub friendly_display_vlans{
+    my $self = shift;
+    my $vlans = shift;
+
+    my @f_vlans;
+    my $first;
+    my $last;
+
+    foreach my $vlan (@$vlans){
+        if(!defined($first)){
+            $first = $vlan;
+            $last = $vlan;
+        }else{
+            if($last + 1 == $vlan){
+                $last = $vlan;
+            }else{
+                if($last == $first){
+                    push(@f_vlans, $first);
+                    $first = $vlan;
+                    $last = $vlan;
+                }else{
+                    push(@f_vlans, $first . "-" . $last);
+                    $first = $vlan;
+                    $last = $vlan;                
+                }
+            }
+        }
+    }
+
+    #do the last push
+    if($first == $last){
+	push(@f_vlans, $first);
+    }else{
+	push(@f_vlans, $first . "-" . $last);
+    }
+
+    return \@f_vlans;
+}
+
 =head2 get_workgroup_switches
 
 =cut

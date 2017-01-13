@@ -312,7 +312,7 @@ sub get_switch_commands{
                 $obj->{'method_name'} = $cmd->{'method_name'};
                 $obj->{'name'} = $cmd->{'name'};
                 $obj->{'parameters'} = ();
-
+                $obj->{'type'} = $cmd->{'type'};
                 push(@{$obj->{'parameters'}}, { type => 'hidden',
                                                 name => 'workgroup',
                                                 description => "workgroup to run the command as",
@@ -377,6 +377,7 @@ sub get_port_commands{
                 my $obj = {};
                 $obj->{'method_name'} = $cmd->{'method_name'};
                 $obj->{'name'} = $cmd->{'name'};
+                $obj->{'type'} = $cmd->{'type'};
                 $obj->{'parameters'} = ();
                 
                 push(@{$obj->{'parameters'}}, { type => 'hidden',
@@ -447,7 +448,7 @@ sub get_vlan_commands{
             $obj->{'method_name'} = $cmd->{'method_name'};
             $obj->{'name'} = $cmd->{'name'};
             $obj->{'parameters'} = ();
-            
+            $obj->{'type'} = $cmd->{'type'};
             push(@{$obj->{'parameters'}}, { type => 'hidden',
                                             name => 'workgroup',
                                             description => "workgroup to run the command as",
@@ -570,7 +571,8 @@ sub get_tags_on_ports{
 	my @results;
 	foreach my $port (@$ports){
 	    my $tags = $self->vce->get_tags_on_port( workgroup => $workgroup, switch => $switch, port => $port);
-	    push(@results, {port => $port, tags => $tags});
+	    #push(@results, {port => $port, tags => $tags});
+            push(@results, {port => $port, tags => $self->vce->access->friendly_display_vlans($tags)});
 	}
 	return {results => [{ports => \@results}]};
     }else{
@@ -669,6 +671,8 @@ sub get_vlans{
             my $vlan_details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan );
             push(@vlans, $vlan_details);
         }
+
+        
 
         return {results => [{vlans => \@vlans}]};
     }else{
