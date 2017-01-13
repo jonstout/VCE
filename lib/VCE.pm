@@ -134,7 +134,8 @@ sub _process_config{
     my %workgroups;
     my %users;
 
-    if (defined $config->get('/accessPolicy/network_model')->[0]) {
+    my $nm_model_file = $config->get('/accessPolicy/network_model');
+    if(defined($nm_model_file) && defined($nm_model_file->[0])){
         $self->_set_network_model_file($config->get('/accessPolicy/network_model')->[0]->{'path'});
     }
 
