@@ -25,18 +25,7 @@ ok($port_tags->{'results'}->[0]->{'ports'}->[0]->{'port'} eq 'eth0/1', "returned
 
 my $tags = $port_tags->{'results'}->[0]->{'ports'}->[0]->{'tags'};
 
-my $is_ok = 1;
-
-for(my $i=0;$i<100;$i++){
-    if($tags->[$i] eq $i + 101){
-
-    }else{
-        warn $tags->[$i] . " ne " . $i + 101 . "\n";
-        $is_ok = 0;
-    }
-}
-
-ok($is_ok, "Expected range is correct");
+ok($tags->[0] eq '101-200', "Expected range is correct");
 
 $port_tags = $client->get_ports_tags( workgroup => 'ajco',
                                       switch => 'foobar',
@@ -47,28 +36,11 @@ ok(defined($port_tags), "ports result was defined for AJ");
 ok($port_tags->{'results'}->[0]->{'ports'}->[0]->{'port'} eq 'eth0/1', "returned proper port");
 ok($port_tags->{'results'}->[0]->{'ports'}->[1]->{'port'} eq 'eth0/2', "returned proper port");
 
-$is_ok = 1;
 $tags = $port_tags->{'results'}->[0]->{'ports'}->[0]->{'tags'};
-for(my $i=0;$i<100;$i++){
-    if($tags->[$i] eq $i + 101){
+ok($tags->[0] eq '101-200', "Expected range is correct");
 
-    }else{
-        warn $tags->[$i] . " ne " . $i + 101 . "\n";
-        $is_ok = 0;
-    }
-}
-ok($is_ok, "Expected range is correct");
-$is_ok = 1;
 $tags = $port_tags->{'results'}->[0]->{'ports'}->[1]->{'tags'};
-for(my $i=0;$i<100;$i++){
-    if($tags->[$i] eq $i + 101){
-
-    }else{
-        warn $tags->[$i] . " ne " . $i + 101 . "\n";
-        $is_ok = 0;
-    }
-}
-ok($is_ok, "Expected range is correct");
+ok($tags->[0] eq '101-200', "Expected range is correct");
 
 $port_tags = $client->get_ports_tags( workgroup => 'edco',
                                       switch => 'foobar',
