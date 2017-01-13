@@ -1,4 +1,6 @@
 <accessPolicy>
+  <rabbit host="localhost" port="5672" user="guest" pass="guest"/>
+  <network_model path="/var/run/vce/network_model.json"/>
 
   <switch name="foobar"  ip="managementip" username="username" password="password" description="Foo">
 
