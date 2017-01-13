@@ -184,9 +184,10 @@ sub _process_config{
 	    my %tags;
             
 	    foreach my $tag (@{$switch->{'port'}->{$port}->{'tags'}}){
-		for(my $i=$tag->{'start'};$i<=$tag->{'end'};$i++){
-		    $tags{$i} = $tag->{'workgroup'};
-		}
+                warn Dumper($tag);
+                for(my $i=$tag->{'start'};$i<=$tag->{'end'};$i++){
+                    $tags{$i} = $tag->{'workgroup'};
+                }
 	    }
 	    
 	    $p->{'tags'} = \%tags;
@@ -218,7 +219,7 @@ sub _process_command_config{
 	foreach my $cmd (keys(%commands)){
 	    
 	    my $val = {name => $cmd,
-		       method_name => $commands{$cmd}{'method_name'},
+                       method_name => $commands{$cmd}{'method_name'},
                        interaction => $commands{$cmd}{'interaction'},
 		       actual_command => $commands{$cmd}{'cmd'}->[0],
 		       type => $commands{$cmd}{'type'},

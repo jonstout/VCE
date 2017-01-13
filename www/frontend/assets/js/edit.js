@@ -81,7 +81,7 @@ function editVlan(e) {
     var url = baseUrl + 'provisioning.cgi?method=edit_vlan';
     url += '&workgroup=' + workgroup;
     url += '&description=' + text;
-    url += '&switch' + name;
+    url += '&switch=' + name;
     url += '&port=' + a;
     url += '&vlan=' + vlan_id;
     url += '&switch=' + name;
