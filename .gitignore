@@ -8,3 +8,10 @@ Makefile
 blib/
 pm_to_blib
 cover_db
+t/conf/apache_test_config.pm
+t/conf/extra.conf
+t/conf/httpd.conf
+t/conf/modperl_inc.pl
+t/conf/modperl_startup.pl
+t/logs/
+www/services/index.html
