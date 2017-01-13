@@ -113,11 +113,19 @@ GetOptions( 'config=s' => \$config_file,
 usage() if $help;
 
 if(!$nofork){
-    my $daemon = Proc::Daemon->new( pid_file => "/var/run/vce.pid");
+
+    my $uid = getpwnam('vce');
+
+    my $daemon = Proc::Daemon->new( pid_file => "/var/run/vce.pid" );
+
+    if($daemon->Status("/var/run/vce.pid")){
+        die "Already running";
+    }
 
     my $pid = $daemon->Init();
     if ( !$pid ) {
 	$0 = "VCE";
+        $> = $uid;
 	GRNOC::Log->new( config => '/etc/vce/logging.conf');
 	main($config_file, $model_file);
     }
