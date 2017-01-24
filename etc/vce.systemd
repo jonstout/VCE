@@ -3,7 +3,7 @@ Description=VCE Services
 After=network.target
 
 [Service]
-Type=simple
+Type=forking
 ExecStart=/usr/lib/systemd/scripts/vce start
 ExecStop=/usr/lib/systemd/scripts/vce stop
 StandardOutput=journal
