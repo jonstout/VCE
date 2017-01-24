@@ -47,12 +47,11 @@ sub main{
     my $model_file = shift;
 
     my $log = GRNOC::Log->get_logger("VCE");
-    $log->error("HERE!!");
+    $log->debug("access_policy.xml: " . Dumper($config_file));
+    $log->debug("network_model.json: " . Dumper($model_file));
 
-    $log->error(Dumper($config_file));
-    $log->error(Dumper($model_file));
     $vce = VCE->new( config_file => $config_file,
-                     model_file => $model_file);
+                     model_file => $model_file );
     
     
     my $switches = $vce->get_all_switches();
@@ -107,7 +106,7 @@ my $nofork;
 
 GetOptions( 'config=s' => \$config_file,
             'model=s'  => \$model_file,
-	    'nofork'   => \$nofork,
+            'nofork'   => \$nofork,
             'help|h|?' => \$help );
 
 usage() if $help;
@@ -123,16 +122,23 @@ if(!$nofork){
     }
 
     my $pid = $daemon->Init();
-    if ( !$pid ) {
-	$0 = "VCE";
+	GRNOC::Log->new(config => '/etc/vce/logging.conf');
+    my $log = GRNOC::Log->get_logger("VCE");
+
+    if (!$pid) {
+        $0 = "VCE";
         $> = $uid;
-	GRNOC::Log->new( config => '/etc/vce/logging.conf');
-	main($config_file, $model_file);
+
+        main($config_file, $model_file);
+    } else {
+        $log->info("VCE Initialization Forked. Starting VCE [$pid].");
     }
-
-
 }else{
-    GRNOC::Log->new( config => '/etc/vce/logging.conf');
+    GRNOC::Log->new(config => '/etc/vce/logging.conf');
+    my $log = GRNOC::Log->get_logger("VCE");
+
+    $log->info("VCE Initialization Fork Skipped.");
     main($config_file, $model_file);
 }
 
+exit 0;
