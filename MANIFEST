@@ -1,6 +1,7 @@
 bin/vce.pl
 bin/vce_switch.pl
 etc/access_policy.xml
+etc/config.xsd
 etc/apache-vce.conf
 etc/apache_logging.conf
 etc/logging.conf

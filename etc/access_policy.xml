@@ -4,6 +4,45 @@
 
   <switch name="foobar"  ip="managementip" username="username" password="password" description="Foo">
 
+    <commands>
+      <port>
+         <command a="a" method_name='show_interface' name='show interface' type='show' interaction='cli' description='shows a list of all interfaces'>
+           <cmd>show interface [% port %]</cmd>
+         </command>
+         <command method_name='set_port_status' name='set port status' input='status' type='action' interaction='cli' configure='true' context='interface [% port %]' description='changes the admin status of a port'>
+           <cmd>[% status %]</cmd>
+           <parameter name='status' type='select' options='Enable,Disable' pattern='[Enable|Disable]' description='the admin status of the port we should set' />
+         </command>
+
+         <command method_name='set_port_descr' name='set port descr' input='descr' type='action' interaction='cli' configure='true' context='interface [% port %]' description='changes the description on a port'>
+           <cmd>port-name [% description %]</cmd>
+           <parameter name='description' type='text' pattern='(.*)' description='the description to set for the port' />
+         </command>
+      </port>
+
+      <system>
+        <command method_name='show_version' type='show' name='show version' interaction='cli' description='shows the version of code running on this switch'>
+          <cmd>show version</cmd>
+        </command>
+        <command method_name='show_chassis' name='show chassis' type='show' interaction='cli' description='shows the chassis information about this switch'>
+          <cmd>show chassis</cmd>
+        </command>
+        <command method_name='show_cpu' name='show cpu' type='show' interaction='cli' description='shows the cpu on the switch'>
+          <cmd>show cpu-utilization</cmd>
+        </command>
+      </system>
+
+      <vlan>
+         <command method_name='show_vlan' type='show' name='show vlan' interaction='cli' description='show the vlan details'>
+           <cmd>show vlan [% vlan_id %]</cmd>
+         </command>
+         <command method_name='show_vlan_statistics' type='show' name='show vlan statistics' interaction='cli' description='shows the vlans interfaces and statistics'>
+           <cmd>show vlan [% vlan_id %] statistics</cmd>
+           <parameter name='vlan_id' type='text' pattern='(.*)' description='the vlan to try' />
+         </command>
+      </vlan>
+    </commands>
+
     <port name="eth0/1" owner="edco">
       <tags start="1" end="100" workgroup="edco"/>
       <tags start="101" end="200" workgroup="ajco"/>
