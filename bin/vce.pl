@@ -129,7 +129,13 @@ if(!$nofork){
         $0 = "VCE";
         $> = $uid;
 
-        main($config_file, $model_file);
+        eval {
+            main($config_file, $model_file);
+        };
+        if ($@) {
+            $log->fatal("Fatal exception raised: $@");
+            exit 1;
+        }
     } else {
         $log->info("VCE Initialization Forked. Starting VCE [$pid].");
     }
@@ -138,7 +144,13 @@ if(!$nofork){
     my $log = GRNOC::Log->get_logger("VCE");
 
     $log->info("VCE Initialization Fork Skipped.");
-    main($config_file, $model_file);
+    eval {
+        main($config_file, $model_file);
+    };
+    if ($@) {
+        $log->fatal("Fatal exception raised: $@");
+        exit 1;
+    }
 }
 
 exit 0;
