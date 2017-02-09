@@ -46,10 +46,11 @@ has template => (is => 'rwp');
 
 sub BUILD{
     my ($self) = @_;
-    
-    my $logger = GRNOC::Log->get_logger("VCE::Services::Switch");
-    $self->_set_logger($logger);    
-    
+
+    my $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf', watch => 15);
+    my $log    = $logger->get_logger("VCE::Services::Switch");
+    $self->_set_logger($log);
+
     $self->_set_vce( VCE->new() );
 
     my $client = GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
@@ -90,13 +91,11 @@ sub _register_commands{
                 
                 $command->{'type'} = $type;
 
-                warn Data::Dumper::Dumper($command);
-
                 my $method = GRNOC::WebService::Method->new( name => $command->{'method_name'},
                                                              description => $command->{'description'},
-                                                             callback => sub { 
+                                                             callback => sub {
                                                                  return $self->_execute_command($command, @_)
-                                                             }); 
+                                                             });
 
                 $method->add_input_parameter( required => 1,
                                               name => 'workgroup',
@@ -123,20 +122,16 @@ sub _register_commands{
                                                   name => 'vlan_id',
                                                   pattern => $GRNOC::WebService::Regex::NUMBER,
                                                   description => "the vlan to run the command for" );
-                    
                 }
 
                 foreach my $param (keys %{$command->{'params'}}){
-                    
                     $method->add_input_parameter( required => 1,
                                                   name => $param,
                                                   pattern => $command->{'params'}{$param}->{'pattern'},
                                                   description => $command->{'params'}{$param}->{'description'} );
-
                 }
 
                 $d->register_method( $method );
-
             }
         }
     }
@@ -151,7 +146,7 @@ sub _register_webservice_methods{
 	name => "get_interfaces",
 	description => "returns a list of interfaces and the interfaces details",
 	callback => sub{ return $self->get_interfaces(@_) });
-    
+
     $method->add_input_parameter( name => "interface_name",
 				  pattern => $GRNOC::WebService::Regex::NAME,
 				  required => 0,
@@ -159,7 +154,6 @@ sub _register_webservice_methods{
 				  description => "Interface name to query");
 
     $d->register_method($method);
-				  
 }
 
 =head2 get_interfaces
@@ -175,7 +169,7 @@ sub get_interfaces{
 
     my @ints;
     foreach my $int (keys(%{$interfaces->{'interfaces'}})){
-	push(@ints,$interfaces->{'interfaces'}{$int});
+        push(@ints,$interfaces->{'interfaces'}{$int});
     }
 
     return {results => [{interfaces => \@ints, raw => $interfaces->{'raw'}}]};
@@ -197,20 +191,21 @@ sub _execute_command{
     my $m_ref = shift;
     my $p_ref = shift;
 
-    warn "IN EXECUTE COMMAND!!\n";
-
     $p_ref->{'command'} = $command;
+
+    $self->logger->debug("In _execute_command");
 
     #first verify we have the permissions to execute this
     if(!$self->_authorize_command( %{$p_ref})){
-        #ok you weren't authorized
-        return {results => [], error => {msg => "Workgroup not authorized for command " . $command->{'name'} . " on switch " . $p_ref->{'switch'}{'value'}}};
+        my $err = "Workgroup not authorized for command " . $command->{'name'} . " on switch " . $p_ref->{'switch'}{'value'};
+        $self->logger->error($err);
+        return {results => [], error => {msg => $err}};
     }
-    
+
     #ok we are now authorized... run the command
     my $cmd_string;
     my $context_string;
-    my $vars = {};;
+    my $vars = {};
     foreach my $var (keys %{$p_ref}){
         $vars->{$var} = $p_ref->{$var}{'value'};
     }
@@ -223,24 +218,39 @@ sub _execute_command{
     }
 
     my $text = $command->{'actual_command'};
-    $self->template->process(\$text, $vars, \$cmd_string) or warn "Error creating template string: " . Dumper($self->template->error());# $self->logger->error("Error creating command string");
-    warn Data::Dumper::Dumper($cmd_string);
-    $self->logger->debug("Command String: " . $cmd_string);
+
+    # Old template->process failure handler
+    # or warn "Error creating template string: " . Dumper($self->template->error());
+    $self->template->process(\$text, $vars, \$cmd_string) or $self->logger->error("Error creating command template: " . Dumper($self->template->error()));
 
     if(!defined($cmd_string)){
         return {results => [], error => {msg => "Error processing command"}};
     }
 
-    my $res = $self->rabbit_client->execute_command( context => $context_string,
-                                                 command => $cmd_string,
-                                                 config => $command->{'config'} );
-
-    if($res->{'error'}){
-        return {success => 0, error => {msg => $res->{'error_message'}}};
-    }else{
-        return { success => 1, raw => $res->{'results'}->{'raw'}};
+    if (!defined $command->{'configure'} || $command->{'configure'} ne 'true') {
+        $command->{'configure'} = 0;
+    } else {
+        $command->{'configure'} = 1;
     }
 
+    $self->logger->debug("Running $cmd_string with params: " . Dumper($vars));
+    my $res;
+    if (defined $context_string) {
+        $self->logger->debug("Running $cmd_string in context $context_string: " . Dumper($command));
+        $res = $self->rabbit_client->execute_command( context => $context_string,
+                                                      command => $cmd_string,
+                                                      config => $command->{'configure'} );
+    } else {
+        $self->logger->debug("Running $cmd_string with no context: " . Dumper($command));
+        $res = $self->rabbit_client->execute_command( command => $cmd_string,
+                                                      config => $command->{'configure'} );
+    }
+
+    if ($res->{'results'}->{'error'}) {
+        return {success => 0, error => {msg => $res->{'results'}->{'error_message'}}};
+    } else {
+        return { success => 1, raw => $res->{'results'}->{'raw'}};
+    }
 }
 
 sub _authorize_command{
@@ -251,9 +261,12 @@ sub _authorize_command{
     warn Dumper(%params);
 
     if($params{'command'}->{'type'} eq 'system'){
-        if(scalar( $self->vce->get_available_ports( workgroup => $params{'workgroup'}{'value'}, switch => $params{'switch'}{'value'}) ) >= 0){
+        my $ports = $self->vce->get_available_ports( workgroup => $params{'workgroup'}{'value'}, switch => $params{'switch'}{'value'});
+        if(scalar @{$ports} >= 0){
+            $self->logger->debug("Ports detected.");
             return 1;
         }else{
+            $self->logger->debug("More than one port detected.");
             return 0;
         }
     }elsif($params{'command'}->{'type'} eq 'port'){
