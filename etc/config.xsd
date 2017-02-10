@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:complexType name="rabbit">
+    <xs:attribute name="user" type="xs:string" use="required"/>
+    <xs:attribute name="pass" type="xs:string" use="required"/>
+    <xs:attribute name="host" type="xs:string" use="required"/>
+    <xs:attribute name="port" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="network_model">
+    <xs:attribute name="path" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tags">
+    <xs:attribute name="start" type="xs:string" use="required"/>
+    <xs:attribute name="end" type="xs:string" use="required"/>
+    <xs:attribute name="workgroup" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="port">
+    <xs:sequence>
+      <xs:element name="tags" type="tags" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="owner" type="xs:string" use="required"/>
+    <xs:attribute name="description" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="cmd">
+    <xs:attribute name="cmd" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="parameter">
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+    <xs:attribute name="pattern" type="xs:string" use="required"/>
+    <xs:attribute name="options" type="xs:string" use="optional"/>
+    <xs:attribute name="description" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="command">
+    <xs:sequence>
+      <xs:element name="cmd" type="xs:string"/>
+      <xs:element name="parameter" type="parameter" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="method_name" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="type" type="xs:string" use="required"/>
+    <xs:attribute name="interaction" type="xs:string" use="required"/>
+    <xs:attribute name="description" type="xs:string" use="optional"/>
+    <xs:attribute name="configure" type="xs:string" use="optional"/>
+    <xs:attribute name="context" type="xs:string" use="optional"/>
+    <xs:attribute name="input" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="portCommand">
+    <xs:sequence>
+      <xs:element name="command" type="command" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="systemCommand">
+    <xs:sequence>
+      <xs:element name="command" type="command" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="vlanCommand">
+    <xs:sequence>
+      <xs:element name="command" type="command" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commands">
+    <xs:sequence>
+      <xs:element name="port" type="portCommand" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="system" type="systemCommand" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="vlan" type="vlanCommand" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="switch">
+    <xs:sequence>
+      <xs:element name="commands" type="commands" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="port" type="port" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="username" type="xs:string" use="required"/>
+    <xs:attribute name="password" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="ip" type="xs:string" use="required"/>
+    <xs:attribute name="vendor" type="xs:string" use="required"/>
+    <xs:attribute name="model" type="xs:string" use="required"/>
+    <xs:attribute name="version" type="xs:string" use="required"/>
+    <xs:attribute name="ssh_port" type="xs:string" use="required"/>
+    <xs:attribute name="description" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="user">
+    <xs:attribute name="id" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="optional"/>
+    <xs:attribute name="email" type="xs:string" use="optional"/>
+  </xs:complexType>
+
+  <xs:complexType name="workgroup">
+    <xs:sequence>
+      <xs:element name="user" type="user" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="admin" type="xs:string" use="optional"/>
+    <xs:attribute name="description" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:element name="accessPolicy">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="rabbit" type="rabbit"/>
+        <xs:element name="network_model" type="network_model"/>
+        <xs:element name="switch" type="switch" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element name="workgroup" type="workgroup" minOccurs="1" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+</xs:schema>

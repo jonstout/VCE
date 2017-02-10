@@ -129,8 +129,14 @@ sub BUILD{
 sub _process_config{
     my $self = shift;
 
-    my $config = GRNOC::Config->new( config_file => $self->config_file, force_array => 1);
-    
+    my $config = GRNOC::Config->new(config_file => $self->config_file, force_array => 1, schema => '/etc/vce/config.xsd');
+    if ($config->validate() != 1) {
+        my $err = $config->get_error()->{'backtrace'}->{'message'};
+        $self->logger->fatal('Configuration does not conform to schema: ' . $err);
+        exit 1;
+    }
+    $self->logger->debug('Configuration validated.');
+
     my %workgroups;
     my %users;
 
