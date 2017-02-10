@@ -15,3 +15,4 @@ t/conf/modperl_inc.pl
 t/conf/modperl_startup.pl
 t/logs/
 www/services/index.html
+www/.htpasswd

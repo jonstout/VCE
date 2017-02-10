@@ -223,47 +223,43 @@ sub workgroup_has_access_to_port{
         $self->logger->error("workgroup_has_access_to_port: port not specified");
         return 0;
     }
-    
+
     if(defined($self->config->{'switches'}->{$params{'switch'}})){
-	
-	if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}})){
-	    
-	    if(defined($params{'vlan'})){
-		
-		if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}})){
-		    if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}} eq $params{'workgroup'}){
-			$self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
-			return 1;
-		    }else{
-			$self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});
-			return 0;
-		    }
-		}
 
-	    }else{
-		
-		foreach my $tag (keys(%{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}})){
-		    if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$tag} eq $params{'workgroup'}){
-			$self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
-			return 1;
-		    }
-		}
-		$self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});		
-		return 0;
-	    }
+        if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}})){
 
-	}else{
-	    $self->logger->debug("workgroup_has_access_to_port: No port on switch " . $params{'switch'} . " named " . $params{'port'} . " found in configuration");
-	    return 0;
-	}
+            if (defined($params{'vlan'})) {
 
-    }else{
-	$self->logger->debug("workgroup_has_access_to_port: No switch in configuration called " . $params{'switch'});
-	return 0;
+                if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}})){
+                    if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}} eq $params{'workgroup'}){
+                        # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'} . ":" . $params{'vlan'});
+                        return 1;
+                    }else{
+                        # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'} . ":" . $params{'vlan'});
+                        return 0;
+                    }
+                }
+            } else {
+                foreach my $tag (keys(%{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}})){
+                    if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$tag} eq $params{'workgroup'}){
+                        # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
+                        return 1;
+                    }
+                }
+
+                # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});
+                return 0;
+            }
+        } else {
+            $self->logger->error("workgroup_has_access_to_port: No port on switch " . $params{'switch'} . " named " . $params{'port'} . " found in configuration");
+            return 0;
+        }
+    } else {
+        $self->logger->error("workgroup_has_access_to_port: No switch in configuration called " . $params{'switch'});
+        return 0;
     }
 
-    $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});
-
+    $self->logger->warn("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});
     return 0;
 }
 

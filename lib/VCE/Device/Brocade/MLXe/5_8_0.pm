@@ -7,6 +7,7 @@ use warnings;
 use Moo;
 extends 'VCE::Device';
 
+use Data::Dumper;
 use GRNOC::Comm;
 use GRNOC::NetConf::Device;
 
@@ -15,7 +16,7 @@ has comm => (is => 'rwp');
 has conn => (is => 'rwp');
 
 has in_configure => (is => 'rwp', default => 0);
-has context => (is => 'rwp');
+has context => (is => 'rwp', default => '');
 
 =head2 BUILD
 
@@ -51,20 +52,19 @@ sub connect{
     $self->logger->error( "" );
     
     my $comm = GRNOC::Comm->new( host => $self->hostname,
-				 user => $self->username,
-				 password => $self->password,
-				 device => 'brocade',
-				 key_delay => .001,
-				 debug => 0 );
-
+                                 user => $self->username,
+                                 password => $self->password,
+                                 device => 'brocade',
+                                 key_delay => .001,
+                                 debug => 0 );
     $comm->login();
-    
-    if($comm->connected()){
-	$self->_set_comm($comm);
-	$self->_set_connected(1);
-    }else{
-	$self->logger->error( "Error: " . $comm->get_error());
-	return;
+
+    if ($comm->connected()) {
+        $self->_set_comm($comm);
+        $self->_set_connected(1);
+    } else {
+        $self->logger->error( "Error: " . $comm->get_error());
+        $self->_set_connected(0);
     }
 
     my $conn = GRNOC::NetConf::Device->new(username => $self->username,
@@ -91,7 +91,8 @@ sub get_interfaces{
 
     if($self->connected){
 	my %interfaces;
-	my $interfaces_brief = $self->comm->issue_command('show interfaces brief');
+    my ($interfaces_brief, $err) = $self->issue_command('show interfaces brief');
+
 	my $ints = $self->_process_interfaces($interfaces_brief);
         my $raw = "";
 	foreach my $int (@$ints){
@@ -203,12 +204,13 @@ sub _get_interface{
     my %params = @_;
 
     my $int_details;
+    my $err;
     if($params{'name'} =~ /\d+\/\d+/){
-	$int_details = $self->comm->issue_command("show interface ethernet " . $params{'name'});
+        ($int_details, $err) = $self->issue_command("show interface ethernet " . $params{'name'});
     }elsif( $params{'name'} =~ /mgmt(\d+)/){
-	$int_details = $self->comm->issue_command("show interface management " . $1);
+        ($int_details, $err) = $self->issue_command("show interface management " . $1);
     }else{
-	$int_details = $self->comm->issue_command("show interface " . $params{'name'});
+        ($int_details, $err) = $self->issue_command("show interface " . $params{'name'});
     }
     return if(!defined($int_details));
 
@@ -329,18 +331,18 @@ sub _process_interfaces{
 sub configure{
     my $self = shift;
 
-    if($self->in_configure){
-        $self->logger->info("Already in configure mode");
-        return 1;
-    }
-    
-    my $res = $self->comm->issue_command("configure terminal");
-    if($res){
-        $self->_set_in_configure(1);
+    if ($self->in_configure) {
+        $self->logger->debug("Already in configure mode");
         return 1;
     }
 
-    return 0;
+    my ($result, $err) = $self->issue_command("configure terminal", "#");
+    if (defined $err) {
+        return 0;
+    }
+
+    $self->_set_in_configure(1);
+    return 1;
 }
 
 
@@ -352,18 +354,20 @@ sub exit_configure{
     my $self = shift;
 
     if(!$self->in_configure){
-        $self->logger->info("Already NOT in configure mode");
+        $self->logger->debug("Already NOT in configure mode");
         return 1;
     }
 
-    my $res = $self->comm->issue_command("exit");
-    if($res){
-        $self->_set_in_configure(1);
-        return 1;
+    # When leaving configuration mode verify that the default prompt
+    # is set in GRNOC:Comm.
+    $self->logger->debug("Leaving configure mode and Setting default prompt: " . $self->comm->{'default_prompt'});
+    my ($result, $err) = $self->issue_command("exit", $self->comm->{'default_prompt'});
+    if (defined $err) {
+        return 0;
     }
 
-    return 0;
-
+    $self->_set_in_configure(0);
+    return 1;
 }
 
 =head2 set_context
@@ -374,56 +378,73 @@ sub set_context{
     my $self = shift;
     my $context = shift;
 
-    if(defined($self->context)){
-        if($self->context eq $context){
+    if ($self->context ne '') {
+        if ($self->context eq $context) {
             $self->logger->info("Already in context $context");
             return 1;
-        }else{
-            $self->logger->error("Already in a context " . $self->context);
+        } else {
+            $self->logger->error("Already in context " . $self->context);
             return 0;
         }
     }
 
-    my $res = $self->comm->issue_command($context);
-    if($res){
-        $self->_set_context($context);
-        return 1;
+    my ($result, $err) = $self->issue_command($context, "#");
+    if (defined $err) {
+        return 0;
     }
 
-    return 0;
+    $self->_set_context($context);
+    return 1;
 }
 
 =head2 exit_context
 
 =cut
-
 sub exit_context{
     my $self = shift;
-    
-    if(!defined($self->context)){
-        $self->logger->info("Not in a context");
+
+    if ($self->context eq '') {
+        $self->logger->debug("Already NOT in a context");
         return 1;
     }
 
-    my $res = $self->comm->issue_command("exit");
-    if($res){
-        $self->_set_context();
-        return 1;
+    # Prompt of '#' is required to prevent a timeout from occurring in
+    # the underlying GRNOC::Comm lib.
+    my ($result, $err) = $self->issue_command("exit", "#");
+    if (defined $err) {
+        return 0;
     }
 
-    return 0;
-
+    $self->_set_context('');
+    return 1;
 }
 
 =head2 issue_command
 
+Returns results and error. Error will be undef if everything went ok.
+
 =cut
-
 sub issue_command{
-    my $self = shift;
+    my $self    = shift;
     my $command = shift;
+    my $prompt  = shift;
 
-    return $self->comm->issue_command($command);
+    my $err = undef;
+
+    $self->logger->debug("Running command: $command");
+    my $result = $self->comm->issue_command($command, $prompt);
+    if (!defined $result) {
+        $err = $self->comm->get_error();
+        $self->logger->error($err);
+
+        # Clear causes a reconnect to ensure valid switch context so
+        # we clear our state after calling this.
+        $self->comm->clear_error();
+        $self->_set_context('');
+        $self->_set_in_configure(0);
+    }
+
+    return ($result, $err);
 }
 
 1;

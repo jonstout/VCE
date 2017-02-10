@@ -5,6 +5,7 @@ package VCE::Switch;
 use strict;
 use warnings;
 
+use Data::Dumper;
 use Moo;
 use GRNOC::Log;
 use GRNOC::RabbitMQ::Method;
@@ -132,34 +133,33 @@ sub _connect_to_device{
     $self->logger->debug("connecting to device");
 
     if($self->vendor eq 'Brocade'){
-	if($self->type eq 'MLXe'){
-	    if($self->version eq '5.8.0'){
-		my $dev = VCE::Device::Brocade::MLXe::5_8_0->new( username => $self->username,
-								  password => $self->password,
-								  hostname => $self->hostname,
-								  port => $self->port);
+        if($self->type eq 'MLXe'){
+            if($self->version eq '5.8.0'){
+                my $dev = VCE::Device::Brocade::MLXe::5_8_0->new( username => $self->username,
+                                                                  password => $self->password,
+                                                                  hostname => $self->hostname,
+                                                                  port => $self->port);
 
-		$self->_set_device($dev);
-		$dev->connect();
-		if($dev->connected){
-		    $self->logger->debug( "Successfully connected to device!" );
-		    return 1;
-		}else{
-		    $self->logger->error( "Error connecting to device");
-		    return;
-		}
-								  
-	    }else{
-		$self->logger->error( "No supported Brocade MLXe module for version " . $self->version );
-		return;
-	    }
-	}else{
-	    $self->logger->error( "No supported Brocade module for devices of type " . $self->type );
-	    return;
-	}
+                $self->_set_device($dev);
+                $dev->connect();
+                if($dev->connected){
+                    $self->logger->debug( "Successfully connected to device!" );
+                    return 1;
+                }else{
+                    $self->logger->error( "Error connecting to device");
+                    return;
+                }
+            }else{
+                $self->logger->error( "No supported Brocade MLXe module for version " . $self->version );
+                return;
+            }
+        }else{
+            $self->logger->error( "No supported Brocade module for devices of type " . $self->type );
+            return;
+        }
     }else{
-	$self->logger->error( "No supported vendor of type " . $self->vendor );
-	return;
+        $self->logger->error( "No supported vendor of type " . $self->vendor );
+        return;
     }
 
 }
@@ -429,43 +429,67 @@ sub execute_command{
     my $m_ref = shift;
     my $p_ref = shift;
 
-    if($self->device->connected()){
-        
-        my $in_configure = 0;
+    $self->logger->info("Calling execute_command");
+    $self->logger->debug(Dumper($p_ref));
 
-        if($p_ref->{'config'}{'value'}){
-            if(!$self->device->configure()){
-                return {success => 0, error => 1, error_msg => "Unable to get into configure mode"};
-            }else{
-                $in_configure = 1;
-            }
-        }
-
-        my $in_context = 0;
-
-        if(defined($p_ref->{'context'}{'value'})){
-            if(!$self->device->set_context( $p_ref->{'context'}{'value'} )){
-                $self->device->exit_configure();
-                return {success => 0, error => 1, error_msg => "Unable to enter the context"};
-            }
-        }
-
-        #ok we are now ready to send our command get the results!
-        my $res = $self->device->issue_command( $p_ref->{'command'}{'value'} );
-
-        if($in_context){
-            $self->device->exit_context();
-        }
-
-        if($in_configure){
-            $self->device->exit_configure();
-        }
-
-        return {success => 1, raw => $res};
-            
-
+    if (!$self->device->connected()) {
+        return {success => 0, error => 1, error_msg => 'Device is currently disconnected.'};
     }
 
+    my $in_configure = 0;
+    my $in_context   = 0;
+    my $prompt       = undef;
+
+    if ($p_ref->{'config'}{'value'}) {
+        $self->logger->debug('Trying to enter configure mode.');
+
+        my $ok = $self->device->configure();
+        if (!$ok) {
+            my $err = "Couldn't enter configure mode.";
+            $self->logger->error($err);
+            return {success => 0, error => 1, error_msg => $err};
+        }
+
+        $in_configure = 1;
+    }
+
+    if (defined $p_ref->{'context'}{'value'}) {
+        $self->logger->debug('Trying to enter context ' . $p_ref->{'context'}{'value'});
+
+        my $ok = $self->device->set_context($p_ref->{'context'}{'value'});
+        if (!$ok) {
+            if ($in_configure) {
+                $self->device->exit_configure();
+            }
+
+            my $err = "Couldn't enter desired context.";
+            $self->logger->error($err);
+            return {success => 0, error => 1, error_msg => $err};
+        }
+
+        $prompt = "#";
+        $in_context = 1;
+    }
+
+    # OK. We are now ready to send our command and get the results!
+    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, $prompt);
+    if (defined $err) {
+        return {success => 0, error => 1, error_msg => $err};
+    }
+
+    if($in_context){
+        $self->device->exit_context();
+    }
+
+    if($in_configure){
+        $self->device->exit_configure();
+    }
+
+    if (defined $prompt) {
+        return {success => 1, raw => "ok"};
+    } else {
+        return {success => 1, raw => $result};
+    }
 }
 
 1;

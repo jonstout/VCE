@@ -31,7 +31,7 @@ Version 0.1.0
 
 =cut
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 package VCE;
 
@@ -221,30 +221,30 @@ sub _process_command_config{
     my $cfg = {};
 
     foreach my $type ("system","port","vlan"){
-	my %commands = %{$config->{$type}->[0]->{'command'}};
-	foreach my $cmd (keys(%commands)){
+        my %commands = %{$config->{$type}->[0]->{'command'}};
+        foreach my $cmd (keys(%commands)){
 	    
-	    my $val = {name => $cmd,
+            my $val = {name => $cmd,
                        method_name => $commands{$cmd}{'method_name'},
                        interaction => $commands{$cmd}{'interaction'},
-		       actual_command => $commands{$cmd}{'cmd'}->[0],
-		       type => $commands{$cmd}{'type'},
-		       configure => $commands{$cmd}{'configure'},
+                       actual_command => $commands{$cmd}{'cmd'}->[0],
+                       type => $commands{$cmd}{'type'},
+                       configure => $commands{$cmd}{'configure'},
                        params => $commands{$cmd}{'parameter'},
                        description => $commands{$cmd}{'description'},
-		       context => $commands{$cmd}{'context'}};
+                       context => $commands{$cmd}{'context'}};
 	    
-	    if(!defined($val->{'configure'})){
-		delete $val->{'configure'};
-	    }
+            if(!defined($val->{'configure'})){
+                delete $val->{'configure'};
+            }
 
-	    if(!defined($val->{'context'})){
-		delete $val->{'context'};
-	    }
+            if(!defined($val->{'context'})){
+                delete $val->{'context'};
+            }
 	    
-	    push(@{$cfg->{$type}},$val);
+            push(@{$cfg->{$type}},$val);
 
-	}
+        }
     }
 
     return $cfg;
@@ -283,32 +283,32 @@ sub get_available_ports{
     my %params = @_;
 
     if(!defined($params{'workgroup'})){
-	$self->logger->error("get_available_ports: Workgroup not specified");
-	return;
+        $self->logger->error("get_available_ports: Workgroup not specified");
+        return;
     }
 
     if(!defined($params{'switch'})){
-	$self->logger->error("get_available_ports: Switch not specified");
-	return;
+        $self->logger->error("get_available_ports: Switch not specified");
+        return;
     }
 
     my @ports;
 
     my $switch = $self->config->{'switches'}->{$params{'switch'}};
     foreach my $port (keys %{$switch->{'ports'}}){
-	if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-							switch => $params{'switch'},
-							port => $port)){
+        if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
+                                                        switch => $params{'switch'},
+                                                        port => $port)){
+
             my $tags = $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
                                                        switch => $params{'switch'},
                                                        port => $port);
-	    push(@ports, {port => $port, tags => $tags});
-	}
+
+            push(@ports, {port => $port, tags => $tags});
+        }
     }
 
     return \@ports;
-
-
 }
 
 =head2 get_tags_on_port
