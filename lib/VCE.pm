@@ -367,7 +367,6 @@ sub get_switches{
 
         my $ports = $self->access->get_switch_ports( workgroup => $params{'workgroup'},
                                                      switch => $switch);
-        
         push(@res,{ name => $switch,
                     description => $self->access->get_switch_description( switch => $switch),
                     vlans => $vlans,

@@ -61,17 +61,17 @@ sub _read_network_model{
 
     if(!-e $self->file ){
 	
-	$self->_set_nm({vlans => {}});
-	$self->_write_network_model();
+        $self->_set_nm({vlans => {}});
+        $self->_write_network_model();
 
     }else{
-	my $str;
-	open(my $fh, "<", $self->file);
-	while(my $line = <$fh>){
-	    $str .= $line;
-	}
-	my $data = decode_json($str);
-	$self->_set_nm($data);
+        my $str;
+        open(my $fh, "<", $self->file);
+        while(my $line = <$fh>){
+            $str .= $line;
+        }
+        my $data = decode_json($str);
+        $self->_set_nm($data);
     }
 }
 
@@ -242,16 +242,16 @@ sub get_vlans{
     my @vlans;
 
     if(!defined($params{'workgroup'})){
-	foreach my $vlan (keys(%{$self->nm->{'vlans'}})){
-	    push(@vlans, $vlan);
-	}
+        foreach my $vlan (keys(%{$self->nm->{'vlans'}})){
+            push(@vlans, $vlan);
+        }
     }else{
-	foreach my $vlan_id (keys(%{$self->nm->{'vlans'}})){
+        foreach my $vlan_id (keys(%{$self->nm->{'vlans'}})){
             my $vlan = $self->nm->{'vlans'}->{$vlan_id};
-	    if($vlan->{'workgroup'} eq $params{'workgroup'}){
-		push(@vlans, $vlan_id);
-	    }
-	}
+            if($vlan->{'workgroup'} eq $params{'workgroup'}){
+                push(@vlans, $vlan_id);
+            }
+        }
     }
 
     if (defined $params{'switch'}) {
