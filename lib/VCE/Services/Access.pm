@@ -77,7 +77,7 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_workgroup_details(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -91,7 +91,7 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_switches(@_) });
 
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -104,19 +104,19 @@ sub _register_webservice_methods{
 	callback => sub{ return $self->get_ports(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-				  pattern => $GRNOC::WebService::Regex::NAME,
+				  pattern => $GRNOC::WebService::Regex::NAME_ID,
 				  required => 1,
                                   multiple => 0,
 				  description => "Workgroup name");
 
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
 				  description => "Switch to get ports from");
     
     $method->add_input_parameter( name => "port",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 0,
                                   multiple => 1,
                                   description => "Individual name of a port to get details about");
@@ -129,13 +129,13 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_tags_on_ports(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
     
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch to get ports from");
@@ -154,13 +154,13 @@ sub _register_webservice_methods{
         callback => sub{ return $self->is_tag_available(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
 
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch to get ports from");
@@ -186,7 +186,7 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_vlans(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -199,7 +199,7 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_vlan_details(@_) });
 
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -219,13 +219,13 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_switch_commands(@_) });
 
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
 
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch to get the commands that can be run");
@@ -239,13 +239,13 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_port_commands(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
     
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch to get the commands that can be run");
@@ -259,13 +259,13 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_vlan_commands(@_) });
 
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
 
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "port to get the commands that can be run");
