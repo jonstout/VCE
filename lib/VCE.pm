@@ -115,14 +115,13 @@ sub BUILD{
     $self->_set_access( VCE::Access->new( config => $self->config ));
 
     $self->_set_network_model( VCE::NetworkModel->new( file => $self->network_model_file ));
-    
+
     $self->_set_device_client( GRNOC::RabbitMQ::Client->new( host => $self->rabbit_mq->{'host'},
                                                              port => $self->rabbit_mq->{'port'},
                                                              user => $self->rabbit_mq->{'user'},
                                                              pass => $self->rabbit_mq->{'pass'},
                                                              exchange => 'VCE',
                                                              topic => 'VCE.Switch.RPC'));
-    
     return $self;
 }
 
@@ -183,7 +182,9 @@ sub _process_config{
         $s->{'username'} = $switch->{'username'};
         $s->{'password'} = $switch->{'password'};
         $s->{'ip'} = $switch->{'ip'};
-	$s->{'commands'} = _process_command_config($switch->{'commands'}->[0]);
+
+	$s->{'commands'} = $self->_process_command_config($switch->{'commands'}->[0]);
+
 	my %ports;
 	foreach my $port (keys(%{$switch->{'port'}})){
 	    my $p = {};
@@ -216,10 +217,12 @@ sub _process_config{
 =cut
 
 sub _process_command_config{
+    my $self = shift;
     my $config = shift;
 
     my $cfg = {};
 
+    $self->logger->debug("Processing switch commands.");
     foreach my $type ("system","port","vlan"){
         my %commands = %{$config->{$type}->[0]->{'command'}};
         foreach my $cmd (keys(%commands)){
