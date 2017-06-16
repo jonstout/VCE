@@ -424,66 +424,66 @@ sub get_port_commands{
 }
 
 =head2 get_vlan_commands
-    
-=cut
 
+Returns the commands that are configured related to vlans.
+
+=cut
 sub get_vlan_commands{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
-    
-    my $workgroup = $p_ref->{'workgroup'}{'value'};
-    
-    my $user = $ENV{'REMOTE_USER'};
-    
+
     my $switch = $p_ref->{'switch'}{'value'};
-    
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup)){
-        
-	my $switch_commands = $self->vce->access->get_vlan_commands( switch => $switch );
-        my @results;
-        foreach my $cmd (@$switch_commands){
-            my $obj = {};
-            $obj->{'method_name'} = $cmd->{'method_name'};
-            $obj->{'name'} = $cmd->{'name'};
-            $obj->{'parameters'} = ();
-            $obj->{'type'} = $cmd->{'type'};
-            push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                            name => 'workgroup',
-                                            description => "workgroup to run the command as",
-                                            required => 1 });
-            
-            push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                            name => 'vlan_id',
-                                            description => "vlan_id of the vlan to run the command on",
-                                            required => 1 });
-            
-            foreach my $param (keys (%{$cmd->{'params'}})){
-                
-                my $p = {};
-                
-                if($cmd->{'params'}{$param}{'type'} eq 'select'){
-                    @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-                }else{
-                    
-                }
-                $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-                $p->{'name'} = $param;
-                $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-                $p->{'required'} = 1;
-                push(@{$obj->{'parameters'}}, $p);
-            }
-            push(@results, $obj);
-            
-            return {results => \@results};
-        }
-    }else{
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $in_workgroup = $self->vce->access->user_in_workgroup(
+        username => $user,
+        workgroup => $workgroup
+    );
+    if (!$in_workgroup) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+	my $switch_commands = $self->vce->access->get_vlan_commands( switch => $switch );
+    my @results;
+    foreach my $cmd (@$switch_commands){
+        my $obj = {};
+        $obj->{'method_name'} = $cmd->{'method_name'};
+        $obj->{'name'} = $cmd->{'name'};
+        $obj->{'parameters'} = ();
+        $obj->{'type'} = $cmd->{'type'};
+        push(@{$obj->{'parameters'}}, { type => 'hidden',
+                                        name => 'workgroup',
+                                        description => "workgroup to run the command as",
+                                        required => 1 });
+
+        push(@{$obj->{'parameters'}}, { type => 'hidden',
+                                        name => 'vlan_id',
+                                        description => "vlan_id of the vlan to run the command on",
+                                        required => 1 });
+
+        foreach my $param (keys (%{$cmd->{'params'}})){
+            my $p = {};
+
+            if($cmd->{'params'}{$param}{'type'} eq 'select'){
+                @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
+            }else{
+
+            }
+
+            $p->{'type'} = $cmd->{'params'}{$param}{'type'};
+            $p->{'name'} = $param;
+            $p->{'description'} = $cmd->{'params'}{$param}{'description'};
+            $p->{'required'} = 1;
+
+            push(@{$obj->{'parameters'}}, $p);
+        }
+        push(@results, $obj);
+    }
+
+    return {results => \@results};
 }
-
-
 
 =head2 get_workgroups
 
