@@ -336,33 +336,36 @@ sub delete_vlan{
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
-    #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-        
-        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-        if($details->{'workgroup'} eq $workgroup){
-            my $status = undef;
-            my $switch = $details->{'switch'};
-            my $vlan = $details->{'vlan'};
-            foreach my $e (@{$details->{'endpoints'}}) {
-                my $port   = $e->{'port'};
-                
-                $status = $self->_send_vlan_remove( $port, $switch, $vlan );
-            }
-
-            if(!$status){
-                return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
-            }else{
-                $self->vce->network_model->delete_vlan( vlan_id => $vlan_id);
-                return {results => [{success => 1}]};
-            }
-        }else{
-            return {results => [], error => {msg => "Workgroup $workgroup is not allowed to edit vlan $vlan_id"}};
-        }
-    }else{
+    # Permissions check
+    my $in_workgroup = $self->vce->access->user_in_workgroup(
+        username  => $user,
+        workgroup => $workgroup
+    );
+    if (!$in_workgroup) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+    if ($details->{'workgroup'} ne $workgroup) {
+        return {results => [], error => {msg => "Workgroup $workgroup is not allowed to edit vlan $vlan_id"}};
+    }
+
+    # Do switch removal
+    my $status = undef;
+    my $switch = $details->{'switch'};
+    my $vlan = $details->{'vlan'};
+
+    foreach my $e (@{$details->{'endpoints'}}) {
+        my $port   = $e->{'port'};
+
+        $status = $self->_send_vlan_remove( $port, $switch, $vlan );
+        if (!$status) {
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
+        }
+    }
+
+    $self->vce->network_model->delete_vlan( vlan_id => $vlan_id);
+    return {results => [{success => 1}]};
 }
 
 sub _send_vlan_add{
@@ -373,8 +376,8 @@ sub _send_vlan_add{
     $self->logger->info("Adding vlan $vlan to port $port on $switch");
 
    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
-   if (exists $response->{'error'}) {
-       $self->logger->error($response->{'error'});
+   if (exists $response->{'results'}->{'error'}) {
+       $self->logger->error($response->{'results'}->{'error'});
        return 0;
    }
 
@@ -386,12 +389,13 @@ sub _send_vlan_remove{
     my $port   = shift;
     my $switch = shift;
     my $vlan   = shift;
+    $self->logger->info("Removing vlan $vlan from port $port on $switch");
 
-   my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
-   if (exists $response->{'error'}) {
-       $self->logger->error($response->{'error'});
-       return 0;
-   }
+    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
+    if (exists $response->{'results'}->{'error'}) {
+        $self->logger->error($response->{'results'}->{'error'});
+        return 0;
+    }
 
     return 1;
 }
