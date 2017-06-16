@@ -73,7 +73,7 @@ sub _register_webservice_methods{
         callback => sub{ return $self->get_workgroup_operational_status(@_) });
 
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -84,12 +84,12 @@ sub _register_webservice_methods{
                                               description => "returns a list of interfaces available to a user",
                                               callback => sub{ return $self->get_interfaces_operational_status(@_) });
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch name");

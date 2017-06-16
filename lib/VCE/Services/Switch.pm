@@ -99,14 +99,14 @@ sub _register_commands{
 
                 $method->add_input_parameter( required => 1,
                                               name => 'workgroup',
-                                              pattern => $GRNOC::WebService::Regex::NAME,
+                                              pattern => $GRNOC::WebService::Regex::NAME_ID,
                                               description => "workgroup to run the command as" );
 
                 if($type eq 'system' || $type eq 'port'){
                     warn "Adding required param switch!\n";
                     $method->add_input_parameter( required => 1,
                                                   name => 'switch',
-                                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                                   description => "Switch to run the command on" );
                 }
 
@@ -148,7 +148,7 @@ sub _register_webservice_methods{
 	callback => sub{ return $self->get_interfaces(@_) });
 
     $method->add_input_parameter( name => "interface_name",
-				  pattern => $GRNOC::WebService::Regex::NAME,
+				  pattern => $GRNOC::WebService::Regex::NAME_ID,
 				  required => 0,
 				  multiple => 1,
 				  description => "Interface name to query");

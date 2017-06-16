@@ -83,7 +83,7 @@ sub _register_webservice_methods{
                                                  callback => sub{ return $self->provision_vlan(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -95,7 +95,7 @@ sub _register_webservice_methods{
                                   description => "VLAN Description for humans to see");
 
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch for the port to provision on");
@@ -119,7 +119,7 @@ sub _register_webservice_methods{
                                               callback => sub{ return $self->edit_vlan(@_) });
     
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -131,7 +131,7 @@ sub _register_webservice_methods{
                                   description => "VLAN Description for humans to see");
 
     $method->add_input_parameter( name => "switch",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch for the port to provision on");
@@ -167,7 +167,7 @@ sub _register_webservice_methods{
                                   description => "VLAN ID to edit");
 
     $method->add_input_parameter( name => "workgroup",
-                                  pattern => $GRNOC::WebService::Regex::NAME,
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
@@ -208,11 +208,11 @@ sub provision_vlan{
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
 
-        my $vlan_id = $self->vce->provision_vlan( workgroup => $workgroup, 
-                                                  description => $description, 
-                                                  username => $user,  
-                                                  switch => $switch, 
-                                                  port => $ports, 
+        my $vlan_id = $self->vce->provision_vlan( workgroup => $workgroup,
+                                                  description => $description,
+                                                  username => $user,
+                                                  switch => $switch,
+                                                  port => $ports,
                                                   vlan => $vlan);
         if(!defined($vlan_id)){
             return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
@@ -225,6 +225,12 @@ sub provision_vlan{
             my $switch = $switch;
             my $vlan   = $vlan;
             $status = $self->_send_vlan_add($port, $switch, $vlan);
+            if (!$status) {
+                return {
+                    results => [{success => 0, vlan_id => $vlan_id}],
+                    error => {msg => "Unable to add VLAN to device"}
+                };
+            }
         }
         
         if($status){
@@ -369,6 +375,7 @@ sub _send_vlan_add{
    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
    if (exists $response->{'error'}) {
        $self->logger->error($response->{'error'});
+       return 0;
    }
 
     return 1;
@@ -383,6 +390,7 @@ sub _send_vlan_remove{
    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
    if (exists $response->{'error'}) {
        $self->logger->error($response->{'error'});
+       return 0;
    }
 
     return 1;
