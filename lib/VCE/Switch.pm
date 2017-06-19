@@ -114,7 +114,7 @@ sub BUILD{
 sub _reconnect_to_device{
     my $self = shift;
     
-    if(defined($self->device) && $self->device->connected()){
+    if(defined($self->device) && $self->device->connected){
 	$self->logger->debug("Already connected");
 	return;
     }
@@ -277,7 +277,7 @@ sub get_interfaces_op {
     my $m_ref = shift;
     my $p_ref = shift;
 
-    if (!defined $self->op_state->{'ports'}) {
+    if (!defined $self->op_state || !defined $self->op_state->{'ports'}) {
         return {results => {}};
     }
 
@@ -302,6 +302,7 @@ sub interface_tagged {
 
     my ($res, $err) = $self->device->interface_tagged($port, $vlan);
     if (defined $err) {
+        $self->logger->error($err);
         return { results => undef, error => $err };
     }
 
@@ -326,6 +327,7 @@ sub no_interface_tagged {
 
     my ($res, $err) = $self->device->no_interface_tagged($port, $vlan);
     if (defined $err) {
+        $self->logger->error($err);
         return { results => undef, error => $err };
     }
 
@@ -341,7 +343,7 @@ sub get_device_status{
     my $method = shift;
     my $params = shift;
 
-    return { status => $self->device->connected()};
+    return { status => $self->device->connected };
 }
 
 =head2 get_interface_status
@@ -382,7 +384,7 @@ sub _gather_operational_status{
 
     my $operational_status = {ports => {}};
 
-    if($self->device->connected()){
+    if($self->device->connected){
         
         my $interfaces = $self->device->get_interfaces(  );
         foreach my $interface (keys (%{$interfaces->{'interfaces'}})){
@@ -432,7 +434,7 @@ sub execute_command{
     $self->logger->info("Calling execute_command");
     $self->logger->debug(Dumper($p_ref));
 
-    if (!$self->device->connected()) {
+    if (!$self->device->connected) {
         return {success => 0, error => 1, error_msg => 'Device is currently disconnected.'};
     }
 

@@ -195,19 +195,27 @@ sub _execute_command{
 
     $self->logger->debug("In _execute_command");
 
-    #first verify we have the permissions to execute this
+    # Verify we have the permissions to execute this
     if(!$self->_authorize_command( %{$p_ref})){
         my $err = "Workgroup not authorized for command " . $command->{'name'} . " on switch " . $p_ref->{'switch'}{'value'};
         $self->logger->error($err);
         return {results => [], error => {msg => $err}};
     }
 
-    #ok we are now authorized... run the command
+
+    $self->logger->info("Calling command $command->{'name'} on $p_ref->{'switch'}{'value'}");
     my $cmd_string;
     my $context_string;
     my $vars = {};
     foreach my $var (keys %{$p_ref}){
         $vars->{$var} = $p_ref->{$var}{'value'};
+
+        # The frontend uses a uuid to identify a (pair of vlans ||
+        # circuit || network). This should be a valid vlan number.
+        if ($var eq 'vlan_id') {
+            my $vlan = $self->vce->network_model->get_vlan_details( vlan_id => $vars->{'vlan_id'} );
+            $vars->{'vlan_id'} = $vlan->{'vlan'};
+        }
     }
 
     if(defined($command->{'context'})){
