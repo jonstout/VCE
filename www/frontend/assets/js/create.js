@@ -23,10 +23,13 @@ function loadVlanDropdown() {
             endpoints_z.innerHTML = '';
             
             // Loads valid VLANS
-            for (var i = 0; i < ports[0].tags.length; i++) {
+            var parts = ports[0].tags[0].split("-");
+            var low = parts[0];
+            var high = parts[1];
+            for (var i = low; i <= high; i++) {
                 var opt = document.createElement('option');
-                opt.innerHTML = ports[0].tags[i];
-                opt.setAttribute('value', ports[0].tags[i]);
+                opt.innerHTML = i;
+                opt.setAttribute('value', i);
                 dropd.appendChild(opt);
             }
             
