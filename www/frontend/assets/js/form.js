@@ -10,6 +10,7 @@
  * - workgroup
  * - switch
  * - port
+ * - vlan_id
  *
  * After submit, the results of a successful request will be
  * added to a pre tag, and placed in #result_text.
@@ -53,7 +54,7 @@ function NewCommandForm(details, reponseFunc) {
         label.innerHTML = param.name;
         
         // Create hidden forms for data stored in cookie
-        if (param.name == "workgroup" || param.name == "switch" || param.name == "port") {
+        if (param.name == "workgroup" || param.name == "switch" || param.name == "port" || param.name == "vlan_id") {
             group.style.display = "none";
         }
 
@@ -94,6 +95,8 @@ function NewCommandForm(details, reponseFunc) {
                 value = cookie.switch;
             } else if (name == "port") {
                 value = cookie.port;
+            } else if (name == "vlan_id") {
+                value = cookie.selectedVlanId;
             }
             
             url += "&" + name + "=" + value;
