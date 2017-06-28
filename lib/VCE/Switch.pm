@@ -113,18 +113,14 @@ sub BUILD{
 
 sub _reconnect_to_device{
     my $self = shift;
-    
+
     if(defined($self->device) && $self->device->connected){
-	$self->logger->debug("Already connected");
-	return;
+        $self->logger->debug("Already connected");
+        return;
     }
 
     $self->logger->info("Attempt to connect");
-    $self->device->connect();
-
-    return;
-    
-    
+    return $self->device->connect();
 }
 
 sub _connect_to_device{
@@ -222,6 +218,19 @@ sub _register_rpc_methods{
 
     $d->register_method($method);
 
+    $method = GRNOC::RabbitMQ::Method->new( name => "vlan_description",
+                                            callback => sub { return $self->vlan_description( @_ )  },
+                                            description => "Sets a vlan's description" );
+    $method->add_input_parameter( name        => "description",
+				  description => "Description the vlan to add",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::TEXT );
+    $method->add_input_parameter( name        => "vlan",
+				  description => "VLAN number to use for tag",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $d->register_method($method);
+
     $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",
                                             callback => sub { return $self->interface_tagged( @_ )  },
                                             description => "Add vlan tagged interface" );
@@ -283,6 +292,32 @@ sub get_interfaces_op {
 
     return {results => $self->op_state->{'ports'}};
 }
+
+=head2 vlan_description
+
+=cut
+
+sub vlan_description {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $desc = $params->{'description'}{'value'};
+    my $vlan = $params->{'vlan'}{'value'};
+
+    if (!$self->device->connected) {
+        $self->logger->error("Error device is not connected.");
+    }
+
+    my ($res, $err) = $self->device->vlan_description($desc, $vlan);
+    if (defined $err) {
+        $self->logger->error($err);
+        return { results => undef, error => $err };
+    }
+
+    return { results => 1 };
+}
+
 
 =head2 interface_tagged
 

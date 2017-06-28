@@ -49,8 +49,6 @@ sub connect{
     my $self = shift;
     my %params = @_;
 
-    $self->logger->error( "" );
-    
     my $comm = GRNOC::Comm->new( host => $self->hostname,
                                  user => $self->username,
                                  password => $self->password,
@@ -112,6 +110,53 @@ sub get_interfaces{
 
 }
 
+=head2 vlan_description
+
+vlan_description sets vlan $vlan_id's description to $desc. Returns a
+response and error; The error is undef if nothing failed.
+
+=cut
+sub vlan_description {
+    my $self    = shift;
+    my $desc    = shift;
+    my $vlan_id = shift;
+
+    my $err = undef;
+    my $req = "
+<nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
+  <nc:edit-config>
+    <nc:target>
+      <nc:running/>
+    </nc:target>
+    <nc:default-operation>merge</nc:default-operation>
+    <nc:config>
+      <brcd:netiron-config>
+        <brcd:vlan-config>
+          <brcd:vlan>
+            <brcd:vlan-id>$vlan_id</brcd:vlan-id>
+            <brcd:vlan-name>$desc</brcd:vlan-name>
+          </brcd:vlan>
+        </brcd:vlan-config>
+      </brcd:netiron-config>
+    </nc:config>
+  </nc:edit-config>
+</nc:rpc>";
+
+    my $ok = $self->conn->send($req);
+    if (!defined $ok) {
+        $err = "Could not set vlan $vlan_id description.";
+        $self->conn->disconnect();
+        return undef, $err;
+    }
+
+    my $res = $self->conn->recv();
+    if (!defined $res->{'nc:ok'}) {
+        $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
+    }
+
+    return $res, $err;
+}
+
 =head2 interface_tagged
 
 Using netconf connection $conn add interface $iface to VLAN
@@ -124,6 +169,7 @@ sub interface_tagged {
     my $iface   = shift;
     my $vlan_id = shift;
 
+    my $err = undef;
     my $req = "
 <nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
   <nc:edit-config>
@@ -144,14 +190,18 @@ sub interface_tagged {
   </nc:edit-config>
 </nc:rpc>";
 
-    $self->conn->send($req);
+    my $ok = $self->conn->send($req);
+    if (!defined $ok) {
+        $err = "Could not add vlan $vlan_id to $iface.";
+        $self->conn->disconnect();
+        return undef, $err;
+    }
 
     my $res = $self->conn->recv();
-    my $err = undef;
-
     if (!defined $res->{'nc:ok'}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
     }
+
     return $res, $err;
 }
 
@@ -167,6 +217,7 @@ sub no_interface_tagged {
     my $iface   = shift;
     my $vlan_id = shift;
 
+    my $err = undef;
     my $req = "
 <nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
   <nc:edit-config>
@@ -187,14 +238,18 @@ sub no_interface_tagged {
   </nc:edit-config>
 </nc:rpc>";
 
-    $self->conn->send($req);
+    my $ok = $self->conn->send($req);
+    if (!defined $ok) {
+        $err = "Could not remove vlan $vlan_id from $iface.";
+        $self->conn->disconnect();
+        return undef, $err;
+    }
 
     my $res = $self->conn->recv();
-    my $err = undef;
-
     if (!defined $res->{'nc:ok'}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
     }
+
     return $res, $err;
 }
 

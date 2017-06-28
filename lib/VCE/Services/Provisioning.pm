@@ -204,43 +204,44 @@ sub provision_vlan{
     my $vlan = $p_ref->{'vlan'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
 
-    #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-
-        my $vlan_id = $self->vce->provision_vlan( workgroup => $workgroup,
-                                                  description => $description,
-                                                  username => $user,
-                                                  switch => $switch,
-                                                  port => $ports,
-                                                  vlan => $vlan);
-        if(!defined($vlan_id)){
-            return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
-        }
-        
-        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-        my $status  = undef;
-        foreach my $e (@{$details->{'endpoints'}}) {
-            my $port   = $e->{'port'};
-            my $switch = $switch;
-            my $vlan   = $vlan;
-            $status = $self->_send_vlan_add($port, $switch, $vlan);
-            if (!$status) {
-                return {
-                    results => [{success => 0, vlan_id => $vlan_id}],
-                    error => {msg => "Unable to add VLAN to device"}
-                };
-            }
-        }
-        
-        if($status){
-            return {results => [{success => 1, vlan_id => $vlan_id}]};
-        } else {
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
-        }
-    } else {
+    my $has_access = $self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup);
+    if (!$has_access) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    my $vlan_id = $self->vce->provision_vlan(
+        workgroup => $workgroup,
+        description => $description,
+        username => $user,
+        switch => $switch,
+        port => $ports,
+        vlan => $vlan
+    );
+    if(!defined($vlan_id)){
+        return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
+    }
+
+    my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+    my $status  = undef;
+
+    foreach my $e (@{$details->{'endpoints'}}) {
+        my $port   = $e->{'port'};
+        my $switch = $switch;
+        my $vlan   = $vlan;
+
+        $status = $self->_send_vlan_add($port, $switch, $vlan);
+        if (!$status) {
+            last;
+        }
+    }
+
+    if (!$status){
+        $self->vce->network_model->delete_vlan(vlan_id => $vlan_id);
+        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
+    }
+
+    $self->_send_vlan_description($description, $switch, $vlan );
+    return {results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
 
@@ -366,6 +367,22 @@ sub delete_vlan{
 
     $self->vce->network_model->delete_vlan( vlan_id => $vlan_id);
     return {results => [{success => 1}]};
+}
+
+sub _send_vlan_description{
+    my $self   = shift;
+    my $desc   = shift;
+    my $switch = shift;
+    my $vlan   = shift;
+    $self->logger->info("Adding description $desc to vlan $vlan on $switch");
+
+   my $response = $self->switch->vlan_description(description => $desc, vlan => $vlan);
+   if (exists $response->{'results'}->{'error'}) {
+       $self->logger->error($response->{'results'}->{'error'});
+       return 0;
+   }
+
+    return 1;
 }
 
 sub _send_vlan_add{
