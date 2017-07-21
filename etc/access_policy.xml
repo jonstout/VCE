@@ -1,23 +1,51 @@
 <accessPolicy>
-  <rabbit host="localhost" port="5672" user="guest" pass="guest"/>
+  <rabbit host="localhost" port="5672" user="guest" pass="guest" />
   <network_model path="/var/run/vce/network_model.json"/>
 
-  <switch name="foobar"  ip="managementip" username="username" password="password" description="Foo">
-
+  <switch name="switch" ip="127.0.0.1" username="username" password="password" description="switch description" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0">
     <commands>
       <port>
-         <command a="a" method_name='show_interface' name='show interface' type='show' interaction='cli' description='shows a list of all interfaces'>
-           <cmd>show interface [% port %]</cmd>
-         </command>
-         <command method_name='set_port_status' name='set port status' input='status' type='action' interaction='cli' configure='true' context='interface [% port %]' description='changes the admin status of a port'>
-           <cmd>[% status %]</cmd>
-           <parameter name='status' type='select' options='Enable,Disable' pattern='[Enable|Disable]' description='the admin status of the port we should set' />
-         </command>
-
-         <command method_name='set_port_descr' name='set port descr' input='descr' type='action' interaction='cli' configure='true' context='interface [% port %]' description='changes the description on a port'>
-           <cmd>port-name [% description %]</cmd>
-           <parameter name='description' type='text' pattern='(.*)' description='the description to set for the port' />
-         </command>
+        <command method_name='show_interface' name='show interface' type='show' interaction='cli' description='shows a list of all interfaces'>
+          <cmd>show interface [% port %]</cmd>
+        </command>
+        <command method_name='show_vlan_ethernet' name='show vlan' type='show' interaction='cli' description='shows a list of all vlans'>
+          <cmd>show vlan [% port %]</cmd>
+        </command>
+        <command method_name='show_tm_stats' name='show tm statistics' type='show' interaction='cli' description=''>
+          <cmd>show tm statistics [% port %]</cmd>
+        </command>
+        <command method_name='show_np_stats' name='show np statistics' type='show' interaction='cli' description=''>
+          <cmd>show np statistics [% port %]</cmd>
+        </command>
+        <command method_name='show_mac_address' name='show mac-address' type='show' interaction='cli' description=''>
+          <cmd>show mac-address [% port %]</cmd>
+        </command>
+        <command method_name='show_run_interface' name='show run interface' type='show' interaction='cli' description=''>
+          <cmd>show run interface [% port %]</cmd>
+        </command>
+        <command method_name='show_remote_fault' name='show remote-fault' type='show' interaction='cli' description=''>
+          <cmd>show remote-fault [% port %]</cmd>
+        </command>
+        <command method_name='show_statistics' name='show statistics' type='show' interaction='cli' description=''>
+          <cmd>show statistics [% port %]</cmd>
+        </command>
+        <command method_name='clear_tm_stats' name='clear tm statistics' type='show' interaction='cli' description=''>
+          <cmd>clear tm statistics [% port %]</cmd>
+        </command>
+        <command method_name='clear_np_stats' name='clear np statistics' type='show' interaction='cli' description=''>
+          <cmd>clear np statistics [% port %]</cmd>
+        </command>
+        <command method_name='clear_statistics' name='clear statistics' type='show' interaction='cli' description=''>
+          <cmd>clear statistics [% port %]</cmd>
+        </command>
+        <command method_name='set_port_status' name='set port status' input='status' type='action' interaction='cli' configure='true' context='interface [% port %]' description='changes the admin status of a port'>
+          <cmd>[% status %]</cmd>
+          <parameter name='status' pattern='(Enable|Disable)' description='the admin status of the port we should set' type='select' options='Enable,Disable' />
+        </command>
+        <command method_name='set_port_descr' name='set port descr' input='descr' type='action' interaction='cli' configure='true' context='interface [% port %]' description='changes the description on a port'>
+          <cmd>port-name [% description %]</cmd>
+          <parameter name='description' pattern='(.*)' description='the description to set for the port' type='text' />
+        </command>
       </port>
 
       <system>
@@ -33,40 +61,25 @@
       </system>
 
       <vlan>
-         <command method_name='show_vlan' type='show' name='show vlan' interaction='cli' description='show the vlan details'>
-           <cmd>show vlan [% vlan_id %]</cmd>
-         </command>
-         <command method_name='show_vlan_statistics' type='show' name='show vlan statistics' interaction='cli' description='shows the vlans interfaces and statistics'>
-           <cmd>show vlan [% vlan_id %] statistics</cmd>
-           <parameter name='vlan_id' type='text' pattern='(.*)' description='the vlan to try' />
-         </command>
+        <command method_name='show_vlan' type='show' name='show vlan' interaction='cli' description='show the vlan details'>
+          <cmd>show vlan [% vlan_id %]</cmd>
+        </command>
+        <command method_name='show_vlan_statistics' type='show' name='show vlan statistics' interaction='cli' description='shows the vlans interfaces and statistics'>
+          <cmd>show vlan [% vlan_id %] statistics</cmd>
+        </command>
+        <command method_name='show_spanning_tree_vlan' type='show' name='show spanning-tree vlan' interaction='cli' description='shows the vlans spanning-tree'>
+          <cmd>show spanning-tree vlan [% vlan_id %]</cmd>
+        </command>
       </vlan>
     </commands>
 
-    <port name="eth0/1" owner="edco">
-      <tags start="1" end="100" workgroup="edco"/>
-      <tags start="101" end="200" workgroup="ajco"/>
+    <!-- Example Port -->
+    <port name="ethernet 5/1" owner="admin">
+      <tags start="100" end="200" workgroup="admin"/>
     </port>
-
-   <port name="eth0/2" owner="edco">
-      <tags start="1" end="100" workgroup="edco"/>
-      <tags start="101" end="200" workgroup="ajco"/>
-    </port>
-
   </switch>
 
-  <workgroup name="edco"  description="this is edcos exchange point access workgroup">
-    <user id="ebalas" name="Ed" email="ebalas@globalnoc.iu.edu" />
-    <user id="stan" name="Stan" email="stan@globalnoc.iu.edu" />
-  </workgroup>
-
-  <workgroup name="ajco"  description="this is edcos exchange point access workgroup">
-    <user id="aragusa" name="AJ" email="aragusa@globalnoc.iu.edu" />
-  </workgroup>
-
   <workgroup name="admin" admin="1" description="admin workgroup">
-    <user id="ebalas" name="Ed" email="ebalas@globalnoc.iu.edu" />
+    <user id="admin" name="admin" email="admin@localhost" />
   </workgroup>
-
-
 </accessPolicy>
