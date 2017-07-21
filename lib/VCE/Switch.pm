@@ -231,6 +231,15 @@ sub _register_rpc_methods{
 				  pattern     => $GRNOC::WebService::Regex::INTEGER );
     $d->register_method($method);
 
+    $method = GRNOC::RabbitMQ::Method->new( name => "no_vlan",
+                                            callback => sub { return $self->no_vlan(@_) },
+                                            description => "Sets a vlan's description" );
+    $method->add_input_parameter( name        => "vlan",
+				  description => "VLAN number to use for tag",
+				  required    => 1,
+				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $d->register_method($method);
+
     $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",
                                             callback => sub { return $self->interface_tagged( @_ )  },
                                             description => "Add vlan tagged interface" );
@@ -361,6 +370,30 @@ sub no_interface_tagged {
     }
 
     my ($res, $err) = $self->device->no_interface_tagged($port, $vlan);
+    if (defined $err) {
+        $self->logger->error($err);
+        return { results => undef, error => $err };
+    }
+
+    return { results => 1 };
+}
+
+=head2 no_vlan
+
+=cut
+
+sub no_vlan {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $vlan = $params->{'vlan'}{'value'};
+
+    if (!$self->device->connected) {
+        $self->logger->error("Error device is not connected.");
+    }
+
+    my ($res, $err) = $self->device->no_vlan($vlan);
     if (defined $err) {
         $self->logger->error($err);
         return { results => undef, error => $err };
