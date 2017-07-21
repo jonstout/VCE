@@ -58,6 +58,9 @@
         <command method_name='show_cpu' name='show cpu' type='show' interaction='cli' description='shows the cpu on the switch'>
           <cmd>show cpu-utilization</cmd>
         </command>
+        <command method_name='show_vlan_all' type='show' name='show vlan' interaction='cli' description='show all the vlan details'>
+          <cmd>show vlan</cmd>
+        </command>
       </system>
 
       <vlan>
