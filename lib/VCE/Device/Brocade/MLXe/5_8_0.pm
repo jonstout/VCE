@@ -157,6 +157,51 @@ sub vlan_description {
     return $res, $err;
 }
 
+=head2 no_vlan
+
+no_vlan removes $vlan_id from this switch. Returns a response and
+error; The error is undef if nothing failed.
+
+=cut
+sub no_vlan {
+    my $self    = shift;
+    my $vlan_id = shift;
+
+    my $err = undef;
+    my $req = "
+<nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
+  <nc:edit-config>
+    <nc:target>
+      <nc:running/>
+    </nc:target>
+    <nc:default-operation>merge</nc:default-operation>
+    <nc:config>
+      <brcd:netiron-config>
+        <brcd:vlan-config>
+          <brcd:vlan nc:operation=\"delete\">
+            <brcd:vlan-id>$vlan_id</brcd:vlan-id>
+          </brcd:vlan>
+        </brcd:vlan-config>
+      </brcd:netiron-config>
+    </nc:config>
+  </nc:edit-config>
+</nc:rpc>";
+
+    my $ok = $self->conn->send($req);
+    if (!defined $ok) {
+        $err = "Could not delete vlan $vlan_id.";
+        $self->conn->disconnect();
+        return undef, $err;
+    }
+
+    my $res = $self->conn->recv();
+    if (!defined $res->{'nc:ok'}) {
+        $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
+    }
+
+    return $res, $err;
+}
+
 =head2 interface_tagged
 
 Using netconf connection $conn add interface $iface to VLAN

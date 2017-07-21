@@ -365,6 +365,8 @@ sub delete_vlan{
         }
     }
 
+    $self->_send_no_vlan($switch, $vlan);
+
     $self->vce->network_model->delete_vlan( vlan_id => $vlan_id);
     return {results => [{success => 1}]};
 }
@@ -409,6 +411,21 @@ sub _send_vlan_remove{
     $self->logger->info("Removing vlan $vlan from port $port on $switch");
 
     my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
+    if (exists $response->{'results'}->{'error'}) {
+        $self->logger->error($response->{'results'}->{'error'});
+        return 0;
+    }
+
+    return 1;
+}
+
+sub _send_no_vlan {
+    my $self   = shift;
+    my $switch = shift;
+    my $vlan   = shift;
+    $self->logger->info("Removing vlan $vlan from $switch");
+
+    my $response = $self->switch->no_vlan(vlan => $vlan);
     if (exists $response->{'results'}->{'error'}) {
         $self->logger->error($response->{'results'}->{'error'});
         return 0;
