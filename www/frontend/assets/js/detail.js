@@ -303,3 +303,14 @@ function loadVlanCommands() {
         });
     });
 }
+
+function selectTab() {
+    var searchParams = new URLSearchParams(location.search.slice(1));
+    var tabSelection = searchParams.get("tab");
+
+    if (tabSelection === null) {
+        tabSelection = "switch";
+    }
+
+    $('a[href="#' + tabSelection + '"]').tab('show');
+}
