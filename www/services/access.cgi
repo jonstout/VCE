@@ -5,8 +5,10 @@ use warnings;
 
 use Data::Dumper;
 
+use GRNOC::Log;
 use VCE::Services::Access;
 
+our $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf');
 our $access_services;
 
 if(!defined($access_services)){
