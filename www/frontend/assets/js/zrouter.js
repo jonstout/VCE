@@ -24,6 +24,8 @@ window.onload = function() {
     
     var url = window.location;
     if (url.pathname.indexOf('details.html') > -1) {
+        selectTab();
+
         loadPorts();
         loadVlans();
         loadSwitch();

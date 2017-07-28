@@ -93,11 +93,11 @@ function createVlan(e) {
     console.log(url);
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
-            window.location.href = 'details.html';
+            window.location.href = 'details.html?tab=vlan';
         });
     });
 }
 
 function cancelVlan(e) {
-    window.location.href = 'details.html';
+    window.location.href = 'details.html?tab=vlan';
 }
