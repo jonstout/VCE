@@ -60,7 +60,6 @@ sub _read_network_model{
     my $self = shift;
 
     if(!-e $self->file ){
-	
         $self->_set_nm({vlans => {}});
         $self->_write_network_model();
 
@@ -70,8 +69,14 @@ sub _read_network_model{
         while(my $line = <$fh>){
             $str .= $line;
         }
+
         my $data = decode_json($str);
-        $self->_set_nm($data);
+        if (!%{$data}) {
+            $self->_set_nm({vlans => {}});
+            $self->_write_network_model();
+        } else {
+            $self->_set_nm($data);
+        }
     }
 }
 

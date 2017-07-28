@@ -171,7 +171,7 @@ sub _process_config{
     my %switches;
     my $switches = $config->get('/accessPolicy/switch');
     foreach my $switch (@$switches){
-	$self->logger->debug("Processing switch: " . Data::Dumper::Dumper($switch));
+	$self->logger->debug("Processing config for $switch->{'name'}");
 	my $s = {};
 	$s->{'name'} = $switch->{'name'};
 	$s->{'description'} = $switch->{'description'};
