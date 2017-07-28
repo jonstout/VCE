@@ -8,8 +8,7 @@ use Data::Dumper;
 use GRNOC::Log;
 use VCE::Services::Operational;
 
-my $logger = GRNOC::Log->new( config => '/etc/vce/apache_logging.conf');
-
+our $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf');
 our $operational_services;
 
 if(!defined($operational_services)){
