@@ -62,7 +62,6 @@ sub _read_network_model{
     if(!-e $self->file ){
         $self->_set_nm({vlans => {}});
         $self->_write_network_model();
-
     }else{
         my $str;
         open(my $fh, "<", $self->file);

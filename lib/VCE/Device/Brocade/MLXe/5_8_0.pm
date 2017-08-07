@@ -77,37 +77,128 @@ sub connect{
     return;
 }
 
+=head2 get_interfaces_state
 
+get_interfaces_state uses netconf to retrieve basic information about
+each interface; It returns an array of interfaces and an error if a
+failure occurred. An example interface is included below.
+
+  {
+    id         => 'ethernet 15/2'
+    duplex     => 'full',
+    hw_addr    => 'cc4e.240c.0ea1',
+    link_state => 'up'
+    name       => 'mat lok',
+    port_state => 'forward',
+    priority   => 'level0',
+    speed      => '10G',
+    tag        => 'no'
+  }
+
+=cut
+sub get_interfaces_state {
+    my $self = shift;
+
+    my $err = undef;
+    my $req = "
+<nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
+  <nc:get>
+    <nc:filter nc:type=\"subtree\">
+      <brcd:netiron-statedata>
+        <brcd:interface-statedata/>
+      </brcd:netiron-statedata>
+    </nc:filter>
+  </nc:get>
+</nc:rpc>";
+
+    my $ok = $self->conn->send($req);
+    if (!defined $ok) {
+        $err = "Could not get interfaces' state.";
+        $self->conn->disconnect();
+        return undef, $err;
+    }
+
+    my $res = $self->conn->recv();
+    if (!defined $res->{'nc:ok'} && keys %{$res->{'nc:rpc-error'}}) {
+        $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
+        return undef, $err;
+    }
+
+    my $data = $res->{'nc:data'}->{'netiron-statedata'}->{'brcd:interface-statedata'}->{'brcd:interface'};
+    my $interfaces = [];
+
+    foreach my $raw (@{$data}) {
+        my $duplex = 'unkown';
+        $duplex = 'full' if (exists $raw->{'brcd:duplex'}->{'brcd:full'});
+        $duplex = 'half' if (exists $raw->{'brcd:duplex'}->{'brcd:half'});
+        $duplex = 'none' if (exists $raw->{'brcd:duplex'}->{'brcd:none'});
+        $duplex = 'na' if (exists $raw->{'brcd:duplex'}->{'brcd:na'});
+
+        my $link_state = 'unkown';
+        $link_state = 'up' if (exists $raw->{'brcd:link-state'}->{'brcd:up'});
+        $link_state = 'down' if (exists $raw->{'brcd:link-state'}->{'brcd:down'});
+        $link_state = 'disabled' if (exists $raw->{'brcd:link-state'}->{'brcd:disabled'});
+
+        my $port_state = 'unkown';
+        $port_state = 'forward' if (exists $raw->{'brcd:l2-state'}->{'brcd:forward'});
+
+        my $tag = 'unknown';
+        $tag = 'no' if (exists $raw->{'brcd:tag-mode'}->{'brcd:no'});
+        $tag = 'yes' if (exists $raw->{'brcd:tag-mode'}->{'brcd:yes'});
+
+        my $priority = 'unknown';
+        $priority = 'level0' if (exists $raw->{'brcd:priority-level'}->{'brcd:level0'});
+
+        my $interface = {
+            id         => $raw->{'brcd:interface-id'},
+            duplex     => $duplex,
+            hw_addr    => $raw->{'brcd:mac-address'},
+            link_state => $link_state,
+            name       => $raw->{'brcd:name'} || '',
+            port_state => $port_state,
+            priority   => $priority,
+            speed      => $raw->{'brcd:speed'},
+            tag        => $tag
+        };
+
+        push(@{$interfaces}, $interface);
+    }
+
+    return $interfaces, $err;
+}
 
 =head2 get_interfaces
 
 =cut
-
-sub get_interfaces{
+sub get_interfaces {
     my $self = shift;
     my %params = @_;
 
-    if($self->connected){
-	my %interfaces;
-    my ($interfaces_brief, $err) = $self->issue_command('show interfaces brief');
-
-	my $ints = $self->_process_interfaces($interfaces_brief);
-        my $raw = "";
-	foreach my $int (@$ints){
-	    my $int_details = $self->_get_interface( name => $int->{'port_name'});
-	    next if(!defined($int_details));
-            next if(!defined($int_details->{'parsed'}->{'name'}));
-            warn Data::Dumper::Dumper(%interfaces);
-            warn Data::Dumper::Dumper($int_details);
-	    $interfaces{$int_details->{'parsed'}->{'name'}} = $int_details->{'parsed'};
-            $raw .= $int_details->{'raw'};
-	}
-	return {interfaces => \%interfaces, raw => $raw};
-    }else{
-	$self->logger->error("not currently connected to the device");
-	return;
+    if (!$self->connected) {
+        $self->logger->error("not currently connected to the device");
+        return;
     }
 
+    my ($ints, $err) = $self->get_interfaces_state();
+    if (defined $err) {
+        $self->logger->error($err);
+    }
+
+    my %interfaces;
+
+    my $raw = "";
+    foreach my $int (@$ints){
+        my $int_details = $self->_get_interface(name => $int->{'id'});
+        next if(!defined($int_details));
+        next if(!defined($int_details->{'parsed'}->{'name'}));
+
+        $int_details->{'parsed'}->{'description'} = $int->{'name'};
+
+        $raw .= $int_details->{'raw'};
+        $interfaces{$int->{'id'}} = $int_details->{'parsed'};
+    }
+
+    return {interfaces => \%interfaces, raw => $raw};
 }
 
 =head2 vlan_description
@@ -305,13 +396,7 @@ sub _get_interface{
 
     my $int_details;
     my $err;
-    if($params{'name'} =~ /\d+\/\d+/){
-        ($int_details, $err) = $self->issue_command("show interface ethernet " . $params{'name'});
-    }elsif( $params{'name'} =~ /mgmt(\d+)/){
-        ($int_details, $err) = $self->issue_command("show interface management " . $1);
-    }else{
-        ($int_details, $err) = $self->issue_command("show interface " . $params{'name'});
-    }
+    ($int_details, $err) = $self->issue_command("show interface " . $params{'name'});
     return if(!defined($int_details));
 
     my $int = {};
@@ -392,36 +477,6 @@ sub _get_interface{
 
     return {parsed => $int, raw => $int_details};
     
-}
-
-sub _process_interfaces{
-    my $self = shift;
-    my $interfaces_brief = shift;
-
-    my @interfaces;
-    foreach my $line (split(/\n/,$interfaces_brief)){
-	next if($line =~ /Port/);
-	next if($line eq '');
-
-	$line =~ /(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)/g;
-
-	my $int = {};
-	$int->{'port_name'} = $1;
-	$int->{'state'} = $2;
-	$int->{'port_state'} = $3;
-	$int->{'duplex'} = $4;
-	$int->{'speed'} = $5;
-	$int->{'trunk'} = $6;
-	$int->{'tag'} = $7;
-	$int->{'priority'} = $8;
-	$int->{'mac'} = $9;
-	$int->{'name'} = $10;
-	$int->{'type'} = $11;
-
-	push(@interfaces,$int);
-    }
-
-    return \@interfaces;
 }
 
 =head2 configure
