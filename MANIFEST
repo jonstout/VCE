@@ -1,9 +1,9 @@
 bin/vce.pl
 bin/vce_switch.pl
 etc/access_policy.xml
-etc/config.xsd
 etc/apache-vce.conf
 etc/apache_logging.conf
+etc/config.xsd
 etc/logging.conf
 etc/network_model.json
 etc/vce.init
@@ -89,13 +89,14 @@ www/frontend/assets/img/background-2560x1024.jpg
 www/frontend/assets/img/mountain_bg.jpg
 www/frontend/assets/img/test.jpg
 www/frontend/assets/js/aconst.js
-www/frontend/assets/js/form.js
 www/frontend/assets/js/create.js
 www/frontend/assets/js/detail.js
 www/frontend/assets/js/edit.js
+www/frontend/assets/js/form.js
 www/frontend/assets/js/header.js
 www/frontend/assets/js/jquery.min.js
 www/frontend/assets/js/js.cookie.js
+www/frontend/assets/js/polyfill/urlsearchparams.js
 www/frontend/assets/js/switch.js
 www/frontend/assets/js/workgroup.js
 www/frontend/assets/js/zrouter.js
