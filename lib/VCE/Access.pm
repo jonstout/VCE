@@ -310,8 +310,11 @@ sub get_tags_on_port{
 
 =head2 friendly_display_vlans
 
-=cut
+friendly_display_vlans takes an arrary of vlans and returns a list of
+human readable vlan ranges. An example range looks like `100-200`, and
+will always be of form `low-high`.
 
+=cut
 sub friendly_display_vlans{
     my $self = shift;
     my $vlans = shift;
@@ -320,7 +323,10 @@ sub friendly_display_vlans{
     my $first;
     my $last;
 
-    foreach my $vlan (@$vlans){
+    # The work below expects a sorted array of vlans
+    my @sorted_vlans = sort { $a <=> $b } @{$vlans};
+
+    foreach my $vlan (@sorted_vlans) {
         if(!defined($first)){
             $first = $vlan;
             $last = $vlan;
@@ -343,11 +349,10 @@ sub friendly_display_vlans{
 
     #do the last push
     if($first == $last){
-	push(@f_vlans, $first);
+        push(@f_vlans, $first);
     }else{
-	push(@f_vlans, $first . "-" . $last);
+        push(@f_vlans, $first . "-" . $last);
     }
-
     return \@f_vlans;
 }
 

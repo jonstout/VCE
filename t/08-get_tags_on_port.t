@@ -22,12 +22,15 @@ ok(defined($tags), "Tags returned a true value");
 
 my $is_ok = 1;
 
-for(my $i=0;$i<100;$i++){
-    if($tags->[$i] eq $i + 101){
-        
-    }else{
-        warn $tags->[$i] . " ne " . $i + 101 . "\n";
+my $testable_tags = {};
+foreach my $tag (@{$tags}) {
+    $testable_tags->{$tag} = 1;
+}
+for (my $i=0; $i < 100; $i++) {
+    if (!defined $testable_tags->{$i+101}) {
+        warn "Tag " . ($i+101) . " wasn't found";
         $is_ok = 0;
+        last;
     }
 }
 
