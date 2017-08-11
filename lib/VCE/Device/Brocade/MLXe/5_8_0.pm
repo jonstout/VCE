@@ -402,7 +402,6 @@ sub _get_interface{
     my $int = {};
     foreach my $line (split(/\n/,$int_details)){
 	if($line =~ /^\s/){
-	    
 	    if($line =~ /Hardware is (\S+), address is (\S+)/){
 		$int->{'hardware_type'} = $1;
 		$int->{'mac_addr'} = $2;
@@ -415,7 +414,7 @@ sub _get_interface{
 	    if($line =~ /MTU (\d+)/){
 		$int->{'mtu'} = $1;
 	    }
-	    
+
 	    if($line =~ /(\d+) packets input, (\d+) bytes, (\d)/){
 		$int->{'input'} = {};
 		$int->{'input'}->{'packets'} = $1;
@@ -446,21 +445,22 @@ sub _get_interface{
                 $int->{'name'} = $1;
                 next if(!defined($int->{'name'}));
                 $int->{'name'} =~ s/100GigabitEthernet/ethernet /;
+                $int->{'name'} =~ s/40GigabitEthernet/ethernet /;
                 $int->{'name'} =~ s/10GigabitEthernet/ethernet /;
                 $int->{'name'} =~ s/GigabitEthernet/ethernet /;
-                
+                $int->{'name'} =~ s/Ethernetmgmt/management /;
+
                 $line =~ /is (\S+), line protocol is (\S+)/;
                 $int->{'admin_status'} = $1;
                 $int->{'status'} = $2;
-                
+
                 if($int->{'admin_status'} eq 'disabled'){
                     $int->{'admin_status'} = 0;
                 }else{
                     $int->{'admin_status'} = 1;
                 }
-                
+
                 if(defined($int->{'status'})){
-                    
                     if($int->{'status'} eq 'up'){
                         $int->{'status'} = 1;
                     }elsif($int->{'status'} eq 'down'){
@@ -476,7 +476,6 @@ sub _get_interface{
     }
 
     return {parsed => $int, raw => $int_details};
-    
 }
 
 =head2 configure
