@@ -486,19 +486,19 @@ sub _get_interface_status{
     my $self = shift;
     my %params = @_;
 
-    my $state = $self->device_client->get_interface_status( interface => $params{'interface'})->{'results'};
-    $self->logger->error("Interface Status: " . Data::Dumper::Dumper($state));
-    if(!defined($state)){
+    my $state = $self->device_client->get_interface_status(interface => $params{'interface'})->{'results'};
+    if (!defined $state || defined $state->{'error'}) {
+        $self->logger->error("Interface Status: " . Data::Dumper::Dumper($state));
         return "Unknown";
     }
-    if($state->{'status'} == 1){
+
+    if ($state->{'status'} == 1) {
         return 'Up';
-    }elsif($state->{'status'} == 0){
+    } elsif ($state->{'status'} == 0) {
         return 'Down';
-    }else{
+    } else {
         return 'Unknown';
     }
-
 }
 
 =head2 is_tag_available
