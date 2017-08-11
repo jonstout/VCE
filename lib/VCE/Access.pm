@@ -272,31 +272,39 @@ sub get_tags_on_port{
     my %params = @_;
 
     if(!defined($params{'workgroup'})){
-        $self->logger->error("get_available_tags_on_port: workgroup not specified");
+        $self->logger->error("get_tags_on_port: workgroup not specified");
         return;
     }
 
     if(!defined($params{'switch'})){
-        $self->logger->error("get_available_tags_on_port: switch not specified");
+        $self->logger->error("get_tags_on_port: switch not specified");
         return;
     }
 
     if(!defined($params{'port'})){
-        $self->logger->error("get_available_tags_on_port: port not specified");
+        $self->logger->error("get_tags_on_port: port not specified");
         return;
     }
-    
-    my @available_tags;
-    for(my $vlan = 1; $vlan < 4095; $vlan++){
-        if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                switch => $params{'switch'},
-                                                port => $params{'port'},
-                                                vlan => $vlan)){
-            push(@available_tags, $vlan);
+
+    if (!defined $self->config->{'switches'}->{$params{'switch'}}) {
+        return [];
+    }
+    my $switch = $self->config->{'switches'}->{$params{'switch'}};
+
+    if (!defined $switch->{'ports'}->{$params{'port'}}) {
+        return [];
+    }
+    my $port = $switch->{'ports'}->{$params{'port'}};
+
+    my $available_tags;
+
+    foreach my $vlan (keys %{$port->{'tags'}}) {
+        if ($port->{'tags'}->{$vlan} eq $params{'workgroup'}) {
+            push(@{$available_tags}, $vlan);
         }
     }
-    return \@available_tags;
-    
+
+    return $available_tags;
 }
 
 
