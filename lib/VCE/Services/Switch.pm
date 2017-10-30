@@ -120,7 +120,7 @@ sub _register_commands{
                 if($type eq 'vlan'){
                     $method->add_input_parameter( required => 1,
                                                   name => 'vlan_id',
-                                                  pattern => $GRNOC::WebService::Regex::NUMBER,
+                                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
                                                   description => "the vlan to run the command for" );
                 }
 
@@ -202,8 +202,6 @@ sub _execute_command{
         return {results => [], error => {msg => $err}};
     }
 
-
-    $self->logger->info("Calling command $command->{'name'} on $p_ref->{'switch'}{'value'}");
     my $cmd_string;
     my $context_string;
     my $vars = {};
