@@ -550,4 +550,16 @@ sub get_switches{
 
 }
 
+sub get_admin_workgroup {
+    my $self = shift;
+
+    foreach my $wgroup (keys %{$self->config->{'workgroups'}}) {
+        if (defined $self->config->{'workgroups'}->{$wgroup}->{'admin'}) {
+            return $self->config->{'workgroups'}->{$wgroup};
+        }
+    }
+
+    return undef;
+}
+
 1;

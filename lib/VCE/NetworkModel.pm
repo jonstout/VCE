@@ -292,4 +292,42 @@ sub get_vlan_details{
     return;
 }
 
+sub get_vlan_details_by_number {
+    my $self = shift;
+    my %params = @_;
+
+    if(!defined $params{'number'}) {
+        $self->logger->error("No VLAN number specified.");
+        return;
+    }
+
+    foreach my $vlan_id (keys %{$self->nm->{'vlans'}}) {
+        my $vlan = $self->nm->{'vlans'}->{$vlan_id};
+        if ($vlan->{'vlan'} eq $params{'number'}) {
+            return $vlan;
+        }
+    }
+
+    $self->logger->error("No VLAN with number: " . $params{'number'});
+    return undef;
+}
+
+sub set_vlan_endpoints {
+    my $self = shift;
+    my %params = @_;
+
+    if (!defined $params{'vlan_id'}) {
+        $self->logger->error("No VLAN ID specified");
+        return;
+    }
+
+    if (defined $self->nm->{'vlans'}->{$params{'vlan_id'}}) {
+        $self->nm->{'vlans'}->{$params{'vlan_id'}}->{'endpoints'} = $params{'endpoints'};
+        return $self->nm->{'vlans'}->{$params{'vlan_id'}};
+    }
+
+    $self->logger->error("No VLAN with ID: " . $params{'vlan_id'});
+    return undef;
+}
+
 1;

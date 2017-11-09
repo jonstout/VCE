@@ -185,6 +185,13 @@ sub _register_rpc_methods{
                                   pattern => $GRNOC::WebService::Regex::NAME_ID );
     $d->register_method($method);
 
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "get_vlans",
+        callback => sub { return $self->get_vlans(@_) },
+        description => "Get the device vlans"
+    );
+    $d->register_method($method);
+
     $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces_op",
                                             callback => sub { return $self->get_interfaces_op( @_ )  },
                                             description => "Get the device interfaces" );
@@ -279,7 +286,7 @@ sub get_interfaces{
     my $p_ref = shift;
 
     if($self->device->connected){
-	return $self->device->get_interfaces(  );
+        return $self->device->get_interfaces();
     }else{
 	$self->logger->error("Error device is not connected");
 	return;
@@ -300,6 +307,30 @@ sub get_interfaces_op {
     }
 
     return {results => $self->op_state->{'ports'}};
+}
+
+=head get_vlans
+
+get_vlans returns a hash of vlan objects describing this devices VLAN
+configuration. This device's control and default VLANs are omitted
+from the resulting hash. The mode of each port object will be 'TAGGED'
+or 'UNTAGGED'.
+
+Unlike get_interfaces, get_vlans has no associated _op method. All
+requests for a device's VLAN configuration will be proxied through the
+op_state variable.
+
+=cut
+sub get_vlans {
+    my $self = shift;
+    my $m_ref = shift;
+    my $p_ref = shift;
+
+    if (!defined $self->op_state || !defined $self->op_state->{'vlans'}) {
+        return {};
+    }
+
+    return $self->op_state->{'vlans'};
 }
 
 =head2 vlan_description
@@ -450,16 +481,20 @@ sub get_interface_status{
 sub _gather_operational_status{
     my $self = shift;
 
-    my $operational_status = {ports => {}};
+    my $operational_status = {ports => {}, vlans => {}};
 
-    if($self->device->connected){
-        
-        my $interfaces = $self->device->get_interfaces(  );
-        foreach my $interface (keys (%{$interfaces->{'interfaces'}})){
-            $self->logger->error("Interface: " . $interface);
+    if ($self->device->connected) {
+        my $interfaces = $self->device->get_interfaces();
+        foreach my $interface (keys (%{$interfaces->{'interfaces'}})) {
+            $self->logger->info("Found interface $interface.");
             $operational_status->{'ports'}->{$interface} = $interfaces->{'interfaces'}->{$interface};
         }
-        
+
+        my $vlans = $self->device->get_vlans();
+        foreach my $vlan (@{$vlans}) {
+            $self->logger->info("Found vlan $vlan->{'vlan'}.");
+            $operational_status->{'vlans'}->{$vlan->{'vlan'}} = $vlan;
+        }
     }
 
     $self->_set_op_state($operational_status);
