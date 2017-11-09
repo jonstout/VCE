@@ -268,58 +268,66 @@ sub edit_vlan{
                                               workgroup => $workgroup )){
 
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id );
-
-        if($details->{'workgroup'} ne $workgroup){
-            return {results => [], error => {msg => "Workgroup $workgroup is not allowed to edit vlan $vlan_id"}};
+        if ($details->{'workgroup'} ne $workgroup) {
+            my $error = "Workgroup $workgroup is not allowed to edit vlan $vlan_id.";
+            $self->logger->error($error);
+            return {results => [], error => {msg => $error}};
         }
 
         #first validate new circuit before we remove the old!
-        if(!$self->vce->validate_circuit( workgroup => $workgroup,
-                                          description => $description,
-                                          username => $user,
-                                          switch => $switch,
-                                          port => $ports,
-                                          vlan => $vlan )){
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Circuit does not validate"}};
+        my $valid_circuit = $self->vce->validate_circuit(
+            workgroup => $workgroup,
+            description => $description,
+            username => $user,
+            switch => $switch,
+            port => $ports,
+            vlan => $vlan
+        );
+        if(!$valid_circuit){
+            my $error = "Couldn't validate circuit.";
+            $self->logger->error($error);
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
         }
 
-        $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-        my $status = undef;
+        my $status = 1;
         foreach my $e (@{$details->{'endpoints'}}) {
             my $port   = $e->{'port'};
             $status = $self->_send_vlan_remove( $port, $switch, $details->{'vlan'} );
         }
-        
         if(!$status){
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
-        }else{
-            
-            $self->vce->delete_vlan( vlan_id => $vlan_id, workgroup => $workgroup );
-            
-            $self->vce->provision_vlan( vlan_id => $vlan_id,
-                                        workgroup => $workgroup, 
-                                        description => $description, 
-                                        username => $user,  
-                                        switch => $switch, 
-                                        port => $ports, 
-                                        vlan => $vlan);
-            
-            my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-            my $status  = undef;
-            foreach my $e (@{$details->{'endpoints'}}) {
-                my $port   = $e->{'port'};
-                
-                $status = $self->_send_vlan_add( $port, $switch, $vlan );
-            }
-
-            if(!$status){
-                return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
-            }else{
-                return {results => [{success => 1, vlan_id => $vlan_id}]};
-            }
+            my $error = "Unable to remove VLAN from device.";
+            $self->logger->error($error);
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
         }
+
+        $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
+        $self->vce->provision_vlan( vlan_id => $vlan_id,
+                                    workgroup => $workgroup,
+                                    description => $description,
+                                    username => $user,
+                                    switch => $switch,
+                                    port => $ports,
+                                    vlan => $vlan);
+
+        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+        my $status  = undef;
+        foreach my $e (@{$details->{'endpoints'}}) {
+            my $port   = $e->{'port'};
+            $status = $self->_send_vlan_add( $port, $switch, $vlan );
+        }
+
+        if(!$status){
+            my $error = "Unable to add VLAN to device.";
+            $self->logger->error($error);
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
+        }else{
+            return {results => [{success => 1, vlan_id => $vlan_id}]};
+        }
+
     }else{
-        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+        my $error = "User $user not in specified workgroup $workgroup.";
+        $self->logger->error($error);
+        return {results => [], error => {msg => $error}};
     }
 }
 
