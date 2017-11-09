@@ -323,6 +323,7 @@ sub set_vlan_endpoints {
 
     if (defined $self->nm->{'vlans'}->{$params{'vlan_id'}}) {
         $self->nm->{'vlans'}->{$params{'vlan_id'}}->{'endpoints'} = $params{'endpoints'};
+        $self->_write_network_model();
         return $self->nm->{'vlans'}->{$params{'vlan_id'}};
     }
 

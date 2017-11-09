@@ -163,6 +163,7 @@ sub _get_network_state {
 
             my $endpoints = [];
             foreach my $port (@{$response->{'results'}->{$vlan_id}->{'ports'}}) {
+                $port->{'port'} =~ s/^\s+|\s+$//g;
                 push(@{$endpoints}, { port => $port->{'port'} });
             }
 
