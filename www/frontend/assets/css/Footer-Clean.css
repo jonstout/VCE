@@ -96,3 +96,8 @@ button.btn.btn-success {
   margin:10px;
 }
 
+.form-group.endpoint {
+  display:flex;
+  flex-flow:row nowrap;
+}
+

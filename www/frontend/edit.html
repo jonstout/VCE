@@ -54,11 +54,11 @@
                 <form>
                     <div class="form-group">
                         <label class="control-label">Description </label>
-                        <input class="form-control" type="text" placeholder="Simple VLAN" id="description">
+                        <input class="form-control" type="text" placeholder="Simple VLAN" id="description" style="min-width:360px;width:90%;">
                     </div>
                     <div class="form-group">
                         <label class="control-label">VLAN </label>
-                        <select class="form-control" id="vlan">
+                        <select class="form-control" id="vlan" style="min-width:360px;width:90%;">
                             <optgroup label="This is a group" id="vlan_optgroup">
                                 <option value="12" selected="">200</option>
                                 <option value="13">210</option>
@@ -66,23 +66,11 @@
                             </optgroup>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="control-label">Endpoints </label>
-                        <select class="form-control" id="endpoint_a">
-                            <optgroup label="Endpoint A" id="endpoint_a_optgroup">
-                                <option value="12" selected="">This is item 1</option>
-                                <option value="13">This is item 2</option>
-                                <option value="14">This is item 3</option>
-                            </optgroup>
-                        </select>
-                        <br/>
-                        <select class="form-control" id="endpoint_z">
-                            <optgroup label="Endpoint Z" id="endpoint_z_optgroup">
-                                <option value="12" selected="">This is item 1</option>
-                                <option value="13">This is item 2</option>
-                                <option value="14">This is item 3</option>
-                            </optgroup>
-                        </select>
+                    <div id="endpoint-container">
+                        <label>Endpoints </label>
+                    </div>
+                    <div class="col-md-12" style="padding:0px;">
+                        <button class="btn btn-info" type="button" id="create_endpoint_button" style="min-width:360px;width:90%;"><i class="glyphicon glyphicon-plus"></i> Add Endpoint</button>
                     </div>
                     <button class="btn btn-success" type="button" id="edit_button">Edit </button>
                     <button class="btn btn-danger" type="button" id="cancel_button">Cancel </button>
