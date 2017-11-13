@@ -50,12 +50,14 @@ sub BUILD{
 =head2 reload_state
 
 =cut
-
 sub reload_state{
     my $self = shift;
     $self->_read_network_model();
 }
 
+=head2 _read_network_model
+
+=cut
 sub _read_network_model{
     my $self = shift;
 
@@ -79,6 +81,9 @@ sub _read_network_model{
     }
 }
 
+=head2 _write_network_model
+
+=cut
 sub _write_network_model{
     my $self = shift;
 
@@ -86,7 +91,6 @@ sub _write_network_model{
     open(my $fh, ">", $self->file) or die "Couldn't open: $!";
     print $fh $json;
     close($fh);
-    
 }
 
 =head2 add_vlan
@@ -96,7 +100,6 @@ adds a vlan to the networkand creates a uuid ID for the vlan
 returns the uuid for the vlan
 
 =cut
-
 sub add_vlan{
     my $self = shift;
     my %params = @_;
@@ -164,7 +167,6 @@ or that the vlan isn't already configured on the given
 port
 
 =cut
-
 sub check_tag_availability{
     my $self = shift;
     my %params = @_;
@@ -212,7 +214,6 @@ sub check_tag_availability{
 deletes a vlan from the network model
 
 =cut
-
 sub delete_vlan{
     my $self = shift;
     my %params = @_;
@@ -238,7 +239,6 @@ sub delete_vlan{
     returns a list of vlans if specified a list of vlans for a workgroup
 
 =cut
-
 sub get_vlans{
     my $self = shift;
     my %params = @_;
@@ -274,7 +274,6 @@ sub get_vlans{
 =head2 get_vlan_details
 
 =cut
-
 sub get_vlan_details{
     my $self = shift;
     my %params = @_;
@@ -292,6 +291,9 @@ sub get_vlan_details{
     return;
 }
 
+=head2 get_vlan_details_by_number
+
+=cut
 sub get_vlan_details_by_number {
     my $self = shift;
     my %params = @_;
@@ -312,6 +314,9 @@ sub get_vlan_details_by_number {
     return undef;
 }
 
+=head2 set_vlan_endpoints
+
+=cut
 sub set_vlan_endpoints {
     my $self = shift;
     my %params = @_;

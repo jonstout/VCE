@@ -58,7 +58,6 @@ sub BUILD{
 =head2 has_access
 
 =cut
-
 sub has_access{
     my $self = shift;
     my %params = @_;
@@ -98,7 +97,6 @@ sub has_access{
 =head2 workgroup_owns_port
 
 =cut
-
 sub workgroup_owns_port{
     my $self = shift;
     my %params = @_;
@@ -142,7 +140,6 @@ sub workgroup_owns_port{
 =head2 workgroups_owned_ports
 
 =cut
-
 sub workgroups_owned_ports{
     my $self = shift;
     my %params = @_;
@@ -170,7 +167,6 @@ sub workgroups_owned_ports{
 =head2 user_in_workgroup
 
 =cut
-
 sub user_in_workgroup{
     my $self = shift;
     my %params = @_;
@@ -204,7 +200,6 @@ sub user_in_workgroup{
 =head2 workgroup_has_access_to_port
 
 =cut
-
 sub workgroup_has_access_to_port{
     my $self = shift;
     my %params = @_;
@@ -266,7 +261,6 @@ sub workgroup_has_access_to_port{
 =head2 get_tags_on_port
 
 =cut
-
 sub get_tags_on_port{
     my $self = shift;
     my %params = @_;
@@ -359,7 +353,6 @@ sub friendly_display_vlans{
 =head2 get_workgroup_switches
 
 =cut
-
 sub get_workgroup_switches{
     my $self = shift;
     my %params = @_;
@@ -388,7 +381,6 @@ sub get_workgroup_switches{
 =head2 get_workgroup_users
 
 =cut
-
 sub get_workgroup_users{
     my $self = shift;
     my %params = @_;
@@ -411,8 +403,6 @@ sub get_workgroup_users{
 =head2 get_workgroup_description
 
 =cut
-
-
 sub get_workgroup_description{
     my $self = shift;
     my %params = @_;
@@ -433,7 +423,6 @@ sub get_workgroup_description{
 =head2 get_switch_description
 
 =cut
-
 sub get_switch_description{
     my $self = shift;
     my %params = @_;
@@ -454,7 +443,6 @@ sub get_switch_description{
 =head2 get_switch_commands
 
 =cut
-
 sub get_switch_commands{
     my $self = shift;
     my %params = @_;
@@ -471,7 +459,6 @@ sub get_switch_commands{
 =head2 get_port_commands
 
 =cut
-
 sub get_port_commands{
 
     my $self = shift;
@@ -488,7 +475,6 @@ sub get_port_commands{
 =head2 get_vlan_commands
 
 =cut
-
 sub get_vlan_commands{
     my $self = shift;
     my %params = @_;
@@ -505,7 +491,6 @@ sub get_vlan_commands{
 =head2 get_switch_ports
 
 =cut
-
 sub get_switch_ports{
     my $self = shift;
     my %params = @_;
@@ -537,7 +522,6 @@ sub get_switch_ports{
 =head2 get_switches
 
 =cut
-
 sub get_switches{
     my $self = shift;
 
@@ -550,6 +534,9 @@ sub get_switches{
 
 }
 
+=head2 get_admin_workgroup
+
+=cut
 sub get_admin_workgroup {
     my $self = shift;
 
