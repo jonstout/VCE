@@ -1,1 +1,1 @@
-const baseUrl = 'http://jonstout-dev7.grnoc.iu.edu/vce/api/';
+const baseUrl = 'api/';
