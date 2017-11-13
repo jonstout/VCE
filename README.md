@@ -16,7 +16,11 @@ gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
 2. Execute `sudo yum makecache`
 3. Execute `sudo yum install vce`
 
-Assuming the previous steps finished successfully, VCE is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions.
+Assuming the previous steps finished successfully, VCE is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete start vce using `systemctl`.
+
+```
+sudo systemctl start vce
+```
 
 ## Configuration
 
