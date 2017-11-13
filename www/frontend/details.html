@@ -53,12 +53,12 @@
             <div class="col-md-12">
                 <div>
                     <ul class="nav nav-tabs">
-                        <li><a href="#switch" role="tab" data-toggle="tab">Switch</a></li>
-                        <li class="active"><a href="#vlan" role="tab" data-toggle="tab">VLANs </a></li>
+                        <li class="active"><a href="#switch" role="tab" data-toggle="tab">Switch</a></li>
+                        <li><a href="#vlan" role="tab" data-toggle="tab">VLANs </a></li>
                         <li><a href="#port" role="tab" data-toggle="tab">Ports </a></li>
                     </ul>
                     <div class="tab-content">
-                        <div class="tab-pane fade" role="tabpanel" id="switch">
+                        <div class="tab-pane fade in active" role="tabpanel" id="switch">
                             <div class="col-md-12">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -116,8 +116,26 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade in active" role="tabpanel" id="vlan">
+                        <div class="tab-pane fade" role="tabpanel" id="vlan">
                             <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h5>Status </h5>
+                                        <div class="table-responsive" style="display:block;max-height:350px;overflow-y:scroll;">
+                                            <table class="table table-striped table-condensed">
+                                                <thead>
+                                                    <tr>
+                                                        <th>VLAN </th>
+                                                        <th>Description </th>
+                                                        <th>Ports </th>
+                                                        <th>Status </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="vlan_table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="row">
                                     <div class="col-md-12">
                                         <form class="form-horizontal">
@@ -141,24 +159,6 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-condensed">
-                                                <thead>
-                                                    <tr>
-                                                        <th>VLAN </th>
-                                                        <th>Description </th>
-                                                        <th>Ports </th>
-                                                        <th>Status </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="vlan_table"></tbody>
-                                                <caption>Status</caption>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
                                         <h4>Results </h4>
                                         <div class="well" id="vlan_response_well"><span> </span></div>
                                     </div>
@@ -167,6 +167,24 @@
                         </div>
                         <div class="tab-pane fade" role="tabpanel" id="port">
                             <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <h5>Status </h5>
+                                        <div class="table-responsive" style="display:block;max-height:350px;overflow-y:scroll;">
+                                            <table class="table table-striped table-condensed">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Port </th>
+                                                        <th>Description </th>
+                                                        <th>VLANS </th>
+                                                        <th>Status </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="port_table"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="row">
                                     <div class="col-md-12">
                                         <form class="form-horizontal">
@@ -183,24 +201,6 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12" id="port_form_container"></div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="table-responsive">
-                                            <table class="table table-striped table-condensed">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Port </th>
-                                                        <th>Description </th>
-                                                        <th>VLANS </th>
-                                                        <th>Status </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="port_table"></tbody>
-                                                <caption>Status</caption>
-                                            </table>
-                                        </div>
-                                    </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
