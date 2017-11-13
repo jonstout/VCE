@@ -584,9 +584,7 @@ sub is_tag_available{
 sub validate_circuit{
     my $self = shift;
     my %params = @_;
-    
-    
-    
+
     if($#{$params{'port'}} < 1){
         $self->logger->error("Not enough endpoints");
         return;
@@ -609,12 +607,6 @@ sub validate_circuit{
         }
     }
 
-    if(!$self->network_model->check_tag_availability( switch => $params{'switch'},
-                                                     vlan => $params{'vlan'} )){
-        $self->logger->error("VLAN: " . $params{'vlan'} . " is already in use on switch: " . $params{'switch'});
-        return;
-    }
-
     return 1;
 }
 
@@ -625,8 +617,9 @@ sub validate_circuit{
 sub provision_vlan{
     my $self = shift;
     my %params = @_;
-    
-    if($self->validate_circuit( %params )){
+
+    my $tag_available = $self->network_model->check_tag_availability(switch => $params{'switch'}, vlan => $params{'vlan'});
+    if ($self->validate_circuit(%params) && $tag_available) {
 
         my @eps;
         for(my $i=0; $i <= $#{$params{'port'}}; $i++){
