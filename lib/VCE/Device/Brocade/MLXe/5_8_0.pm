@@ -167,6 +167,91 @@ sub get_interfaces_state {
     return $interfaces, $err;
 }
 
+=head2 get_vlans
+
+get_vlans returns a list of vlan objects describing this devices VLAN
+configuration. This device's control and default VLANs are omitted
+from the resulting list. The mode of each port object will be 'TAGGED'
+or 'UNTAGGED'.
+
+    {
+      'ports' => [
+        {
+          'mode' => 'TAGGED',
+          'port' => 'ethernet 1/2 '
+         }
+      ],
+      'name' => 'hybrid',
+      'vlan' => '11'
+    }
+
+=cut
+sub get_vlans {
+    my $self = shift;
+
+    if (!$self->connected) {
+        $self->logger->error("not currently connected to the device");
+        return;
+    }
+
+    my $err = undef;
+    my $req = "
+<nc:rpc message-id=\"1\" xmlns:nc=\"urn:ietf:params:xml:ns:netconf:base:1.0\"  xmlns:brcd=\"http://brocade.com/ns/netconf/config/netiron-config/\">
+  <nc:get>
+    <nc:filter nc:type=\"subtree\">
+      <brcd:netiron-statedata>
+        <brcd:vlan-statedata/>
+      </brcd:netiron-statedata>
+    </nc:filter>
+  </nc:get>
+</nc:rpc>";
+
+    my $ok = $self->conn->send($req);
+    if (!defined $ok) {
+        $err = "Could not get vlans' state.";
+        $self->conn->disconnect();
+        return undef, $err;
+    }
+
+    my $res = $self->conn->recv();
+    if (!defined $res->{'nc:ok'} && keys %{$res->{'nc:rpc-error'}}) {
+        $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
+        return undef, $err;
+    }
+
+    my $vlans = $res->{'nc:data'}->{'netiron-statedata'}->{'brcd:vlan-statedata'}->{'brcd:vlan'};
+    my $control_vlan = $res->{'nc:data'}->{'netiron-statedata'}->{'brcd:vlan-statedata'}->{'brcd:control-vlan-id'};
+    my $default_vlan = $res->{'nc:data'}->{'netiron-statedata'}->{'brcd:vlan-statedata'}->{'brcd:default-vlan-id'};
+
+    my $result = [];
+    foreach my $vlan (@{$vlans}) {
+        # Ignore all information relating to the control and default vlans.
+        if ($vlan->{'brcd:vlan-id'} eq $control_vlan || $vlan->{'brcd:vlan-id'} eq $default_vlan) {
+            next;
+        }
+
+        my $name = '';
+        if (ref($vlan->{'brcd:vlan-name'}) ne 'HASH') { $name = $vlan->{'brcd:vlan-name'}; }
+
+        my $ports = [];
+        if (!defined $vlan->{'brcd:port'}) {
+            $vlan->{'brcd:port'} = [];
+        }
+
+        if (ref($vlan->{'brcd:port'}) ne 'ARRAY') {
+            $vlan->{'brcd:port'} = [ $vlan->{'brcd:port'} ];
+        }
+
+        foreach my $port (@{$vlan->{'brcd:port'}}) {
+            push(@{$ports}, { port => $port->{'brcd:port-id'}, mode => $port->{'brcd:tag-mode'} });
+        }
+
+        push(@{$result}, { vlan => $vlan->{'brcd:vlan-id'}, name => $name, ports => $ports });
+    }
+
+    return $result;
+}
+
 =head2 get_interfaces
 
 =cut

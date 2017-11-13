@@ -38,6 +38,7 @@ package VCE;
 use strict;
 use warnings;
 
+use AnyEvent;
 use Moo;
 use GRNOC::Log;
 use GRNOC::Config;
@@ -122,7 +123,57 @@ sub BUILD{
                                                              pass => $self->rabbit_mq->{'pass'},
                                                              exchange => 'VCE',
                                                              topic => 'VCE.Switch.RPC'));
+
+    $self->{'get_network_state_timer'} = AnyEvent->timer(
+        after => 30,
+        interval => 300,
+        cb => sub { $self->_get_network_state() }
+    );
+
     return $self;
+}
+
+sub _get_network_state {
+    my $self = shift;
+
+    $self->device_client->get_vlans( async_callback => sub {
+        my $response = shift;
+        if (defined $response->{'error'}) {
+            return $self->logger->error($response->{'error'});
+        }
+
+        foreach my $vlan_id (keys %{$response->{'results'}}) {
+            my $vlan = $self->network_model->get_vlan_details_by_number(number => $vlan_id);
+            if (!defined $vlan) {
+                my $switch_name = (keys(%{$self->config->{'switches'}}))[0];
+                my $workgroup = $self->access->get_admin_workgroup();
+                my $user = (keys %{$workgroup->{'user'}})[0];
+
+                my $id = $self->network_model->add_vlan(
+                    description => $response->{'results'}->{$vlan_id}->{'name'},
+                    workgroup => $workgroup->{'name'},
+                    vlan => $response->{'results'}->{$vlan_id}->{'vlan'},
+                    switch => $switch_name,
+                    endpoints => [],
+                    username => $user
+                );
+
+                $vlan = $self->network_model->get_vlan_details(vlan_id => $id);
+            }
+
+            my $endpoints = [];
+            foreach my $port (@{$response->{'results'}->{$vlan_id}->{'ports'}}) {
+                $port->{'port'} =~ s/^\s+|\s+$//g;
+                push(@{$endpoints}, { port => $port->{'port'} });
+            }
+
+            my $result = $self->network_model->set_vlan_endpoints(
+                vlan_id => $vlan->{'vlan_id'},
+                endpoints => $endpoints
+            );
+            $self->logger->debug('updated vlan: ' . Dumper($result));
+        }
+    });
 }
 
 sub _process_config{
@@ -153,6 +204,7 @@ sub _process_config{
 	$self->logger->debug("Processing workgroup: " . Data::Dumper::Dumper($workgroup));
 	my $grp = {};
 	$grp->{'name'} = $workgroup->{'name'};
+    $grp->{'admin'} = $workgroup->{'admin'};
 	$grp->{'description'} = $workgroup->{'description'};
 	$grp->{'user'} = $workgroup->{'user'};
 	$workgroups{$grp->{'name'}} = $grp;
@@ -395,7 +447,7 @@ sub get_interfaces_operational_state {
         $self->logger->error("get_interfaces_operational_state: Switch not specified");
         return;
     }
-    
+
     return $self->device_client->get_interfaces_op()->{'results'};
 }
 
@@ -526,7 +578,7 @@ sub is_tag_available{
 }
 
 =head2 validate_circuit
-    
+
 =cut
 
 sub validate_circuit{
