@@ -585,8 +585,9 @@ sub validate_circuit{
     my $self = shift;
     my %params = @_;
 
-    if($#{$params{'port'}} < 1){
-        $self->logger->error("Not enough endpoints");
+    my $port_count = $#{$params{'port'}} + 1;
+    if ($port_count < 1) {
+        $self->logger->error("Not enough endpoints. Got $port_count endpoints.");
         return;
     }
     

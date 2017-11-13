@@ -1,4 +1,7 @@
 function configureEditButtons() {
+    var createEndpoint = document.getElementById('create_endpoint_button');
+    createEndpoint.addEventListener("click", createEndpointSelector, false);
+
     var create = document.getElementById('edit_button');
     create.addEventListener("click", editVlan, false);
     
@@ -34,19 +37,13 @@ function loadVlanDetails() {
                 }
             }
 
-            var endpoint_a = document.getElementById('endpoint_a');
-            for (var i = 0; i < endpoint_a.options.length; i++) {
-                if (endpoint_a.options[i].value == circuit.endpoints[0].port) {
-                    endpoint_a.selectedIndex = i;
-                    break;
-                }
-            }
-
-            var endpoint_z = document.getElementById('endpoint_z');
-            for (var i = 0; i < endpoint_z.options.length; i++) {
-                if (endpoint_z.options[i].value == circuit.endpoints[1].port) {
-                    endpoint_z.selectedIndex = i;
-                    break;
+            // Load and select reported endpoints
+            for (var i = 0; i < circuit.endpoints.length; i++) {
+                var select = createEndpointSelector();
+                for (var j = 0; j < select.options.length; j++) {
+                    if (select.options[j].value === circuit.endpoints[i].port) {
+                        select.options[j].selected = true;
+                    }
                 }
             }
         });
@@ -66,29 +63,32 @@ function editVlan(e) {
     var vlan = document.getElementById('vlan');
     var vlan_id = vlan.options[vlan.selectedIndex].value;
     
-    var endpoint_a = document.getElementById('endpoint_a');
-    var a = endpoint_a.options[endpoint_a.selectedIndex].value;
-    
-    var endpoint_z = document.getElementById('endpoint_z');
-    var z = endpoint_z.options[endpoint_z.selectedIndex].value;
+    var endpoints = document.forms[1].endpoint;
+    if (endpoints.value === '') {
+        var epNames = [];
+        for (var i = 0; i < endpoints.length; i++) {
+            epNames.push(endpoints[i].value);
+        }
+        endpoints = epNames;
+    } else {
+        endpoints = [endpoints.value];
+    }
 
     console.log(text);
     console.log(vlan_id);
-    console.log(a);
-    console.log(z);
+    console.log(endpoints);
     console.log(vlanId);
     
     var url = baseUrl + 'provisioning.cgi?method=edit_vlan';
     url += '&workgroup=' + workgroup;
     url += '&description=' + text;
     url += '&switch=' + name;
-    url += '&port=' + a;
-    url += '&vlan=' + vlan_id;
-    url += '&switch=' + name;
-    url += '&port=' + z;
     url += '&vlan=' + vlan_id;
     url += '&vlan_id=' + vlanId;
-    
+    url += endpoints.map(function(e) {
+        return '&port=' + e;
+    }).join('');
+
     console.log(url);
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
