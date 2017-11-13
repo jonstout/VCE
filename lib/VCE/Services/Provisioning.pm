@@ -291,13 +291,12 @@ sub edit_vlan{
 
         my $status = 1;
         foreach my $e (@{$details->{'endpoints'}}) {
-            my $port   = $e->{'port'};
-            $status = $self->_send_vlan_remove( $port, $switch, $details->{'vlan'} );
-        }
-        if(!$status){
-            my $error = "Unable to remove VLAN from device.";
-            $self->logger->error($error);
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
+            $status = $self->_send_vlan_remove($e->{'port'}, $switch, $details->{'vlan'});
+            if (!$status) {
+                my $error = "Unable to remove VLAN from device.";
+                $self->logger->error($error);
+                return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
+            }
         }
 
         $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
@@ -312,17 +311,15 @@ sub edit_vlan{
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         my $status  = undef;
         foreach my $e (@{$details->{'endpoints'}}) {
-            my $port   = $e->{'port'};
-            $status = $self->_send_vlan_add( $port, $switch, $vlan );
+            $status = $self->_send_vlan_add($e->{'port'}, $switch, $vlan);
+            if (!$status) {
+                my $error = "Unable to add VLAN to device.";
+                $self->logger->error($error);
+                return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
+            }
         }
 
-        if(!$status){
-            my $error = "Unable to add VLAN to device.";
-            $self->logger->error($error);
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
-        }else{
-            return {results => [{success => 1, vlan_id => $vlan_id}]};
-        }
+        return {results => [{success => 1, vlan_id => $vlan_id}]};
 
     }else{
         my $error = "User $user not in specified workgroup $workgroup.";
