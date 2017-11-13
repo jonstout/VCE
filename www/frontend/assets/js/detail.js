@@ -81,6 +81,10 @@ function loadPorts() {
                 } else {
                     status.innerHTML = 'Down';
                 }
+
+                if (ports[i].admin_status === 0) {
+                    status.innerHTML = 'Disabled';
+                }
             }
             
             $('#port_table').on('click', '.clickable-row', function(e) {
