@@ -18,7 +18,21 @@ has conn => (is => 'rwp');
 has in_configure => (is => 'rwp', default => 0);
 has context => (is => 'rwp', default => '');
 
+=head1 Package 5_8_0
+
+    use VCE::Device::Brocade::MLXe::5_8_0;
+
+=cut
+
 =head2 BUILD
+
+    $device = VCE::Device::Brocade::MLXe::5_8_0->new(
+        username => $username,
+        password => $password,
+        hostname => $hostname,
+        port     => $port
+    );
+
 
 =over 4
 
@@ -26,12 +40,13 @@ has context => (is => 'rwp', default => '');
 
 =item conn
 
-=item context
-
 =item in_configure
 
-=back    
+=item context
 
+=back
+
+=cut
 sub BUILD{
     my ($self) = @_;
 
@@ -44,7 +59,6 @@ sub BUILD{
 =head2 connect
 
 =cut
-
 sub connect{
     my $self = shift;
     my %params = @_;
@@ -474,7 +488,9 @@ sub no_interface_tagged {
     return $res, $err;
 }
 
+=head2 _get_interface
 
+=cut
 sub _get_interface{
     my $self = shift;
     my %params = @_;
@@ -566,7 +582,6 @@ sub _get_interface{
 =head2 configure
 
 =cut
-
 sub configure{
     my $self = shift;
 
@@ -588,7 +603,6 @@ sub configure{
 =head2 exit_configure
 
 =cut
-
 sub exit_configure{
     my $self = shift;
 
@@ -612,7 +626,6 @@ sub exit_configure{
 =head2 set_context
 
 =cut
-
 sub set_context{
     my $self = shift;
     my $context = shift;

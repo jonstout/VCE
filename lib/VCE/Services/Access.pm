@@ -694,18 +694,21 @@ sub get_vlan_details{
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-
-        my $vlan = $self->vce->network_model->get_vlan_details( vlan_id => $p_ref->{'vlan_id'}{'value'});
-        if($vlan->{'workgroup'} eq $workgroup){
-            return {results => [{circuit => $vlan}]};
-        }else{
-            return {error => {'msg' => "Workgroup $workgroup does not have access to vlan " . $p_ref->{'vlan_id'}{'value'}}};
-        }
-    }else{
+    my $valid_workgroup = $self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup);
+    if (!$valid_workgroup) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    my $vlan = $self->vce->network_model->get_vlan_details(vlan_id => $p_ref->{'vlan_id'}{'value'});
+
+    my $workgroup_owns_vlan = $vlan->{'workgroup'} eq $workgroup;
+    if (!$workgroup_owns_vlan) {
+        my $error = "Workgroup $workgroup does not have access to vlan " . $p_ref->{'vlan_id'}{'value'};
+        $self->logger->error($error);
+        return {error => {'msg' => $error}};
+    }
+
+    return {results => [{circuit => $vlan}]};
 }
 
 1;

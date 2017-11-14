@@ -131,15 +131,14 @@ sub add_vlan{
     $obj->{'create_time'} = time();
     $obj->{'endpoints'}   = [];
     $obj->{'status'} = "Active";
-    
 
-    $self->logger->error("All base parts ready");
-
-    if(!$self->check_tag_availability( switch => $obj->{'switch'},
-                                       vlan => $obj->{'vlan'})){
+    if (!$self->check_tag_availability(switch => $obj->{'switch'}, vlan => $obj->{'vlan'})) {
         $self->logger->error("VLAN is already in use on switch");
         return;
     }
+
+	$self->logger->info("Adding VLAN: " . $params{'vlan_id'} . " to network model.");
+
     foreach my $ep (@{$params{'endpoints'}}){
         my $ep_obj = {};
         $ep_obj->{'port'} = $ep->{'port'};
@@ -171,41 +170,23 @@ sub check_tag_availability{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'vlan'})){
-	$self->logger->error("check_tag_availability: vlan not defined");
+    if (!defined $params{'vlan'}) {
+        $self->logger->error("check_tag_availability: vlan not defined");
         return;
     }
-    
-    if(!defined($params{'switch'})){
+
+    if (!defined $params{'switch'}) {
         $self->logger->error("check_tag_availability: switch not defined");
         return;
     }
-    
-    foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
+
+    foreach my $vlan (keys %{$self->nm->{'vlans'}}) {
         my $v = $self->nm->{'vlans'}{$vlan};
-        if($v->{'switch'} eq $params{'switch'} && $v->{'vlan'} eq $params{'vlan'}){
+        if ($v->{'switch'} eq $params{'switch'} && $v->{'vlan'} eq $params{'vlan'}) {
             return 0;
         }
     }
-    
-#this code presumes you can do push/pop tags... however MLXe can't
-#    if(!defined($params{'port'})){
-#        $self->logger->error("check_tag_availability: port not defined");
-#        return;
-#    }
-#    
-#         
-#    foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
-#        foreach my $ep (@{$self->nm->{'vlans'}->{$vlan}->{'endpoints'}}){
-#            if($ep->{'switch'} eq $params{'switch'} && $ep->{'port'} eq $params{'port'} && $ep->{'tag'} eq $params{'tag'}){
-#                #no it is not available in use by this vlan
-#                return 0;
-#            }
-#        }
-#    }
-    
 
-    #yep its available
     return 1;
 }
 

@@ -619,28 +619,34 @@ sub provision_vlan{
     my $self = shift;
     my %params = @_;
 
-    my $tag_available = $self->network_model->check_tag_availability(switch => $params{'switch'}, vlan => $params{'vlan'});
-    if ($self->validate_circuit(%params) && $tag_available) {
-
-        my @eps;
-        for(my $i=0; $i <= $#{$params{'port'}}; $i++){
-            push(@eps,{ port => $params{'port'}->[$i]});
-        }
-        
-        $self->logger->error("Provisioning VLAN in network model");
-        
-        #ok we made it this far... provision!
-        my $id = $self->network_model->add_vlan( description => $params{'description'},
-                                                 vlan_id => $params{'vlan_id'},
-                                                 workgroup => $params{'workgroup'},
-                                                 vlan => $params{'vlan'},
-                                                 switch => $params{'switch'},
-                                                 endpoints => \@eps,
-                                                 username => $params{'username'});
-        return $id;
+    my $valid_circuit = $self->validate_circuit(%params);
+    if (!$valid_circuit) {
+        $self->logger->error("Could not validate the requested VLAN for provisioning.");
+        return;
     }
-    
-    return;
+
+    my $tag_available = $self->network_model->check_tag_availability(switch => $params{'switch'}, vlan => $params{'vlan'});
+    if (!$tag_available) {
+        $self->logger->error("VLAN " . $params{'vlan'} . " is invalid for the requested endpoints.");
+        return;
+    }
+
+    my @eps;
+    for (my $i=0; $i <= $#{$params{'port'}}; $i++) {
+        push(@eps, {port => $params{'port'}->[$i]});
+    }
+
+    $self->logger->info("Adding VLAN to network model.");
+
+    return $self->network_model->add_vlan(
+        description => $params{'description'},
+        vlan_id => $params{'vlan_id'},
+        workgroup => $params{'workgroup'},
+        vlan => $params{'vlan'},
+        switch => $params{'switch'},
+        endpoints => \@eps,
+        username => $params{'username'}
+    );
 }
 
 
