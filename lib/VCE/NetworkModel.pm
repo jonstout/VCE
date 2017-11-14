@@ -50,12 +50,14 @@ sub BUILD{
 =head2 reload_state
 
 =cut
-
 sub reload_state{
     my $self = shift;
     $self->_read_network_model();
 }
 
+=head2 _read_network_model
+
+=cut
 sub _read_network_model{
     my $self = shift;
 
@@ -79,6 +81,9 @@ sub _read_network_model{
     }
 }
 
+=head2 _write_network_model
+
+=cut
 sub _write_network_model{
     my $self = shift;
 
@@ -86,7 +91,6 @@ sub _write_network_model{
     open(my $fh, ">", $self->file) or die "Couldn't open: $!";
     print $fh $json;
     close($fh);
-    
 }
 
 =head2 add_vlan
@@ -96,7 +100,6 @@ adds a vlan to the networkand creates a uuid ID for the vlan
 returns the uuid for the vlan
 
 =cut
-
 sub add_vlan{
     my $self = shift;
     my %params = @_;
@@ -128,15 +131,14 @@ sub add_vlan{
     $obj->{'create_time'} = time();
     $obj->{'endpoints'}   = [];
     $obj->{'status'} = "Active";
-    
 
-    $self->logger->error("All base parts ready");
-
-    if(!$self->check_tag_availability( switch => $obj->{'switch'},
-                                       vlan => $obj->{'vlan'})){
+    if (!$self->check_tag_availability(switch => $obj->{'switch'}, vlan => $obj->{'vlan'})) {
         $self->logger->error("VLAN is already in use on switch");
         return;
     }
+
+	$self->logger->info("Adding VLAN: " . $params{'vlan_id'} . " to network model.");
+
     foreach my $ep (@{$params{'endpoints'}}){
         my $ep_obj = {};
         $ep_obj->{'port'} = $ep->{'port'};
@@ -164,46 +166,27 @@ or that the vlan isn't already configured on the given
 port
 
 =cut
-
 sub check_tag_availability{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'vlan'})){
-	$self->logger->error("check_tag_availability: vlan not defined");
+    if (!defined $params{'vlan'}) {
+        $self->logger->error("check_tag_availability: vlan not defined");
         return;
     }
-    
-    if(!defined($params{'switch'})){
+
+    if (!defined $params{'switch'}) {
         $self->logger->error("check_tag_availability: switch not defined");
         return;
     }
-    
-    foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
+
+    foreach my $vlan (keys %{$self->nm->{'vlans'}}) {
         my $v = $self->nm->{'vlans'}{$vlan};
-        if($v->{'switch'} eq $params{'switch'} && $v->{'vlan'} eq $params{'vlan'}){
+        if ($v->{'switch'} eq $params{'switch'} && $v->{'vlan'} eq $params{'vlan'}) {
             return 0;
         }
     }
-    
-#this code presumes you can do push/pop tags... however MLXe can't
-#    if(!defined($params{'port'})){
-#        $self->logger->error("check_tag_availability: port not defined");
-#        return;
-#    }
-#    
-#         
-#    foreach my $vlan (keys (%{$self->nm->{'vlans'}})){
-#        foreach my $ep (@{$self->nm->{'vlans'}->{$vlan}->{'endpoints'}}){
-#            if($ep->{'switch'} eq $params{'switch'} && $ep->{'port'} eq $params{'port'} && $ep->{'tag'} eq $params{'tag'}){
-#                #no it is not available in use by this vlan
-#                return 0;
-#            }
-#        }
-#    }
-    
 
-    #yep its available
     return 1;
 }
 
@@ -212,7 +195,6 @@ sub check_tag_availability{
 deletes a vlan from the network model
 
 =cut
-
 sub delete_vlan{
     my $self = shift;
     my %params = @_;
@@ -238,7 +220,6 @@ sub delete_vlan{
     returns a list of vlans if specified a list of vlans for a workgroup
 
 =cut
-
 sub get_vlans{
     my $self = shift;
     my %params = @_;
@@ -274,7 +255,6 @@ sub get_vlans{
 =head2 get_vlan_details
 
 =cut
-
 sub get_vlan_details{
     my $self = shift;
     my %params = @_;
@@ -292,6 +272,9 @@ sub get_vlan_details{
     return;
 }
 
+=head2 get_vlan_details_by_number
+
+=cut
 sub get_vlan_details_by_number {
     my $self = shift;
     my %params = @_;
@@ -312,6 +295,9 @@ sub get_vlan_details_by_number {
     return undef;
 }
 
+=head2 set_vlan_endpoints
+
+=cut
 sub set_vlan_endpoints {
     my $self = shift;
     my %params = @_;

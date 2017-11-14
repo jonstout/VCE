@@ -309,7 +309,7 @@ sub get_interfaces_op {
     return {results => $self->op_state->{'ports'}};
 }
 
-=head get_vlans
+=head2 get_vlans
 
 get_vlans returns a hash of vlan objects describing this devices VLAN
 configuration. This device's control and default VLANs are omitted

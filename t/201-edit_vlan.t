@@ -4,7 +4,7 @@ use strict;
 use warnings;
 #use Test::More skip_all => "Busted";
 
-use Test::More tests => 28;
+use Test::More tests => 27;
 use Test::Deep;
 use GRNOC::WebService::Client;
 use AnyEvent::HTTP::LWP::UserAgent;
@@ -210,7 +210,7 @@ ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have anoter
 my $edit_vlan2;
 $req = make_request({ method => 'edit_vlan',
                       description => "Automated test suite!",
-                      vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
+                      vlan_id => $new_vlan->{'results'}->[0]->{'vlan_id'},
                       switch => 'foobar',
                       port => ['eth0/1','eth0/2'],
                       vlan => '104',
@@ -223,8 +223,7 @@ if($response->is_success){
 }
 
 ok(defined($edit_vlan2), "Got a response");
-ok($edit_vlan2->{'results'}->[0]->{'success'} == 0, "Failed to edit circuit");
-ok($edit_vlan2->{'error'}->{'msg'} eq "Circuit does not validate", "proper error when failed to edit circuit");
+ok($edit_vlan2->{'results'}->[0]->{'success'} == 1, "Correctly edited circuit. Didn't change anything.");
 
 $vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                            workgroup => 'ajco');
@@ -274,7 +273,7 @@ if($response->is_success){
 }
 
 ok(defined($edit_vlan3), "Got a valid response");
-ok(defined($edit_vlan3->{'error'}) && $edit_vlan3->{'error'}->{'msg'} eq 'User aragusa not in specified workgroup edco', "Proper error when user not in workgroup");
+ok(defined($edit_vlan3->{'error'}) && $edit_vlan3->{'error'}->{'msg'} eq 'User aragusa not in specified workgroup edco.', "Proper error when user not in workgroup");
 
 my $provisioner2 = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/provisioning.cgi',
                                                    realm => 'VCE',
