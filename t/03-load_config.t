@@ -20,13 +20,15 @@ my $workgroups = $vce->config->{'workgroups'};
 
 cmp_deeply($workgroups, {
     'admin' => {
-	'user' => {
-	    'ebalas' => {}
-	},
-	'name' => 'admin',
-	'description' => 'admin workgroup'
+        'admin' => 1,
+        'user' => {
+            'ebalas' => {}
+        },
+        'name' => 'admin',
+        'description' => 'admin workgroup'
     },
-	    'edco' => {
+    'edco' => {
+        'admin' => undef,
 		'user' => {
 		    'stan' => {},
 		    'ebalas' => {}
@@ -34,12 +36,13 @@ cmp_deeply($workgroups, {
 		'name' => 'edco',
 		'description' => 'this is edcos exchange point access workgroup'
 	},
-		    'ajco' => {
-			'user' => {
-			    'aragusa' => {},
-                            'jonstout' => {}
-			},
-			'name' => 'ajco',
-			'description' => 'this is ajcos exchange point access workgroup'
-		}
-	   });
+    'ajco' => {
+        'admin' => undef,
+        'user' => {
+            'aragusa' => {},
+            'jonstout' => {}
+        },
+        'name' => 'ajco',
+        'description' => 'this is ajcos exchange point access workgroup'
+    }
+});
