@@ -300,6 +300,120 @@ sub get_interfaces {
     return {interfaces => \%interfaces, raw => $raw};
 }
 
+=head2 vlan_spanning_tree
+
+    my ($res, $err) = vlan_spanning_tree($vlan_id);
+
+vlan_spanning_tree enables spanning tree on VLAN $vlan_id. Returns a
+response and error; The error is undef if nothing failed.
+
+L<nos-601-netconfguide.pdf|https://www.brocade.com/content/dam/common/documents/content-types/netconf-operations-guide/nos-601-netconfguide.pdf> pg. 22
+
+=cut
+sub vlan_spanning_tree {
+    my $self    = shift;
+    my $vlan_id = shift;
+
+    my $res;
+    my $err;
+
+    my $ok = $self->configure();
+    if (!$ok) {
+        $err = "Could not enter configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    $ok = $self->set_context("vlan $vlan_id");
+    if (!$ok) {
+        $err = "Could not enter vlan configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("spanning-tree", "#");
+    if ($err) {
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("write mem", "#");
+    if ($err) {
+        $self->logger->error($err);
+    }
+
+    $ok = $self->exit_context();
+    if (!$ok) {
+        $err = "Failed to exit context.";
+        $self->logger->warn($err);
+    }
+
+    $ok = $self->exit_configure();
+    if (!$ok) {
+        $err = "Failed to exit configure.";
+        $self->logger->warn($err);
+    }
+
+    return $res, $err;
+}
+
+=head2 no_vlan_spanning_tree
+
+    my ($res, $err) = no_vlan_spanning_tree($vlan_id);
+
+no_vlan_spanning_tree disables spanning tree on VLAN $vlan_id. Returns
+a response and error; The error is undef if nothing failed.
+
+L<nos-601-netconfguide.pdf|https://www.brocade.com/content/dam/common/documents/content-types/netconf-operations-guide/nos-601-netconfguide.pdf> pg. 22
+
+=cut
+sub no_vlan_spanning_tree {
+    my $self    = shift;
+    my $vlan_id = shift;
+
+    my $res;
+    my $err;
+
+    my $ok = $self->configure();
+    if (!$ok) {
+        $err = "Could not enter configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    $ok = $self->set_context("vlan $vlan_id");
+    if (!$ok) {
+        $err = "Could not enter vlan configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("no spanning-tree", "#");
+    if ($err) {
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("write mem", "#");
+    if ($err) {
+        $self->logger->error($err);
+    }
+
+    $ok = $self->exit_context();
+    if (!$ok) {
+        $err = "Failed to exit context.";
+        $self->logger->warn($err);
+    }
+
+    $ok = $self->exit_configure();
+    if (!$ok) {
+        $err = "Failed to exit configure.";
+        $self->logger->warn($err);
+    }
+
+    return $res, $err;
+}
+
 =head2 vlan_description
 
 vlan_description sets vlan $vlan_id's description to $desc. Returns a
