@@ -75,7 +75,7 @@ sub BUILD{
 
     $0 = "VCE(" . $self->username . ")";
 
-    $self->logger->error("Creating Dispatcher");
+    $self->logger->debug("Creating Dispatcher");
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( host => $self->rabbit_mq->{'host'},
                                                        port => $self->rabbit_mq->{'port'},
                                                        user => $self->rabbit_mq->{'user'},
@@ -89,12 +89,12 @@ sub BUILD{
 
     $self->_set_dispatcher($dispatcher);
 
-    $self->logger->error("Connecting to device");
+    $self->logger->info("Connecting to device");
 
     $self->_connect_to_device();
 
     if(!defined($self->device)){
-	$self->logger->error("Error connecting to device");
+        $self->logger->error("Error connecting to device");
     }
 
     $SIG{'TERM'} = sub {
@@ -102,7 +102,7 @@ sub BUILD{
         $self->stop();
     };
 
-    $self->logger->error("Creating timers");
+    $self->logger->debug("Creating timers");
 
     $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 300, cb => sub { $self->_gather_operational_status() });
 
@@ -164,114 +164,187 @@ sub _register_rpc_methods{
     my $self = shift;
     my $d = shift;
 
-    my $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces",
-					       callback => sub { return $self->get_interfaces( @_ )  },
-					       description => "Get the device interfaces" );
-    $method->add_input_parameter( name => "interface_name",
-				  description => "Name of the interface to gather data about",
-				  required => 0,
-				  multiple => 1,
-				  pattern => $GRNOC::WebService::Regex::NAME_ID );
+    my $method = GRNOC::RabbitMQ::Method->new(
+        name => "get_interfaces",
+        callback => sub { return $self->get_interfaces( @_ )  },
+        description => "Get the device interfaces",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name => "interface_name",
+        description => "Name of the interface to gather data about",
+        required => 0,
+        multiple => 1,
+        pattern => $GRNOC::WebService::Regex::NAME_ID
+    );
     $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "get_interface_status",
-                                            callback => sub { return $self->get_interface_status( @_ )  },
-                                            description => "Get the device interfaces" );
-
-    $method->add_input_parameter( name => "interface",
-                                  description => "Name of the interface to gather data about",
-                                  required => 1,
-                                  multiple => 0,
-                                  pattern => $GRNOC::WebService::Regex::NAME_ID );
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "get_interface_status",
+        callback => sub { return $self->get_interface_status( @_ )  },
+        description => "Get the device interfaces",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name => "interface",
+        description => "Name of the interface to gather data about",
+        required => 1,
+        multiple => 0,
+        pattern => $GRNOC::WebService::Regex::NAME_ID
+    );
     $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new(
         name => "get_vlans",
         callback => sub { return $self->get_vlans(@_) },
-        description => "Get the device vlans"
+        description => "Get the device vlans",
+        async => 1
     );
     $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "get_interfaces_op",
-                                            callback => sub { return $self->get_interfaces_op( @_ )  },
-                                            description => "Get the device interfaces" );
-    $d->register_method($method);
-    
-    $method = GRNOC::RabbitMQ::Method->new( name => "get_device_status",
-                                            callback => sub { return $self->get_device_status( @_ )  },
-                                            description => "Get the device status" );
-
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "get_interfaces_op",
+        callback => sub { return $self->get_interfaces_op( @_ )  },
+        description => "Get the device interfaces",
+        async => 1
+    );
     $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "execute_command",
-                                            callback => sub { return $self->execute_command( @_ )  },
-                                            description => "executes a command" );
-    
-    $method->add_input_parameter( name        => "command",
-                                  description => "Actual command to run",
-                                  required    => 1,
-                                  pattern     => $GRNOC::WebService::Regex::TEXT );
-    
-    $method->add_input_parameter( name        => "context",
-                                  description => "Any context for the command",
-                                  required    => 0,
-                                  pattern     => $GRNOC::WebService::Regex::TEXT );
-
-    $method->add_input_parameter( name        => "config",
-                                  description => "Does this command need to be done in commadn mode",
-                                  required    => 1,
-                                  default     => 0,
-                                  pattern     => $GRNOC::WebService::Regex::BOOLEAN );
-
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "get_device_status",
+        callback => sub { return $self->get_device_status( @_ )  },
+        description => "Get the device status",
+        async => 1
+    );
     $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "vlan_description",
-                                            callback => sub { return $self->vlan_description( @_ )  },
-                                            description => "Sets a vlan's description" );
-    $method->add_input_parameter( name        => "description",
-				  description => "Description the vlan to add",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::TEXT );
-    $method->add_input_parameter( name        => "vlan",
-				  description => "VLAN number to use for tag",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "execute_command",
+        callback => sub { return $self->execute_command( @_ )  },
+        description => "executes a command",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "command",
+        description => "Actual command to run",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
+    $method->add_input_parameter(
+        name        => "context",
+        description => "Any context for the command",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
+    $method->add_input_parameter(
+        name        => "config",
+        description => "Does this command need to be done in commadn mode",
+        required    => 1,
+        default     => 0,
+        pattern     => $GRNOC::WebService::Regex::BOOLEAN
+    );
     $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "no_vlan",
-                                            callback => sub { return $self->no_vlan(@_) },
-                                            description => "Sets a vlan's description" );
-    $method->add_input_parameter( name        => "vlan",
-				  description => "VLAN number to use for tag",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "vlan_description",
+        callback => sub { return $self->vlan_description( @_ )  },
+        description => "Sets a vlan's description",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "description",
+        description => "Description the vlan to add",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
+    $method->add_input_parameter(
+        name        => "vlan",
+        description => "VLAN number to use for tag",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
     $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",
-                                            callback => sub { return $self->interface_tagged( @_ )  },
-                                            description => "Add vlan tagged interface" );
-    $method->add_input_parameter( name        => "port",
-				  description => "Name of the interface to add tag to",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::TEXT );
-    $method->add_input_parameter( name        => "vlan",
-				  description => "VLAN number to use for tag",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "no_vlan",
+        callback => sub { return $self->no_vlan(@_) },
+        description => "Sets a vlan's description",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "vlan",
+        description => "VLAN number to use for tag",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
     $d->register_method($method);
 
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "interface_tagged",
+        callback => sub { return $self->interface_tagged( @_ )  },
+        description => "Add vlan tagged interface",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "port",
+        description => "Name of the interface to add tag to",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
+    $method->add_input_parameter(
+        name        => "vlan",
+        description => "VLAN number to use for tag",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $d->register_method($method);
 
-    $method = GRNOC::RabbitMQ::Method->new( name => "no_interface_tagged",
-                                            callback => sub { return $self->no_interface_tagged( @_ )  },
-                                            description => "Remove vlan tagged interface" );
-    $method->add_input_parameter( name        => "port",
-				  description => "Name of the interface to remove tag from",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::TEXT );
-    $method->add_input_parameter( name        => "vlan",
-				  description => "VLAN number to use for tag",
-				  required    => 1,
-				  pattern     => $GRNOC::WebService::Regex::INTEGER );
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "no_interface_tagged",
+        callback => sub { return $self->no_interface_tagged( @_ )  },
+        description => "Remove vlan tagged interface",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "port",
+        description => "Name of the interface to remove tag from",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
+    $method->add_input_parameter(
+        name        => "vlan",
+        description => "VLAN number to use for tag",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $d->register_method($method);
+
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "vlan_spanning_tree",
+        callback => sub { return $self->vlan_spanning_tree(@_)  },
+        description => "Enable PVST on vlan",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "vlan",
+        description => "VLAN to enable PVST on",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $d->register_method($method);
+
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "no_vlan_spanning_tree",
+        callback => sub { return $self->no_vlan_spanning_tree(@_)  },
+        description => "Disable PVST on vlan",
+        async => 1
+    );
+    $method->add_input_parameter(
+        name        => "vlan",
+        description => "VLAN to disable PVST on",
+        required    => 1,
+        pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
     $d->register_method($method);
 }
 
@@ -281,15 +354,18 @@ sub _register_rpc_methods{
 =cut
 
 sub get_interfaces{
-    my $self = shift;
-    my $m_ref = shift;
-    my $p_ref = shift;
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
 
     if($self->device->connected){
-        return $self->device->get_interfaces();
+        return &$success($self->device->get_interfaces());
     }else{
-	$self->logger->error("Error device is not connected");
-	return;
+        $self->logger->error("Error device is not connected");
+        return &$success({});
     }
 }
 
@@ -298,15 +374,19 @@ sub get_interfaces{
 =cut
 
 sub get_interfaces_op {
-    my $self = shift;
-    my $m_ref = shift;
-    my $p_ref = shift;
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
 
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
+    $self->logger->error("Calling Switch.get_interfaces_op");
     if (!defined $self->op_state || !defined $self->op_state->{'ports'}) {
-        return {results => {}};
+        return &$success({});
     }
 
-    return {results => $self->op_state->{'ports'}};
+    return &$success($self->op_state->{'ports'});
 }
 
 =head2 get_vlans
@@ -322,15 +402,20 @@ op_state variable.
 
 =cut
 sub get_vlans {
-    my $self = shift;
-    my $m_ref = shift;
-    my $p_ref = shift;
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
+    $self->logger->info("Calling get_vlans");
 
     if (!defined $self->op_state || !defined $self->op_state->{'vlans'}) {
-        return {};
+        return &$error("VLAN opperational state has not yet been discovered.");
     }
 
-    return $self->op_state->{'vlans'};
+    return &$success($self->op_state->{'vlans'});
 }
 
 =head2 vlan_description
@@ -342,20 +427,25 @@ sub vlan_description {
     my $method = shift;
     my $params = shift;
 
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
     my $desc = $params->{'description'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
 
+    $self->logger->info("Calling get_vlans");
+
     if (!$self->device->connected) {
-        $self->logger->error("Error device is not connected.");
+        return &$error("Device is not connected.");
     }
 
     my ($res, $err) = $self->device->vlan_description($desc, $vlan);
     if (defined $err) {
         $self->logger->error($err);
-        return { results => undef, error => $err };
+        return &$error($err);
     }
 
-    return { results => 1 };
+    return &$success(1);
 }
 
 
@@ -368,20 +458,23 @@ sub interface_tagged {
     my $method = shift;
     my $params = shift;
 
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
     my $port = $params->{'port'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
 
     if (!$self->device->connected) {
-        $self->logger->error("Error device is not connected.");
+        return &$error("Device is not connected.");
     }
 
     my ($res, $err) = $self->device->interface_tagged($port, $vlan);
     if (defined $err) {
         $self->logger->error($err);
-        return { results => undef, error => $err };
+        return &$error($err);
     }
 
-    return { results => 1 };
+    return &$success(1);
 }
 
 =head2 no_interface_tagged
@@ -393,20 +486,94 @@ sub no_interface_tagged {
     my $method = shift;
     my $params = shift;
 
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
     my $port = $params->{'port'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
 
     if (!$self->device->connected) {
-        $self->logger->error("Error device is not connected.");
+        return &$error("Device is not connected.");
     }
 
     my ($res, $err) = $self->device->no_interface_tagged($port, $vlan);
     if (defined $err) {
         $self->logger->error($err);
-        return { results => undef, error => $err };
+        return &$error($err);
     }
 
-    return { results => 1 };
+    return &$success(1);
+}
+
+=head2 vlan_spanning_tree
+
+Response
+
+    { results => 1 }
+
+or
+
+    { error => "An error string" }
+
+=cut
+sub vlan_spanning_tree {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
+    my $vlan = $params->{'vlan'}{'value'};
+
+    $self->logger->info("Calling vlan_spanning_tree");
+
+    if (!$self->device->connected) {
+        return &$error("Device is not connected.");
+    }
+
+    my ($res, $err) = $self->device->vlan_spanning_tree($vlan);
+    if (defined $err) {
+        $self->logger->error($err);
+        return &$error($err);
+    }
+
+    $self->logger->info("Returning from vlan_spanning_tree");
+    return &$success(1);
+}
+
+=head2 no_vlan_spanning_tree
+
+Response
+
+    { results => 1 }
+
+or
+
+    { error => "An error string" }
+
+=cut
+sub no_vlan_spanning_tree {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
+    my $vlan = $params->{'vlan'}{'value'};
+
+    if (!$self->device->connected) {
+        return &$error("Device is not connected.");
+    }
+
+    my ($res, $err) = $self->device->no_vlan_spanning_tree($vlan);
+    if (defined $err) {
+        $self->logger->error($err);
+        return &$error($err);
+    }
+
+    return &$success(1);
 }
 
 =head2 no_vlan
@@ -418,31 +585,37 @@ sub no_vlan {
     my $method = shift;
     my $params = shift;
 
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
     my $vlan = $params->{'vlan'}{'value'};
 
     if (!$self->device->connected) {
-        $self->logger->error("Error device is not connected.");
+        return &$error("Device is not connected.");
     }
 
     my ($res, $err) = $self->device->no_vlan($vlan);
     if (defined $err) {
         $self->logger->error($err);
-        return { results => undef, error => $err };
+        return &$error($err);
     }
 
-    return { results => 1 };
+    return &$success(1);
 }
 
 =head2 get_device_status
 
 =cut
 
-sub get_device_status{
+sub get_device_status {
     my $self   = shift;
     my $method = shift;
     my $params = shift;
 
-    return { status => $self->device->connected };
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
+    return &$success($self->device->connected);
 }
 
 =head2 get_interface_status
@@ -454,24 +627,27 @@ sub get_interface_status{
     my $method = shift;
     my $params = shift;
 
+    my $success = $method->{'success_callback'};
+    my $error   = $method->{'error_callback'};
+
     my $interface = $params->{'interface'}{'value'};
 
     if(!defined($interface)){
         $self->logger->error("No Interface defined");
-        return {status => undef, error => {msg => "No state specified"}};
+        return &$error("No state specified");
     }
 
     if(!defined($self->op_state)){
         $self->logger->error("No operational state specified yet!!");
-        return { status => undef, error => {msg => "No operational status yet, probably not connected to device"}};
+        return &$error("No operational status yet, probably not connected to device");
     }
 
     if(!defined($self->op_state->{'ports'}{$interface})){
         $self->logger->error("NO Port named: " . $interface);
-        return { status => undef, error => {msg => "No interface was found by that name on the device"}};
+        return &$error("No interface was found by that name on the device");
     }
 
-    return {status => $self->op_state->{'ports'}{$interface}{'status'}};
+    return &$success($self->op_state->{'ports'}{$interface}{'status'});
 }
 
 =head2 _gather_operational_status
@@ -507,19 +683,18 @@ sub _gather_operational_status{
 
 sub start{
     my $self = shift;
-    
+
     if(!defined($self->dispatcher)){
-	$self->logger->error("Dispatcher is not connected");
+        $self->logger->error("Dispatcher is not connected");
     }else{
-	$self->dispatcher->start_consuming();
-	return;
+        $self->dispatcher->start_consuming();
+        return;
     }
 }
 
 =head2 stop
 
 =cut
-
 sub stop{
     my $self = shift;
     $self->dispatcher->stop_consuming();
@@ -528,17 +703,19 @@ sub stop{
 =head2 execute_command
 
 =cut
-
 sub execute_command{
     my $self = shift;
     my $m_ref = shift;
     my $p_ref = shift;
 
+    my $success = $m_ref->{'success_callback'};
+    my $error   = $m_ref->{'error_callback'};
+
     $self->logger->info("Calling execute_command");
     $self->logger->debug(Dumper($p_ref));
 
     if (!$self->device->connected) {
-        return {success => 0, error => 1, error_msg => 'Device is currently disconnected.'};
+        return &$success({success => 0, error => 1, error_msg => 'Device is currently disconnected.'});
     }
 
     my $in_configure = 0;
@@ -552,7 +729,7 @@ sub execute_command{
         if (!$ok) {
             my $err = "Couldn't enter configure mode.";
             $self->logger->error($err);
-            return {success => 0, error => 1, error_msg => $err};
+            return &$success({success => 0, error => 1, error_msg => $err});
         }
 
         $in_configure = 1;
@@ -569,7 +746,7 @@ sub execute_command{
 
             my $err = "Couldn't enter desired context.";
             $self->logger->error($err);
-            return {success => 0, error => 1, error_msg => $err};
+            return &$success({success => 0, error => 1, error_msg => $err});
         }
 
         $prompt = "#";
@@ -579,7 +756,7 @@ sub execute_command{
     # OK. We are now ready to send our command and get the results!
     my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, $prompt);
     if (defined $err) {
-        return {success => 0, error => 1, error_msg => $err};
+        return &$success({success => 0, error => 1, error_msg => $err});
     }
 
     if($in_context){
@@ -591,9 +768,9 @@ sub execute_command{
     }
 
     if (defined $prompt) {
-        return {success => 1, raw => "ok"};
+        return &$success({success => 1, raw => "ok"});
     } else {
-        return {success => 1, raw => $result};
+        return &$success({success => 1, raw => $result});
     }
 }
 
