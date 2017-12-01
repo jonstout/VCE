@@ -105,6 +105,10 @@ function NewCommandForm(details, reponseFunc) {
         
         fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
             response.json().then(function(data) {
+                if (typeof data.error !== 'undefined') {
+                    return displayError(data.error.msg);
+                }
+
                 console.log(data);
                 reponseFunc(data.raw);
             });

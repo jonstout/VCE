@@ -14,14 +14,32 @@ function loadCookie() {
     */
 }
 
+function loadErrorCloseButton() {
+    var errorCloseButton = document.getElementById("error_exit");
+    var errorContainer = document.getElementById("error");
+
+    errorCloseButton.onclick = function(e) {
+        errorContainer.setAttribute('style', 'display: none;');
+    };
+}
+
+function displayError(error) {
+    var errorContainer = document.getElementById("error");
+    var errorText = document.getElementById("error_text");
+
+    errorText.innerText = error;
+    errorContainer.setAttribute('style', 'display: block;');
+}
+
 // The var $allow_credentials in Method.pm must be set to 'true'
 // for cors.
 window.onload = function() {
+    loadErrorCloseButton();
     loadCookie();
     cookie = Cookies.getJSON('vce');
-    
+
     setHeader(cookie.switches);
-    
+
     var url = window.location;
     if (url.pathname.indexOf('details.html') > -1) {
         selectTab();

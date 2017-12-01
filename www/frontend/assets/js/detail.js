@@ -6,6 +6,10 @@ function loadSwitch() {
     url += '&workgroup=' + cookie.workgroup;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var switches = data.results[0].workgroups;
 
             for (var i = 0; i < switches.length; i++) {
@@ -57,6 +61,10 @@ function loadPorts() {
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var table = document.getElementById("port_table");
             table.innerHTML = "";
             var ports = data.results[0].ports;
@@ -121,6 +129,10 @@ function navigateOnSelect(e) {
 
         fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
             response.json().then(function(data) {
+                if (typeof data.error !== 'undefined') {
+                    return displayError(data.error.msg);
+                }
+
                 window.location.href = 'details.html';
             });
         });
@@ -139,6 +151,10 @@ function loadVlans() {
     url += '&switch=' + name;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var vlans = data.results[0].vlans;
             var table = document.getElementById("vlan_table");
             table.innerHTML = '';
@@ -193,6 +209,10 @@ function loadPortCommands() {
     url += '&switch=' + cookie.switch;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var cmds = data.results;
             
             for (var i = 0; i < cmds.length; i++) {
@@ -236,6 +256,10 @@ function loadSwitchCommands() {
     url += '&switch=' + cookie.switch;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var cmds = data.results;
             
             for (var i = 0; i < cmds.length; i++) {
@@ -279,6 +303,10 @@ function loadVlanCommands() {
     url += '&switch=' + cookie.switch;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var cmds = data.results;
             
             for (var i = 0; i < cmds.length; i++) {

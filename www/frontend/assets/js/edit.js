@@ -23,6 +23,10 @@ function loadVlanDetails() {
     url += '&vlan_id=' + vlanId;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var circuit = data.results[0].circuit;
             console.log(circuit);
             
@@ -92,6 +96,10 @@ function editVlan(e) {
     console.log(url);
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             window.location.href = 'details.html?tab=vlan';
         });
     });
