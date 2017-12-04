@@ -121,13 +121,15 @@ sub get_workgroup_operational_status{
     my $user = $ENV{'REMOTE_USER'};
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
+
     if($self->vce->access->user_in_workgroup( username => $user,
                                               workgroup => $workgroup )){
-        
         $self->logger->debug("Fetching workgroups for user: " . $user);
         return {results => [{workgroups => $self->vce->get_switches_operational_state( workgroup => $workgroup )}]};
     }else{
-        return {results => [], error => {msg => "User $user is not in workgroup " . $workgroup}};
+        my $err = "User $user is not in workgroup " . $workgroup;
+        $self->logger->error($err);
+        return {results => [], error => {msg => $err}};
     }
 
 }
@@ -150,9 +152,9 @@ sub get_interfaces_operational_status {
     #verify user in workgroup
     if ($self->vce->access->user_in_workgroup( username => $user,
                                                workgroup => $workgroup )) {
-	
+
         my $ports = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch, ports => undef);
-	my $port_info = $self->vce->get_interfaces_operational_state(workgroup => $workgroup, switch => $switch);
+        my $port_info = $self->vce->get_interfaces_operational_state(workgroup => $workgroup, switch => $switch);
         if (!defined $port_info) {
             my $err = "Could not get interface state from device.";
             $self->logger->error($err);
@@ -161,7 +163,7 @@ sub get_interfaces_operational_status {
 
         my $result = [];
         foreach my $port (@{$ports}) {
-            my $pdata = $port_info->{'results'}->{$port->{'port'}};
+            my $pdata = $port_info->{$port->{'port'}};
             $pdata->{'tags'} = $self->vce->access->friendly_display_vlans($port->{'tags'});
             push(@{$result}, $pdata);
         }
@@ -169,9 +171,9 @@ sub get_interfaces_operational_status {
 	return {results => [{ ports => $result}]};
     } else {
         my $err = "User $user not in specified workgroup $workgroup";
-
         $self->logger->error($err);
-	return {results => [], error => {msg => $err}};
+
+        return {results => [], error => {msg => $err}};
     }
 }
 

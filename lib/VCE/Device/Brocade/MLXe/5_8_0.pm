@@ -26,7 +26,7 @@ has context => (is => 'rwp', default => '');
 
 =head2 BUILD
 
-    $device = VCE::Device::Brocade::MLXe::5_8_0->new(
+    my $device = VCE::Device::Brocade::MLXe::5_8_0->new(
         username => $username,
         password => $password,
         hostname => $hostname,
@@ -58,56 +58,69 @@ sub BUILD{
 
 =head2 connect
 
+    my $err = connect();
+
+connect creates a CLI connection and NetConf session to this
+device. Returns an error string if connecting fails.
+
 =cut
 sub connect{
     my $self = shift;
     my %params = @_;
 
-    my $comm = GRNOC::Comm->new( host => $self->hostname,
-                                 user => $self->username,
-                                 password => $self->password,
-                                 device => 'brocade',
-                                 key_delay => .001,
-                                 debug => 0 );
+    my $err;
+    my $comm = GRNOC::Comm->new(
+        host => $self->hostname,
+        user => $self->username,
+        password => $self->password,
+        device => 'brocade',
+        key_delay => .001,
+        debug => 0
+    );
     $comm->login();
 
     if ($comm->connected()) {
         $self->_set_comm($comm);
         $self->_set_connected(1);
     } else {
-        $self->logger->error( "Error: " . $comm->get_error());
+        $err = "Error: " . $comm->get_error();
+        $self->logger->error($err);
         $self->_set_connected(0);
     }
 
-    my $conn = GRNOC::NetConf::Device->new(username => $self->username,
-                                           password => $self->password,
-                                           host     => $self->hostname,
-                                           port     => 830,
-                                           type     => 'Brocade',
-                                           model    => 'MLXe',
-                                           version  => '5.8.0');
+    my $conn = GRNOC::NetConf::Device->new(
+        username => $self->username,
+        password => $self->password,
+        host     => $self->hostname,
+        port     => 830,
+        type     => 'Brocade',
+        model    => 'MLXe',
+        version  => '5.8.0'
+    );
     $self->_set_conn($conn);
 
-    return;
+    return $err;
 }
 
 =head2 get_interfaces_state
+
+    my ($interfaces, $err) = get_interfaces_state();
 
 get_interfaces_state uses netconf to retrieve basic information about
 each interface; It returns an array of interfaces and an error if a
 failure occurred. An example interface is included below.
 
-  {
-    id         => 'ethernet 15/2'
-    duplex     => 'full',
-    hw_addr    => 'cc4e.240c.0ea1',
-    link_state => 'up'
-    name       => 'mat lok',
-    port_state => 'forward',
-    priority   => 'level0',
-    speed      => '10G',
-    tag        => 'no'
-  }
+    {
+      id         => 'ethernet 15/2'
+      duplex     => 'full',
+      hw_addr    => 'cc4e.240c.0ea1',
+      link_state => 'up'
+      name       => 'mat lok',
+      port_state => 'forward',
+      priority   => 'level0',
+      speed      => '10G',
+      tag        => 'no'
+    }
 
 =cut
 sub get_interfaces_state {
@@ -298,6 +311,114 @@ sub get_interfaces {
     }
 
     return {interfaces => \%interfaces, raw => $raw};
+}
+
+=head2 vlan_spanning_tree
+
+    my ($res, $err) = vlan_spanning_tree($vlan_id);
+
+vlan_spanning_tree enables spanning tree on VLAN $vlan_id. Returns a
+response and error; The error is undef if nothing failed.
+
+=cut
+sub vlan_spanning_tree {
+    my $self    = shift;
+    my $vlan_id = shift;
+
+    my $res;
+    my $err;
+
+    my $ok = $self->configure();
+    if (!$ok) {
+        $err = "Could not enter configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    $ok = $self->set_context("vlan $vlan_id");
+    if (!$ok) {
+        $err = "Could not enter vlan configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("spanning-tree", "#");
+    if ($err) {
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("write mem", "#");
+    if ($err) {
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    $ok = $self->exit_context();
+    if (!$ok) {
+        $self->logger->warn("Failed to exit context.");
+    }
+
+    $ok = $self->exit_configure();
+    if (!$ok) {
+        $self->logger->warn("Failed to exit configure.");
+    }
+
+    return $res, $err;
+}
+
+=head2 no_vlan_spanning_tree
+
+    my ($res, $err) = no_vlan_spanning_tree($vlan_id);
+
+no_vlan_spanning_tree disables spanning tree on VLAN $vlan_id. Returns
+a response and error; The error is undef if nothing failed.
+
+=cut
+sub no_vlan_spanning_tree {
+    my $self    = shift;
+    my $vlan_id = shift;
+
+    my $res;
+    my $err;
+
+    my $ok = $self->configure();
+    if (!$ok) {
+        $err = "Could not enter configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    $ok = $self->set_context("vlan $vlan_id");
+    if (!$ok) {
+        $err = "Could not enter vlan configure mode.";
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("no spanning-tree", "#");
+    if ($err) {
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    ($res, $err) = $self->issue_command("write mem", "#");
+    if ($err) {
+        $self->logger->error($err);
+        return $res, $err;
+    }
+
+    $ok = $self->exit_context();
+    if (!$ok) {
+        $self->logger->warn("Failed to exit context.");
+    }
+
+    $ok = $self->exit_configure();
+    if (!$ok) {
+        $self->logger->warn("Failed to exit configure.");
+    }
+
+    return $res, $err;
 }
 
 =head2 vlan_description
@@ -581,6 +702,10 @@ sub _get_interface{
 
 =head2 configure
 
+    my $ok = configure();
+
+configure enters into this device's configuration mode.
+
 =cut
 sub configure{
     my $self = shift;
@@ -601,6 +726,10 @@ sub configure{
 
 
 =head2 exit_configure
+
+    my $ok = exit_configure();
+
+exit_configure exits this device's configuration mode.
 
 =cut
 sub exit_configure{
@@ -624,6 +753,12 @@ sub exit_configure{
 }
 
 =head2 set_context
+
+    my $ok = set_context('vlan 218');
+
+set_context changes the context in which a command is run. For
+example, to enable spanning tree on a per-VLAN basis you must first
+run C<conf t> and C<vlan 218> before C<spanning-tree> is executed.
 
 =cut
 sub set_context{
@@ -651,6 +786,10 @@ sub set_context{
 
 =head2 exit_context
 
+    my $ok = exit_context();
+
+exit_context exits this device's current CLI context.
+
 =cut
 sub exit_context{
     my $self = shift;
@@ -673,7 +812,10 @@ sub exit_context{
 
 =head2 issue_command
 
-Returns results and error. Error will be undef if everything went ok.
+    my ($res, $err) = issue_command($command, $prompt);
+
+issue_command returns the output generated by executing C<$command> on
+this device. The output includes all data up to C<$prompt>.
 
 =cut
 sub issue_command{

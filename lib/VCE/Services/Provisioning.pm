@@ -224,6 +224,7 @@ sub provision_vlan{
     my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
     my $status  = undef;
 
+    my $endpoint_count = 0;
     foreach my $e (@{$details->{'endpoints'}}) {
         my $port   = $e->{'port'};
         my $switch = $switch;
@@ -233,11 +234,24 @@ sub provision_vlan{
         if (!$status) {
             last;
         }
+
+        $endpoint_count++;
     }
 
     if (!$status){
         $self->vce->network_model->delete_vlan(vlan_id => $vlan_id);
         return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
+    }
+
+    # Multipoint VLANs should have spanning-tree enabled.
+    my $response;
+    if ($endpoint_count > 2) {
+        $response = $self->switch->vlan_spanning_tree(vlan => $vlan);
+    } else {
+        $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
+    }
+    if (defined $response->{'error'}) {
+        $self->logger->warn($response->{'error'});
     }
 
     $self->_send_vlan_description($description, $switch, $vlan );
@@ -310,6 +324,7 @@ sub edit_vlan{
 
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         my $status  = undef;
+        my $endpoint_count = 0;
         foreach my $e (@{$details->{'endpoints'}}) {
             $status = $self->_send_vlan_add($e->{'port'}, $switch, $vlan);
             if (!$status) {
@@ -317,6 +332,19 @@ sub edit_vlan{
                 $self->logger->error($error);
                 return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
             }
+
+            $endpoint_count++;
+        }
+
+        # Multipoint VLANs should have spanning-tree enabled.
+        my $response;
+        if ($endpoint_count > 2) {
+            $response = $self->switch->vlan_spanning_tree(vlan => $vlan);
+        } else {
+            $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
+        }
+        if (defined $response->{'error'}) {
+            $self->logger->warn($response->{'error'});
         }
 
         return {results => [{success => 1, vlan_id => $vlan_id}]};
@@ -400,8 +428,8 @@ sub _send_vlan_add{
     $self->logger->info("Adding vlan $vlan to port $port on $switch");
 
    my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
-   if (exists $response->{'results'}->{'error'}) {
-       $self->logger->error($response->{'results'}->{'error'});
+   if (exists $response->{'error'}) {
+       $self->logger->error($response->{'error'});
        return 0;
    }
 
@@ -416,8 +444,8 @@ sub _send_vlan_remove{
     $self->logger->info("Removing vlan $vlan from port $port on $switch");
 
     my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
-    if (exists $response->{'results'}->{'error'}) {
-        $self->logger->error($response->{'results'}->{'error'});
+    if (exists $response->{'error'}) {
+        $self->logger->error($response->{'error'});
         return 0;
     }
 

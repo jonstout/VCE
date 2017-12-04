@@ -21,11 +21,7 @@
 ##   limitations under the License.
 #
 
-=head1 NAME
-
-VCE - VCE Virtual Customer Equipement
-
-=head1 VERSION
+=head1 VCE - VCE Virtual Customer Equipement
 
 Version 0.2.3
 
@@ -65,17 +61,17 @@ has device_client => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
 
 =head1 SYNOPSIS
+
 This is a module to provide a simplified object oriented way to connect to
 and interact with the VCE database.
-
-Some examples:
 
     use VCE;
 
     my $vce = VCE->new();
-    my $is_in_workgroup = $vce->access->user_in_workgroup( username => 'aragusa@iu.edu',
-                                                           workgroup => 'ajco');
-
+    my $is_in_workgroup = $vce->access->user_in_workgroup(
+      username => 'aragusa@iu.edu',
+      workgroup => 'ajco'
+    );
 
 =cut
 
@@ -465,7 +461,6 @@ sub get_switches_operational_state{
     }
 
     my $switches = $self->get_switches( workgroup => $params{'workgroup'});
-
     foreach my $switch (@$switches){
         my %int_state;
         $switch->{'status'} = $self->_get_switch_status( switch => $switch );
@@ -512,25 +507,25 @@ sub get_switches_operational_state{
         $switch->{'vlans'} = \@vlans;
     }
 
-            
     return $switches;
 }
-
-
 
 sub _get_switch_status{
     my $self = shift;
     my %params = @_;
 
-    my $state = $self->device_client->get_device_status()->{'results'};
-    $self->logger->error("SWITCH STATUS: " . Data::Dumper::Dumper($state));
-    if(!defined($state)){
-        return "Unknown";
+    my $state = $self->device_client->get_device_status();
+    if (defined $state->{'error'}) {
+        $self->logger->error($state->{'error'});
+        return 'Unknown';
     }
-    if($state->{'status'} == 1){
-        return "Up";
-    }else{
-        return "Down";
+
+    if ($state->{'results'} == 1) {
+        return 'Up';
+    } elsif ($state->{'results'} == 0) {
+        return 'Down';
+    } else {
+        return 'Unknown';
     }
 }
 
@@ -538,15 +533,15 @@ sub _get_interface_status{
     my $self = shift;
     my %params = @_;
 
-    my $state = $self->device_client->get_interface_status(interface => $params{'interface'})->{'results'};
-    if (!defined $state || defined $state->{'error'}) {
-        $self->logger->error("Interface Status: " . Data::Dumper::Dumper($state));
+    my $state = $self->device_client->get_interface_status(interface => $params{'interface'});
+    if (defined $state->{'error'}) {
+        $self->logger->error($state->{'error'});
         return "Unknown";
     }
 
-    if ($state->{'status'} == 1) {
+    if ($state->{'results'} == 1) {
         return 'Up';
-    } elsif ($state->{'status'} == 0) {
+    } elsif ($state->{'results'} == 0) {
         return 'Down';
     } else {
         return 'Unknown';
