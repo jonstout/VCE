@@ -179,7 +179,6 @@ sub _register_webservice_methods{
 =head2 handle_request
 
 =cut
-
 sub handle_request{
     my $self = shift;
 
@@ -189,8 +188,6 @@ sub handle_request{
 =head2 provision_vlan
 
 =cut
-
-
 sub provision_vlan{
     my $self = shift;
     my $m_ref = shift;
@@ -222,25 +219,20 @@ sub provision_vlan{
     }
 
     my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-    my $status  = undef;
-
+    my $endpoints = [];
     my $endpoint_count = 0;
+
     foreach my $e (@{$details->{'endpoints'}}) {
-        my $port   = $e->{'port'};
-        my $switch = $switch;
-        my $vlan   = $vlan;
-
-        $status = $self->_send_vlan_add($port, $switch, $vlan);
-        if (!$status) {
-            last;
-        }
-
+        push(@{$endpoints}, $e->{'port'});
         $endpoint_count++;
     }
 
-    if (!$status){
+    my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
+    if (defined $response->{'error'}) {
+        $self->logger->error($response->{'error'});
+
         $self->vce->network_model->delete_vlan(vlan_id => $vlan_id);
-        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to add VLAN to device"}};
+        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
     }
 
     # Multipoint VLANs should have spanning-tree enabled.
@@ -262,7 +254,6 @@ sub provision_vlan{
 =head2 edit_vlan
 
 =cut
-
 sub edit_vlan{
     my $self = shift;
     my $m_ref = shift;
@@ -303,14 +294,15 @@ sub edit_vlan{
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
         }
 
-        my $status = 1;
+        my $endpoints = [];
         foreach my $e (@{$details->{'endpoints'}}) {
-            $status = $self->_send_vlan_remove($e->{'port'}, $switch, $details->{'vlan'});
-            if (!$status) {
-                my $error = "Unable to remove VLAN from device.";
-                $self->logger->error($error);
-                return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
-            }
+            push(@{$endpoints}, $e->{'port'});
+        }
+
+        my $response = $self->switch->no_interface_tagged(port => $endpoints, vlan => $vlan);
+        if (defined $response->{'error'}) {
+            $self->logger->error($response->{'error'});
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
         }
 
         $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
@@ -323,17 +315,19 @@ sub edit_vlan{
                                     vlan => $vlan);
 
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-        my $status  = undef;
+        my $endpoints = [];
         my $endpoint_count = 0;
-        foreach my $e (@{$details->{'endpoints'}}) {
-            $status = $self->_send_vlan_add($e->{'port'}, $switch, $vlan);
-            if (!$status) {
-                my $error = "Unable to add VLAN to device.";
-                $self->logger->error($error);
-                return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
-            }
 
+        foreach my $e (@{$details->{'endpoints'}}) {
+            push(@{$endpoints}, $e->{'port'});
             $endpoint_count++;
+        }
+
+        my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
+        if (defined $response->{'error'}) {
+            $self->logger->error($response->{'error'});
+
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
         }
 
         # Multipoint VLANs should have spanning-tree enabled.
@@ -347,8 +341,8 @@ sub edit_vlan{
             $self->logger->warn($response->{'error'});
         }
 
+        $self->_send_vlan_description($description, $switch, $vlan );
         return {results => [{success => 1, vlan_id => $vlan_id}]};
-
     }else{
         my $error = "User $user not in specified workgroup $workgroup.";
         $self->logger->error($error);
@@ -359,7 +353,6 @@ sub edit_vlan{
 =head2 delete_vlan
 
 =cut
-
 sub delete_vlan{
     my $self = shift;
     my $m_ref = shift;
@@ -385,17 +378,18 @@ sub delete_vlan{
     }
 
     # Do switch removal
-    my $status = undef;
     my $switch = $details->{'switch'};
     my $vlan = $details->{'vlan'};
 
+    my $endpoints = [];
     foreach my $e (@{$details->{'endpoints'}}) {
-        my $port   = $e->{'port'};
+        push(@{$endpoints}, $e->{'port'});
+    }
 
-        $status = $self->_send_vlan_remove( $port, $switch, $vlan );
-        if (!$status) {
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Unable to remove VLAN from device"}};
-        }
+    my $response = $self->switch->no_interface_tagged(port => $endpoints, vlan => $vlan);
+    if (defined $response->{'error'}) {
+        $self->logger->error($response->{'error'});
+        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
     }
 
     $self->_send_no_vlan($switch, $vlan);
@@ -412,42 +406,10 @@ sub _send_vlan_description{
     $self->logger->info("Adding description $desc to vlan $vlan on $switch");
 
    my $response = $self->switch->vlan_description(description => $desc, vlan => $vlan);
-   if (exists $response->{'results'}->{'error'}) {
-       $self->logger->error($response->{'results'}->{'error'});
-       return 0;
-   }
-
-    return 1;
-}
-
-sub _send_vlan_add{
-    my $self   = shift;
-    my $port   = shift;
-    my $switch = shift;
-    my $vlan   = shift;
-    $self->logger->info("Adding vlan $vlan to port $port on $switch");
-
-   my $response = $self->switch->interface_tagged(port => $port, vlan => $vlan);
    if (exists $response->{'error'}) {
        $self->logger->error($response->{'error'});
        return 0;
    }
-
-    return 1;
-}
-
-sub _send_vlan_remove{
-    my $self   = shift;
-    my $port   = shift;
-    my $switch = shift;
-    my $vlan   = shift;
-    $self->logger->info("Removing vlan $vlan from port $port on $switch");
-
-    my $response = $self->switch->no_interface_tagged(port => $port, vlan => $vlan);
-    if (exists $response->{'error'}) {
-        $self->logger->error($response->{'error'});
-        return 0;
-    }
 
     return 1;
 }
@@ -459,8 +421,8 @@ sub _send_no_vlan {
     $self->logger->info("Removing vlan $vlan from $switch");
 
     my $response = $self->switch->no_vlan(vlan => $vlan);
-    if (exists $response->{'results'}->{'error'}) {
-        $self->logger->error($response->{'results'}->{'error'});
+    if (exists $response->{'error'}) {
+        $self->logger->error($response->{'error'});
         return 0;
     }
 

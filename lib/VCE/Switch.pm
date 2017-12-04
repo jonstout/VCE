@@ -289,6 +289,7 @@ sub _register_rpc_methods{
         name        => "port",
         description => "Name of the interface to add tag to",
         required    => 1,
+        multiple    => 1,
         pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $method->add_input_parameter(
@@ -309,6 +310,7 @@ sub _register_rpc_methods{
         name        => "port",
         description => "Name of the interface to remove tag from",
         required    => 1,
+        multiple    => 1,
         pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $method->add_input_parameter(
@@ -451,8 +453,22 @@ sub vlan_description {
 
 =head2 interface_tagged
 
-=cut
+    my $response = interface_tagged(
+      port => ['ethernet 15/1', 'ethernet 15/2'],
+      vlan => 300
+    );
 
+interface_tagged adds C<vlan> to the array of interfaces in C<port>.
+
+Response
+
+    { results => 1 }
+
+or
+
+    { error => "An error string" }
+
+=cut
 sub interface_tagged {
     my $self   = shift;
     my $method = shift;
@@ -479,8 +495,23 @@ sub interface_tagged {
 
 =head2 no_interface_tagged
 
-=cut
+    my $response = no_interface_tagged(
+      port => ['ethernet 15/1', 'ethernet 15/2'],
+      vlan => 300
+    );
 
+no_interface_tagged removes C<vlan> from the array of interfaces in
+C<port>.
+
+Response
+
+    { results => 1 }
+
+or
+
+    { error => "An error string" }
+
+=cut
 sub no_interface_tagged {
     my $self   = shift;
     my $method = shift;
