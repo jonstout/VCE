@@ -13,6 +13,10 @@ function loadVlanDropdown() {
     url += '&switch=' + name;
     return fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var ports = data.results[0].ports;
             
             var dropd = document.getElementById("vlan_optgroup");
@@ -121,6 +125,10 @@ function createVlan(e) {
     
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             window.location.href = 'details.html?tab=vlan';
         });
     });

@@ -23,6 +23,10 @@ function loadWorkgroups() {
     var url = baseUrl + 'access.cgi?method=get_workgroups';
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
             var workgroups = data.results[0].workgroups;
             
             var selectedWorkgroup = document.getElementById('workgroup_select');
