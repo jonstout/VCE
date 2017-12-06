@@ -59,10 +59,14 @@ function loadSwitches() {
                 status.innerHTML = switches[i].status;
                 
                 var vlan = row.insertCell(2);
-                vlan.innerHTML = switches[i].up_vlans.toString() + "/" + switches[i].total_vlans.toString();
+                var vlans_up = switches[i].up_vlans;
+                var vlans_dn = switches[i].total_vlans - switches[i].up_vlans;
+                vlan.innerHTML = `▲ ${vlans_up} &nbsp;&nbsp; ▼ ${vlans_dn}`;
                 
                 var ports = row.insertCell(3);
-                ports.innerHTML = switches[i].up_ports.toString() + "/" + switches[i].total_ports.toString();
+                var ports_up = switches[i].up_ports;
+                var ports_dn = switches[i].total_ports - switches[i].up_ports;
+                ports.innerHTML = `▲ ${ports_up} &nbsp;&nbsp; ▼ ${ports_dn}`;
             }
             
             setHeader(switchNames);
