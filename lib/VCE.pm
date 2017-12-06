@@ -192,7 +192,6 @@ sub _process_config{
     }
 
     my $rabbitMQ = $config->get('/accessPolicy/rabbit')->[0];
-    $self->logger->error("RabbitMQ: " . Data::Dumper::Dumper($rabbitMQ));
     $self->_set_rabbit_mq($rabbitMQ);
 
     my $wgs = $config->get('/accessPolicy/workgroup');

@@ -515,15 +515,17 @@ sub no_vlan {
 
 =head2 interface_tagged
 
-Using netconf connection $conn add interface $iface to VLAN
+Using netconf connection $conn add interfaces $ifaces to VLAN
 $vlan_id. Returns a response and error; The error is undef if nothing
 failed.
 
 =cut
 sub interface_tagged {
     my $self    = shift;
-    my $iface   = shift;
+    my $ifaces  = shift;
     my $vlan_id = shift;
+
+    $self->logger->info("Adding vlan $vlan_id to " . join(", ", @{$ifaces}) . ".");
 
     my $err = undef;
     my $req = "
@@ -538,8 +540,14 @@ sub interface_tagged {
         <brcd:vlan-config>
           <brcd:vlan>
             <brcd:vlan-id>$vlan_id</brcd:vlan-id>
-            <brcd:tagged>$iface</brcd:tagged>
-          </brcd:vlan>
+";
+
+    foreach my $iface (@{$ifaces}) {
+        $req .= "            <brcd:tagged>$iface</brcd:tagged>
+";
+    }
+
+    $req .= "          </brcd:vlan>
         </brcd:vlan-config>
       </brcd:netiron-config>
     </nc:config>
@@ -548,7 +556,7 @@ sub interface_tagged {
 
     my $ok = $self->conn->send($req);
     if (!defined $ok) {
-        $err = "Could not add vlan $vlan_id to $iface.";
+        $err = "Could not add vlan $vlan_id to " . join(", ", @{$ifaces}) . ".";
         $self->conn->disconnect();
         return undef, $err;
     }
@@ -563,15 +571,17 @@ sub interface_tagged {
 
 =head2 no_interface_tagged
 
-Using netconf connection $conn remove interface $iface from VLAN
+Using netconf connection $conn remove interfaces $ifaces from VLAN
 $vlan_id. Returns a response and error; The error is undef if nothing
 failed.
 
 =cut
 sub no_interface_tagged {
     my $self    = shift;
-    my $iface   = shift;
+    my $ifaces  = shift;
     my $vlan_id = shift;
+
+    $self->logger->info("Removing vlan $vlan_id from " . join(", ", @{$ifaces}) . ".");
 
     my $err = undef;
     my $req = "
@@ -586,8 +596,14 @@ sub no_interface_tagged {
         <brcd:vlan-config>
           <brcd:vlan>
             <brcd:vlan-id>$vlan_id</brcd:vlan-id>
-            <brcd:tagged nc:operation=\"delete\">$iface</brcd:tagged>
-          </brcd:vlan>
+";
+
+    foreach my $iface (@{$ifaces}) {
+        $req .= "            <brcd:tagged nc:operation=\"delete\">$iface</brcd:tagged>
+";
+    }
+
+    $req .= "          </brcd:vlan>
         </brcd:vlan-config>
       </brcd:netiron-config>
     </nc:config>
@@ -596,7 +612,7 @@ sub no_interface_tagged {
 
     my $ok = $self->conn->send($req);
     if (!defined $ok) {
-        $err = "Could not remove vlan $vlan_id from $iface.";
+        $err = "Could not remove vlan $vlan_id from " . join(", ", @{$ifaces}) . ".";
         $self->conn->disconnect();
         return undef, $err;
     }

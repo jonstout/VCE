@@ -137,7 +137,7 @@ sub add_vlan{
         return;
     }
 
-	$self->logger->info("Adding VLAN: " . $params{'vlan_id'} . " to network model.");
+	$self->logger->info("Adding VLAN: " . $params{'vlan'} . " to network model.");
 
     foreach my $ep (@{$params{'endpoints'}}){
         my $ep_obj = {};
