@@ -653,7 +653,6 @@ sub get_switches{
 
 sub get_vlans{
     my $self = shift;
-    
     my $m_ref = shift;
     my $p_ref = shift;
 
@@ -661,24 +660,19 @@ sub get_vlans{
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-        
-        my $vlans = $self->vce->network_model->get_vlans( workgroup => $workgroup);
-
-        my @vlans;
-        foreach my $vlan (@$vlans){
-            my $vlan_details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan );
-            push(@vlans, $vlan_details);
-        }
-
-        
-
-        return {results => [{vlans => \@vlans}]};
-    }else{
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
+    my $vlans = $self->vce->network_model->get_vlans(workgroup => $workgroup);
+
+    my @vlans;
+    foreach my $vlan (@$vlans){
+        my $vlan_details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan );
+        push(@vlans, $vlan_details);
+    }
+
+    return {results => [{vlans => \@vlans}]};
 }
 
 =head2 get_vlan_details
