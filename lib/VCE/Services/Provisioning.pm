@@ -273,23 +273,81 @@ sub edit_vlan{
                                               workgroup => $workgroup )){
 
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id );
-        if ($details->{'workgroup'} ne $workgroup) {
-            my $error = "Workgroup $workgroup is not allowed to edit vlan $vlan_id.";
-            $self->logger->error($error);
-            return {results => [], error => {msg => $error}};
+
+        # if ($details->{'workgroup'} ne $workgroup) {
+        #     my $error = "Workgroup $workgroup is not allowed to edit vlan $vlan_id.";
+        #     $self->logger->error($error);
+        #     return {results => [], error => {msg => $error}};
+        # }
+
+        my $mk_interfaces = [];
+        my $rm_interfaces = [];
+
+        foreach my $port (@{$ports}) {
+            my $new = 1;
+
+            foreach my $endpoint (@{$details->{endpoints}}) {
+                if ($endpoint->{port} eq $port) {
+                    $new = 0;
+                    last;
+                }
+            }
+            if ($new) {
+                push(@{$mk_interfaces}, $port);
+            }
         }
 
-        #first validate new circuit before we remove the old!
-        my $valid_circuit = $self->vce->validate_circuit(
-            workgroup => $workgroup,
-            description => $description,
-            username => $user,
-            switch => $switch,
-            port => $ports,
-            vlan => $vlan
+        foreach my $endpoint (@{$details->{endpoints}}) {
+            my $exists = 0;
+            foreach my $port (@{$ports}) {
+                if ($port eq $endpoint->{port}) {
+                    $exists = 1;
+                    last;
+                }
+            }
+            if (!$exists) {
+                push(@{$rm_interfaces}, $endpoint->{port});
+            }
+        }
+
+        my $vlan_owner     = $details->{'workgroup'} eq $workgroup;
+        my $vlan_permittee = $self->vce->validate_circuit(
+            workgroup   => $workgroup,
+            switch      => $switch,
+            port        => $ports,
+            vlan        => $vlan
         );
-        if(!$valid_circuit){
-            my $error = "Couldn't validate circuit.";
+
+        my $rm_interfaces_count = @{$rm_interfaces};
+        my $rm_interfaces_owner = 0;
+        if ($rm_interfaces_count > 0) {
+            $rm_interfaces_owner = 1;
+        }
+
+        foreach my $intf (@{$rm_interfaces}) {
+            my $intf_owner = $self->vce->access->workgroup_owns_port(
+                workgroup => $workgroup,
+                switch    => $switch,
+                port      => $intf
+            );
+            if (!$intf_owner) {
+                $rm_interfaces_owner = 0;
+                last;
+            }
+        }
+
+        # There are two cases when a VLAN may be edited. The first
+        # requires that the VLAN is owned by $workgroup and that the
+        # workgroup has been allocated the appropriate VLANs on all of
+        # $ports.
+        #
+        # The second case is when a port owner decides a VLAN should
+        # be removed from its port. This case requires the ports being
+        # removed are owned by $workgroup, and that no other ports are
+        # added.
+        if (!($vlan_owner && $vlan_permittee) && !($rm_interfaces_owner && @{$mk_interfaces} == 0)) {
+            warn "vlan_owner: $vlan_owner vlan_permittee: $vlan_permittee rm_int_owner: $rm_interfaces_owner";
+            my $error = "Workgroup $workgroup not authorized to make this change.";
             $self->logger->error($error);
             return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
         }
@@ -306,13 +364,16 @@ sub edit_vlan{
         }
 
         $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
-        $self->vce->provision_vlan( vlan_id => $vlan_id,
-                                    workgroup => $workgroup,
-                                    description => $description,
-                                    username => $user,
-                                    switch => $switch,
-                                    port => $ports,
-                                    vlan => $vlan);
+        $self->vce->provision_vlan(
+            vlan_id => $vlan_id,
+            workgroup => $workgroup,
+            description => $description,
+            username => $user,
+            switch => $switch,
+            port => $ports,
+            vlan => $vlan,
+            skip_validation => 1
+        );
 
         my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
         my $endpoints = [];

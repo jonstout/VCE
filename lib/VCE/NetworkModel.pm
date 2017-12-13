@@ -104,6 +104,8 @@ sub add_vlan{
     my $self = shift;
     my %params = @_;
 
+    warn Dumper(\%params);
+
     $self->logger->error("Adding a VLAN");
 
     my $obj = {};
@@ -222,7 +224,8 @@ sub delete_vlan{
       switch    => $string  (optional)
     );
 
-get_vlans returns a list of vlans filtered by C<workgroup> and C<switch>.
+get_vlans returns a list of vlan UUIDs filtered by C<workgroup> and
+C<switch>.
 
 =cut
 sub get_vlans{
@@ -247,6 +250,12 @@ sub get_vlans{
 }
 
 =head2 get_vlan_details
+
+    my $vlan = get_vlan_details(
+      vlan_id => $string
+    );
+
+get_vlan_details returns the VLAN associated with UUID C<$vlan_id>.
 
 =cut
 sub get_vlan_details{

@@ -571,4 +571,55 @@ sub get_admin_workgroup {
     return undef;
 }
 
+=head2 port_owner
+
+    my $ok = port_owner($workgroup, $switch, $port);
+
+port_owner returns 1 if C<$workgroup> owns C<($switch, $port)>.
+
+=cut
+sub port_owner {
+    my $self      = shift;
+    my $workgroup = shift;
+    my $switch    = shift;
+    my $port      = shift;
+
+
+    if (!defined $self->config->{switches}->{$switch'}) {
+        $self->logger->error("Couldn't find a switch named $switch.");
+        return 0;
+    }
+
+    if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
+        $self->logger->error("Couldn't find a port named $port on $switch.");
+        return 0;
+    }
+
+    my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
+
+    if ($port_config->{'owner'} ne $workgroup) {
+        $self->logger->warn("Workgroup $workgroup doesn't own $port on $switch.");
+        return 0;
+    }
+
+    return 1;
+}
+
+=head2 vlan_owner
+
+    my $ok = vlan_owner($workgroup, $vlan_uuid);
+
+vlan_owner returns 1 if C<$workgroup> created C<$vlan_uuid>.
+
+=cut
+
+=head2 vlan_permittee
+
+    my $ok = vlan_permittee($workgroup, $swich, $port, $vlan);
+
+vlan_permittee returns 1 if C<$workgroup> has the right to provision
+C<$vlan> on C<($switch, $port)>.
+
+=cut
+
 1;
