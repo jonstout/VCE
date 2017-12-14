@@ -9,6 +9,7 @@ use Moo;
 use JSON::XS;
 use GRNOC::Log;
 
+use Data::Dumper;
 use Data::UUID;
 
 has logger => (is => 'rwp');

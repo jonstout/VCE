@@ -571,55 +571,85 @@ sub get_admin_workgroup {
     return undef;
 }
 
-=head2 port_owner
+=head2 is_port_owner
 
-    my $ok = port_owner($workgroup, $switch, $port);
+    my ($ok, $error) = is_port_owner($workgroup, $switch, $port);
 
-port_owner returns 1 if C<$workgroup> owns C<($switch, $port)>.
+is_port_owner returns 1 if C<$workgroup> owns C<($switch, $port)>. An
+error string describing the authorization failure is returned on
+failure.
 
 =cut
-sub port_owner {
+sub is_port_owner {
     my $self      = shift;
     my $workgroup = shift;
     my $switch    = shift;
     my $port      = shift;
 
-
-    if (!defined $self->config->{switches}->{$switch'}) {
-        $self->logger->error("Couldn't find a switch named $switch.");
-        return 0;
+    if (!defined $self->config->{switches}->{$switch}) {
+        return (0, "Couldn't find a switch named $switch.");
     }
 
     if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
-        $self->logger->error("Couldn't find a port named $port on $switch.");
-        return 0;
+        return (0, "Couldn't find a port named $port on $switch.");
     }
 
     my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
 
     if ($port_config->{'owner'} ne $workgroup) {
-        $self->logger->warn("Workgroup $workgroup doesn't own $port on $switch.");
-        return 0;
+        return (0, "Workgroup $workgroup doesn't own $port on $switch.");
     }
 
-    return 1;
+    return (1, undef);
 }
 
-=head2 vlan_owner
+=head2 is_vlan_permittee
 
-    my $ok = vlan_owner($workgroup, $vlan_uuid);
+    my ($ok, $error) = is_vlan_permittee(
+      $workgroup, # string
+      $swich,     # string
+      $ports,     # []string
+      $vlan       # integer
+    );
 
-vlan_owner returns 1 if C<$workgroup> created C<$vlan_uuid>.
-
-=cut
-
-=head2 vlan_permittee
-
-    my $ok = vlan_permittee($workgroup, $swich, $port, $vlan);
-
-vlan_permittee returns 1 if C<$workgroup> has the right to provision
-C<$vlan> on C<($switch, $port)>.
+is_vlan_permittee returns 1 if C<$workgroup> has the right to
+provision C<$vlan> on C<($switch, $port)>. An error string describing
+the authorization failure is returned on failure.
 
 =cut
+sub is_vlan_permittee {
+    my $self      = shift;
+    my $workgroup = shift;
+    my $switch    = shift;
+    my $ports     = shift;
+    my $vlan      = shift;
+
+    my $count = @{$ports};
+    if ($count < 1) {
+        $self->logger->warn("Checking VLAN permissions on zero endpoints.");
+    }
+
+    foreach my $port (@{$ports}) {
+        if (!defined $self->config->{switches}->{$switch}) {
+            return (0, "Couldn't find a switch named $switch.");
+        }
+
+        if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
+            return (0, "Couldn't find a port named $port on $switch.");
+        }
+
+        my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
+
+        if (!defined $port_config->{tags}->{$vlan}) {
+            return (0, "No port on switch $switch named $port with VLAN $vlan found in configuration.");
+        }
+
+        if ($port_config->{'tags'}->{$vlan} ne $workgroup) {
+            return (0, "Workgroup $workgroup does not have access to VLAN $vlan on port $port on $switch.");
+        }
+    }
+
+    return (1, undef);
+}
 
 1;

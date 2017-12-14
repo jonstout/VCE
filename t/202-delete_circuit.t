@@ -83,8 +83,7 @@ my $provisioner = GRNOC::WebService::Client->new( url => 'http://localhost:8529/
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
 
 ok(defined($vlans), "Got a response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Expected circuits found!");
-
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Expected circuits found!");
 
 my $vlan;
 my $req = make_request({ method => 'add_vlan',
@@ -108,7 +107,7 @@ ok(defined($vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "We now see that we have a VLAN!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have a VLAN!");
 
 my $vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                               workgroup => 'ajco');
@@ -157,7 +156,7 @@ ok($delete->{'results'}->[0]->{'success'} == 1, "Successfully delete the circuit
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Looks like we successfully deleted it");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Looks like we successfully deleted it");
 
 $req = make_request({ method => 'add_vlan',
                       description => "Automated test suite!",
@@ -179,7 +178,7 @@ ok(defined($vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "We now see that we have a VLAN!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have a VLAN!");
 
 $vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                            workgroup => 'ajco');
@@ -220,7 +219,7 @@ ok($delete->{'error'}->{'msg'} eq 'User aragusa not in specified workgroup edco'
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Looks like we did not successfully delete it");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "Looks like we did not successfully delete it");
 
 my $provisioner2 = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/provisioning.cgi',
                                                    realm => 'VCE',
@@ -237,7 +236,7 @@ ok($delete->{'error'}->{'msg'} =~ /Workgroup edco is not allowed to edit vlan/, 
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Looks like we did not successfully delete it");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "Looks like we did not successfully delete it");
 
 $delete = $provisioner->delete_vlan( vlan_id => '11111',
                                      workgroup => 'ajco');
@@ -247,4 +246,4 @@ ok(!defined($delete->{'results'}->[0]), "Unable to delete the circuit");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Looks like we did not successfully delete it");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "Looks like we did not successfully delete it");

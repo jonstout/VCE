@@ -674,13 +674,13 @@ sub get_vlans{
             next;
         }
 
-        # Check if an Endpoint on the VLAN is owned by $workgroup.
+        # If $workgroup owns a port on $vlan he should be able to see
+        # it's details.
         foreach my $endpoint (@{$vlan_details->{'endpoints'}}) {
-            my $ok = $self->vce->access->workgroup_has_access_to_port(
-                workgroup => $workgroup,
-                switch    => $vlan_details->{'switch'},
-                port      => $endpoint->{'port'},
-                vlan      => $vlan_details->{'vlan'}
+            my ($ok, undef) = $self->vce->access->is_port_owner(
+                $workgroup,
+                $vlan_details->{switch},
+                $endpoint->{port}
             );
             if ($ok) {
                 push(@vlans, $vlan_details);

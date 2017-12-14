@@ -611,45 +611,30 @@ sub validate_circuit{
 
 =head2 provision_vlan
 
+    my $vlan_uuid = provision_vlan(
+      workgroup   => $string,
+      username    => $string
+      switch      => $string,
+      port        => [$string],
+      vlan        => $string,
+      description => $string,
+      vlan_id     => $string (optional),
+    );
+
+provision_vlan creates a new VLAN, or updates an existing VLAN if
+C<$vlan_id> is provided. Returns the VLAN's UUID or C<undef> on
+failure.
+
 =cut
-sub provision_vlan{
+sub provision_vlan {
     my $self = shift;
     my %params = @_;
 
-    warn 'provision_vlan: ' . Dumper(\%params);
-
-    my $skip_validation = 0;
-    if (defined $params{skip_validation}) {
-        $skip_validation = $params{skip_validation};
-    }
-
-    my $valid_circuit = $self->validate_circuit(%params);
-    warn Dumper(!$valid_circuit);
-    warn Dumper(!$skip_validation);
-    warn 'state: ' . Dumper(!$valid_circuit && $skip_validation == 0);
-
-    if (!$valid_circuit && $skip_validation == 0) {
-        warn "Could not validate the requested VLAN for provisioning.";
-        $self->logger->error("Could not validate the requested VLAN for provisioning.");
-        return;
-    }
-
-    warn "Adding VLAN to network model.";
-    my $tag_available = $self->network_model->check_tag_availability(switch => $params{'switch'}, vlan => $params{'vlan'});
-    if (!$tag_available) {
-        $self->logger->error("VLAN " . $params{'vlan'} . " is invalid for the requested endpoints.");
-        return;
-    }
-
     my @eps;
-    for (my $i=0; $i <= $#{$params{'port'}}; $i++) {
-        push(@eps, {port => $params{'port'}->[$i]});
+    foreach my $port (@{$params{'port'}}) {
+        push(@eps, {port => $port});
     }
 
-    warn "Adding VLAN to network model.";
-    $self->logger->info("Adding VLAN to network model.");
-
-    warn "!!! adding vlan to the network model";
     return $self->network_model->add_vlan(
         description => $params{'description'},
         vlan_id => $params{'vlan_id'},
@@ -675,18 +660,13 @@ sub delete_vlan{
     }
 
     my $vlan = $self->network_model->get_vlan_details( vlan_id => $params{'vlan_id'});
-    if(!defined($vlan)){
+    if (!defined $vlan) {
         $self->logger->error("No vlan by that Id can be found");
         return;
     }
 
-    if($vlan->{'workgroup'} eq $params{'workgroup'}){
-        $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'} );
-        return 1;
-    }else{
-        return 0;
-    }
-
+    $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'} );
+    return 1;
 }
 
 =head2 get_workgroup_details
