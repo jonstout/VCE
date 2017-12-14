@@ -43,6 +43,7 @@ make
 %pre
 /usr/bin/getent group vce || /usr/sbin/groupadd -r vce
 /usr/bin/getent passwd vce || /usr/sbin/useradd -r -s /sbin/nologin -g vce vce
+/usr/sbin/usermod -a -G vce apache
 
 %install
 rm -rf $RPM_BUILDR_ROOT
@@ -96,6 +97,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/config.xsd %{buildroot}%{_sysconfdir}/vce/config.xsd
 %{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
+
 %{__install} etc/network_model.json %{buildroot}%{_var}/run/vce/network_model.json
 
 # Final Step
@@ -133,5 +135,5 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/access_policy.xml
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
-%attr(755,vce, -) %{_var}/run/vce/network_model.json
-%config(noreplace) %{_var}/run/vce/network_model.json
+
+%config(noreplace) %attr(664,vce,vce) %{_var}/run/vce/network_model.json
