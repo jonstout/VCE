@@ -77,7 +77,7 @@ my $ua = AnyEvent::HTTP::LWP::UserAgent->new;
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
 
 ok(defined($vlans), "Got a response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Expected circuits found!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Expected circuits found!");
 
 my $vlan;
 my $req = make_request({ method => 'add_vlan', 
@@ -91,8 +91,7 @@ my $response = $ua->simple_request_async($req)->recv;
 if($response->is_success){
     my $content = $response->content;
     $vlan = decode_json($content);
-}                               
-
+}
 
 ok(defined($vlan), "got a response");
 ok($vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
@@ -101,7 +100,7 @@ ok(defined($vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "We now see that we have a VLAN!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have a VLAN!");
 
 my $vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                               workgroup => 'ajco');
@@ -172,7 +171,7 @@ ok($vlan->{'error'}->{'msg'} eq 'Unable to add circuit to network model', "Retur
 
 $vlans = $client->get_vlans( workgroup => 'ajco');
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Making sure we have the right number of circuits still");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "Making sure we have the right number of circuits still");
 
 
 $req = make_request({method => 'add_vlan',

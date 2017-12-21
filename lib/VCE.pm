@@ -554,8 +554,7 @@ sub _get_interface_status{
 sub is_tag_available{
     my $self = shift;
     my %params = @_;
-    
-    
+
     if(!defined($params{'switch'})){
         $self->logger->error("is_tag_available: Switch not specified");
         return;
@@ -565,16 +564,25 @@ sub is_tag_available{
         $self->logger->error("is_tag_available: tag not specified");
         return;
     }
-    
-    return $self->network_model->check_tag_availability( switch => $params{'switch'},                                                         
+
+    return $self->network_model->check_tag_availability( switch => $params{'switch'},
                                                          vlan => $params{'tag'});
-    
 }
 
 =head2 validate_circuit
 
-=cut
+    my $ok = validate_circuit(
+      workgroup => $string,
+      switch    => $string,
+      port      => [$string],
+      vlan      => $string,
+    );
 
+validate_circuit returns 1 if C<$workgroup> has access to all
+C<($switch, $port, $vlan)> tuples. If the length of port is zero this
+method returns C<undef>.
+
+=cut
 sub validate_circuit{
     my $self = shift;
     my %params = @_;
@@ -584,19 +592,15 @@ sub validate_circuit{
         $self->logger->error("Not enough endpoints. Got $port_count endpoints.");
         return;
     }
-    
-    my $vlan;
-    
-    #validate endpoints and create ep object
-    for(my $i=0; $i <= $#{$params{'port'}}; $i++){
-        
-        $self->logger->error("Checking access to port");
-        
-        if(!$self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                         switch => $params{'switch'},
-                                                         port => $params{'port'}->[$i],
-                                                         vlan => $params{'vlan'})){
-            
+
+    for (my $i = 0; $i <= $#{$params{'port'}}; $i++) {
+        my $has_access = $self->access->workgroup_has_access_to_port(
+            workgroup => $params{'workgroup'},
+            switch => $params{'switch'},
+            port => $params{'port'}->[$i],
+            vlan => $params{'vlan'}
+        );
+        if(!$has_access) {
             $self->logger->error("Workgroup " . $params{'workgroup'} . " does not have access to tag " . $params{'vlan'} . " on " . $params{'switch'} . ":" . $params{'port'}->[$i]);
             return;
         }
@@ -607,30 +611,29 @@ sub validate_circuit{
 
 =head2 provision_vlan
 
-=cut
+    my $vlan_uuid = provision_vlan(
+      workgroup   => $string,
+      username    => $string
+      switch      => $string,
+      port        => [$string],
+      vlan        => $string,
+      description => $string,
+      vlan_id     => $string (optional),
+    );
 
-sub provision_vlan{
+provision_vlan creates a new VLAN, or updates an existing VLAN if
+C<$vlan_id> is provided. Returns the VLAN's UUID or C<undef> on
+failure.
+
+=cut
+sub provision_vlan {
     my $self = shift;
     my %params = @_;
 
-    my $valid_circuit = $self->validate_circuit(%params);
-    if (!$valid_circuit) {
-        $self->logger->error("Could not validate the requested VLAN for provisioning.");
-        return;
-    }
-
-    my $tag_available = $self->network_model->check_tag_availability(switch => $params{'switch'}, vlan => $params{'vlan'});
-    if (!$tag_available) {
-        $self->logger->error("VLAN " . $params{'vlan'} . " is invalid for the requested endpoints.");
-        return;
-    }
-
     my @eps;
-    for (my $i=0; $i <= $#{$params{'port'}}; $i++) {
-        push(@eps, {port => $params{'port'}->[$i]});
+    foreach my $port (@{$params{'port'}}) {
+        push(@eps, {port => $port});
     }
-
-    $self->logger->info("Adding VLAN to network model.");
 
     return $self->network_model->add_vlan(
         description => $params{'description'},
@@ -642,7 +645,6 @@ sub provision_vlan{
         username => $params{'username'}
     );
 }
-
 
 =head2 delete_vlan
 
@@ -658,18 +660,13 @@ sub delete_vlan{
     }
 
     my $vlan = $self->network_model->get_vlan_details( vlan_id => $params{'vlan_id'});
-    if(!defined($vlan)){
+    if (!defined $vlan) {
         $self->logger->error("No vlan by that Id can be found");
         return;
     }
 
-    if($vlan->{'workgroup'} eq $params{'workgroup'}){
-        $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'} );
-        return 1;
-    }else{
-        return 0;
-    }
-
+    $self->network_model->delete_vlan( vlan_id => $params{'vlan_id'} );
+    return 1;
 }
 
 =head2 get_workgroup_details

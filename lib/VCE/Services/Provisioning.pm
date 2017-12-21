@@ -206,6 +206,12 @@ sub provision_vlan{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
+    my ($ok, $error) = $self->vce->access->is_vlan_permittee($workgroup, $switch, $ports, $vlan);
+    if (!$ok) {
+        $self->logger->error($error);
+        return {results => [], error => {msg => $error}};
+    }
+
     my $vlan_id = $self->vce->provision_vlan(
         workgroup => $workgroup,
         description => $description,
@@ -268,86 +274,136 @@ sub edit_vlan{
     my $description = $p_ref->{'description'}{'value'};
     my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
-    #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-
-        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id );
-        if ($details->{'workgroup'} ne $workgroup) {
-            my $error = "Workgroup $workgroup is not allowed to edit vlan $vlan_id.";
-            $self->logger->error($error);
-            return {results => [], error => {msg => $error}};
-        }
-
-        #first validate new circuit before we remove the old!
-        my $valid_circuit = $self->vce->validate_circuit(
-            workgroup => $workgroup,
-            description => $description,
-            username => $user,
-            switch => $switch,
-            port => $ports,
-            vlan => $vlan
-        );
-        if(!$valid_circuit){
-            my $error = "Couldn't validate circuit.";
-            $self->logger->error($error);
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
-        }
-
-        my $endpoints = [];
-        foreach my $e (@{$details->{'endpoints'}}) {
-            push(@{$endpoints}, $e->{'port'});
-        }
-
-        my $response = $self->switch->no_interface_tagged(port => $endpoints, vlan => $vlan);
-        if (defined $response->{'error'}) {
-            $self->logger->error($response->{'error'});
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
-        }
-
-        $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
-        $self->vce->provision_vlan( vlan_id => $vlan_id,
-                                    workgroup => $workgroup,
-                                    description => $description,
-                                    username => $user,
-                                    switch => $switch,
-                                    port => $ports,
-                                    vlan => $vlan);
-
-        my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-        my $endpoints = [];
-        my $endpoint_count = 0;
-
-        foreach my $e (@{$details->{'endpoints'}}) {
-            push(@{$endpoints}, $e->{'port'});
-            $endpoint_count++;
-        }
-
-        my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
-        if (defined $response->{'error'}) {
-            $self->logger->error($response->{'error'});
-
-            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
-        }
-
-        # Multipoint VLANs should have spanning-tree enabled.
-        my $response;
-        if ($endpoint_count > 2) {
-            $response = $self->switch->vlan_spanning_tree(vlan => $vlan);
-        } else {
-            $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
-        }
-        if (defined $response->{'error'}) {
-            $self->logger->warn($response->{'error'});
-        }
-
-        $self->_send_vlan_description($description, $switch, $vlan );
-        return {results => [{success => 1, vlan_id => $vlan_id}]};
-    }else{
+    # BEGIN - Permissions check
+    # There are two cases when a VLAN may be edited. The first
+    # requires that the VLAN is owned by $workgroup and that the
+    # workgroup has been allocated the appropriate VLANs on all of
+    # $ports.
+    #
+    # The second case is when a port owner decides a VLAN should
+    # be removed from its port. This case requires the ports being
+    # removed are owned by $workgroup, and that no other ports are
+    # added.
+    my $valid_user = $self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup);
+    if (!$valid_user) {
         my $error = "User $user not in specified workgroup $workgroup.";
         $self->logger->error($error);
         return {results => [], error => {msg => $error}};
     }
+
+    my $details       = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id );
+    my $is_vlan_owner = $details->{'workgroup'} eq $workgroup;
+    my ($is_vlan_permittee, undef) = $self->vce->access->is_vlan_permittee($workgroup, $switch, $ports, $vlan);
+
+    if (!($is_vlan_owner && $is_vlan_permittee)) {
+        my $mk_interfaces = [];
+        my $rm_interfaces = [];
+
+        foreach my $port (@{$ports}) {
+            my $new = 1;
+
+            foreach my $endpoint (@{$details->{endpoints}}) {
+                if ($endpoint->{port} eq $port) {
+                    $new = 0;
+                    last;
+                }
+            }
+            if ($new) {
+                push(@{$mk_interfaces}, $port);
+            }
+        }
+
+        foreach my $endpoint (@{$details->{endpoints}}) {
+            my $exists = 0;
+            foreach my $port (@{$ports}) {
+                if ($port eq $endpoint->{port}) {
+                    $exists = 1;
+                    last;
+                }
+            }
+            if (!$exists) {
+                push(@{$rm_interfaces}, $endpoint->{port});
+            }
+        }
+
+        my $rm_interfaces_count = @{$rm_interfaces};
+        my $mk_interfaces_count = @{$mk_interfaces};
+        my $is_rm_interfaces_owner = 0;
+        if ($rm_interfaces_count > 0) {
+            $is_rm_interfaces_owner = 1;
+        }
+
+        foreach my $intf (@{$rm_interfaces}) {
+            ($is_rm_interfaces_owner, undef) = $self->vce->access->is_port_owner(
+                $workgroup,
+                $switch,
+                $intf
+            );
+            if (!$is_rm_interfaces_owner) {
+                last;
+            }
+        }
+
+        if (!($is_rm_interfaces_owner && $mk_interfaces_count == 0)) {
+            my $error = "Workgroup $workgroup not authorized to make this change.";
+            warn "vlan_owner: $is_vlan_owner vlan_permittee: $is_vlan_permittee rm_int_owner: $is_rm_interfaces_owner";
+            $self->logger->error($error);
+            return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $error}};
+        }
+    }
+    # END
+
+    my $endpoints = [];
+    foreach my $e (@{$details->{'endpoints'}}) {
+        push(@{$endpoints}, $e->{'port'});
+    }
+
+    my $response = $self->switch->no_interface_tagged(port => $endpoints, vlan => $vlan);
+    if (defined $response->{'error'}) {
+        $self->logger->error($response->{'error'});
+        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
+    }
+
+    $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
+    $self->vce->provision_vlan(
+        vlan_id => $vlan_id,
+        workgroup => $workgroup,
+        description => $description,
+        username => $user,
+        switch => $switch,
+        port => $ports,
+        vlan => $vlan
+    );
+
+    my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+    my $endpoints = [];
+    my $endpoint_count = 0;
+
+    foreach my $e (@{$details->{'endpoints'}}) {
+        push(@{$endpoints}, $e->{'port'});
+        $endpoint_count++;
+    }
+
+    my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
+    if (defined $response->{'error'}) {
+        $self->logger->error($response->{'error'});
+
+        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
+    }
+
+    # Multipoint VLANs should have spanning-tree enabled.
+    my $response;
+    if ($endpoint_count > 2) {
+        $response = $self->switch->vlan_spanning_tree(vlan => $vlan);
+    } else {
+        $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
+    }
+    if (defined $response->{'error'}) {
+        $self->logger->warn($response->{'error'});
+    }
+
+    $self->_send_vlan_description($description, $switch, $vlan );
+    return {results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
 =head2 delete_vlan
@@ -363,15 +419,12 @@ sub delete_vlan{
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
-    # Permissions check
-    my $in_workgroup = $self->vce->access->user_in_workgroup(
-        username  => $user,
-        workgroup => $workgroup
-    );
+    my $in_workgroup = $self->vce->access->user_in_workgroup(username  => $user, workgroup => $workgroup);
     if (!$in_workgroup) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
+    # Check if is_vlan_owner
     my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
     if ($details->{'workgroup'} ne $workgroup) {
         return {results => [], error => {msg => "Workgroup $workgroup is not allowed to edit vlan $vlan_id"}};

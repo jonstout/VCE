@@ -76,7 +76,7 @@ my $ua = AnyEvent::HTTP::LWP::UserAgent->new;
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
 
 ok(defined($vlans), "Got a response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 1, "Expected circuits found!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Expected circuits found!");
 
 
 my $vlan;
@@ -100,7 +100,7 @@ ok(defined($vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "We now see that we have a VLAN!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have a VLAN!");
 
 my $vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                               workgroup => 'ajco');
@@ -205,7 +205,7 @@ ok(defined($new_vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
-ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have anoterh VLAN!");
+ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 4, "We now see that we have anoterh VLAN!");
 
 my $edit_vlan2;
 $req = make_request({ method => 'edit_vlan',
@@ -291,4 +291,4 @@ my $edit_vlan4 = $provisioner2->edit_vlan( description => "Automated test suite!
                                            workgroup => 'edco');
 
 ok(defined($edit_vlan4), "Got a valid response");
-ok($edit_vlan4->{'error'}->{'msg'} =~ /Workgroup edco is not allowed to edit vlan/, "Proper error message when unable to provision");
+ok($edit_vlan4->{'error'}->{'msg'} =~ /Workgroup edco not authorized to make this change./, "Proper error message when unable to provision");

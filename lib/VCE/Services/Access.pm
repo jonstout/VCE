@@ -6,7 +6,7 @@ use strict;
 use warnings;
 
 use Moo;
-
+use Data::Dumper;
 use VCE;
 
 use GRNOC::Log;
@@ -650,10 +650,8 @@ sub get_switches{
 =head2 get_vlans
 
 =cut
-
 sub get_vlans{
     my $self = shift;
-    
     my $m_ref = shift;
     my $p_ref = shift;
 
@@ -661,30 +659,42 @@ sub get_vlans{
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-        
-        my $vlans = $self->vce->network_model->get_vlans( workgroup => $workgroup);
-
-        my @vlans;
-        foreach my $vlan (@$vlans){
-            my $vlan_details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan );
-            push(@vlans, $vlan_details);
-        }
-
-        
-
-        return {results => [{vlans => \@vlans}]};
-    }else{
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
+    my $vlans = $self->vce->network_model->get_vlans();
+
+    my @vlans;
+    foreach my $vlan (@$vlans) {
+        my $vlan_details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan);
+        # Check if the VLAN is owned by $workgroup.
+        if ($vlan_details->{'workgroup'} eq $workgroup) {
+            push(@vlans, $vlan_details);
+            next;
+        }
+
+        # If $workgroup owns a port on $vlan he should be able to see
+        # it's details.
+        foreach my $endpoint (@{$vlan_details->{'endpoints'}}) {
+            my ($ok, undef) = $self->vce->access->is_port_owner(
+                $workgroup,
+                $vlan_details->{switch},
+                $endpoint->{port}
+            );
+            if ($ok) {
+                push(@vlans, $vlan_details);
+                last;
+            }
+        }
+    }
+
+    return {results => [{vlans => \@vlans}]};
 }
 
 =head2 get_vlan_details
 
 =cut
-
 sub get_vlan_details{
     my $self = shift;
     my $m_ref = shift;
@@ -702,13 +712,29 @@ sub get_vlan_details{
     my $vlan = $self->vce->network_model->get_vlan_details(vlan_id => $p_ref->{'vlan_id'}{'value'});
 
     my $workgroup_owns_vlan = $vlan->{'workgroup'} eq $workgroup;
-    if (!$workgroup_owns_vlan) {
-        my $error = "Workgroup $workgroup does not have access to vlan " . $p_ref->{'vlan_id'}{'value'};
-        $self->logger->error($error);
-        return {error => {'msg' => $error}};
+    my $workgroup_owns_port = 0;
+
+    # Check if an Endpoint on the VLAN is owned by $workgroup.
+    foreach my $endpoint (@{$vlan->{'endpoints'}}) {
+        my $ok = $self->vce->access->workgroup_has_access_to_port(
+            workgroup => $workgroup,
+            switch    => $vlan->{'switch'},
+            port      => $endpoint->{'port'},
+            vlan      => $vlan->{'vlan'}
+        );
+        if ($ok) {
+            $workgroup_owns_port = 1;
+            last;
+        }
     }
 
-    return {results => [{circuit => $vlan}]};
+    if ($workgroup_owns_vlan || $workgroup_owns_port) {
+        return {results => [{circuit => $vlan}]};
+    }
+
+    my $error = "Workgroup $workgroup does not have access to vlan " . $p_ref->{'vlan_id'}{'value'};
+    $self->logger->error($error);
+    return {error => {'msg' => $error}};
 }
 
 1;

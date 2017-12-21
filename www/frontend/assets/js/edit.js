@@ -34,11 +34,22 @@ function loadVlanDetails() {
             desc.value = circuit.description;
 
             var vlan = document.getElementById('vlan');
+            var set_vlan = false;
             for (var i = 0; i < vlan.options.length; i++) {
                 if (vlan.options[i].value == circuit.vlan) {
                     vlan.selectedIndex = i;
+                    set_vlan = true;
                     break;
                 }
+            }
+
+            if (!set_vlan) {
+                var dropd = document.getElementById("vlan_optgroup");
+                var opt = document.createElement('option');
+                opt.innerHTML = circuit.vlan;
+                opt.setAttribute('value', circuit.vlan);
+                dropd.appendChild(opt);
+                vlan.selectedIndex = vlan.options.length - 1;
             }
 
             // Load and select reported endpoints

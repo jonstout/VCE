@@ -9,6 +9,7 @@ use Moo;
 use JSON::XS;
 use GRNOC::Log;
 
+use Data::Dumper;
 use Data::UUID;
 
 has logger => (is => 'rwp');
@@ -103,6 +104,8 @@ returns the uuid for the vlan
 sub add_vlan{
     my $self = shift;
     my %params = @_;
+
+    warn Dumper(\%params);
 
     $self->logger->error("Adding a VLAN");
 
@@ -217,7 +220,13 @@ sub delete_vlan{
 
 =head2 get_vlans
 
-    returns a list of vlans if specified a list of vlans for a workgroup
+    my $vlans = get_vlans(
+      workgroup => $string, (optional)
+      switch    => $string  (optional)
+    );
+
+get_vlans returns a list of vlan UUIDs filtered by C<workgroup> and
+C<switch>.
 
 =cut
 sub get_vlans{
@@ -226,33 +235,28 @@ sub get_vlans{
 
     my @vlans;
 
-    if(!defined($params{'workgroup'})){
-        foreach my $vlan (keys(%{$self->nm->{'vlans'}})){
-            push(@vlans, $vlan);
+    foreach my $uuid (keys %{$self->nm->{'vlans'}}) {
+        if (defined $params{'workgroup'} && $self->nm->{'vlans'}->{$uuid}->{'workgroup'} ne $params{'workgroup'}) {
+            next;
         }
-    }else{
-        foreach my $vlan_id (keys(%{$self->nm->{'vlans'}})){
-            my $vlan = $self->nm->{'vlans'}->{$vlan_id};
-            if($vlan->{'workgroup'} eq $params{'workgroup'}){
-                push(@vlans, $vlan_id);
-            }
-        }
-    }
 
-    if (defined $params{'switch'}) {
-        my @final;
-        foreach my $vlan (@vlans){
-            if($self->nm->{'vlans'}->{$vlan}->{'switch'} eq $params{'switch'}){
-                push(@final, $vlan);
-            }
+        if (defined $params{'switch'} && $self->nm->{'vlans'}->{$uuid}->{'switch'} ne $params{'switch'}) {
+            next;
         }
-        return \@final;
+
+        push(@vlans, $uuid);
     }
 
     return \@vlans;
 }
 
 =head2 get_vlan_details
+
+    my $vlan = get_vlan_details(
+      vlan_id => $string
+    );
+
+get_vlan_details returns the VLAN associated with UUID C<$vlan_id>.
 
 =cut
 sub get_vlan_details{
