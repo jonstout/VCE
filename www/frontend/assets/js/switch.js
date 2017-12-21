@@ -21,7 +21,7 @@ function loadWorkgroup() {
             description.innerHTML = workgroup.description;
 
             var users = document.getElementById('workgroup_users');
-            users.innerHTML = workgroup.users.toString();
+            users.innerHTML = workgroup.users.join(', ');
 
             var switches = document.getElementById('workgroup_switches');
             switches.innerHTML = workgroup.switches.length;
