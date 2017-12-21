@@ -101,3 +101,8 @@ button.btn.btn-success {
   flex-flow:row nowrap;
 }
 
+.switch-status-col {
+  display:flex;
+  flex-flow:row wrap;
+}
+
