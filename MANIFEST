@@ -1,3 +1,4 @@
+bin/vce-run-check
 bin/vce.pl
 bin/vce_switch.pl
 etc/access_policy.xml
