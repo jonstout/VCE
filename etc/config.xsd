@@ -85,8 +85,6 @@
       <xs:element name="commands" type="commands" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element name="port" type="port" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
-    <xs:attribute name="username" type="xs:string" use="required"/>
-    <xs:attribute name="password" type="xs:string" use="required"/>
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="ip" type="xs:string" use="required"/>
     <xs:attribute name="vendor" type="xs:string" use="required"/>
