@@ -6,6 +6,7 @@ etc/apache_logging.conf
 etc/config.xsd
 etc/logging.conf
 etc/network_model.json
+etc/password.json
 etc/vce.init
 etc/vce.systemd
 lib/VCE.pm
@@ -49,6 +50,7 @@ t/200-provision_vlan.t
 t/201-edit_vlan.t
 t/202-delete_circuit.t
 t/300-get_switch_interfaces.t
+t/conf/extra.conf.in
 t/etc/apache_logging.conf
 t/etc/nm1.json
 t/etc/nm1.json.orig

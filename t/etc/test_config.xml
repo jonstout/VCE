@@ -1,9 +1,7 @@
 <accessPolicy>
   <rabbit host="localhost" port="5672" user="guest" pass="guest"/>
 
-  <switch name="foobar"  ip="managementip" username="username" password="password" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0"  >
-
-
+  <switch name="foobar" ip="managementip" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0">
     <commands>
       <port>
 	    <command method_name='show_interface' name='show interface' type='show' interaction='cli' description='shows a list of all interfaces'>
