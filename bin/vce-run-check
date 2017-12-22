@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use GRNOC::Config;
+
+use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
+
+sub usage {
+    print "Usage: $0 [--config <file path>]\n";
+    exit 1;
+}
+
+sub main {
+    my $config_file = shift;
+
+    my $config = GRNOC::Config->new(
+        config_file => $config_file,
+        force_array => 1,
+        schema => '/etc/vce/config.xsd'
+    );
+
+    if ($config->validate() != 1) {
+        my $err = $config->get_error()->{'backtrace'}->{'message'};
+        print "Configuration does not conform to schema: $err\n";
+        exit 1;
+    }
+
+    print "Configuration validated.\n";
+}
+
+my $config_file = DEFAULT_CONFIG_FILE;
+my $help = undef;
+
+GetOptions(
+    'config=s' => \$config_file,
+    'help|h|?' => \$help
+);
+
+usage() if $help;
+
+main($config_file);

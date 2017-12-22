@@ -84,6 +84,14 @@ To define a workgroup, create a workgroup block. Use `admin="1"` to define the s
   <user id="user-2" />
 </workgroup>
 ```
+
+#### Validate configuration
+To quickly verify that the configuration is valid use the `vce-run-check` command.
+
+```
+/usr/bin/vce-run-check --config /etc/vce/access_policy.xml
+```
+
 ### Frontend Assets
 The frontend is installed to `/usr/share/vce/www/`. Below is an Apache configuration that may be used to host the frontend and the API.
 
