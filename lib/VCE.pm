@@ -48,6 +48,7 @@ use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
 has network_model_file => (is => 'rwp', default => "/var/run/vce/network_model.json");
+
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 
@@ -196,64 +197,61 @@ sub _process_config{
 
     my $wgs = $config->get('/accessPolicy/workgroup');
     foreach my $workgroup (@$wgs){
-	$self->logger->debug("Processing workgroup: " . Data::Dumper::Dumper($workgroup));
-	my $grp = {};
-	$grp->{'name'} = $workgroup->{'name'};
-    $grp->{'admin'} = $workgroup->{'admin'};
-	$grp->{'description'} = $workgroup->{'description'};
-	$grp->{'user'} = $workgroup->{'user'};
-	$workgroups{$grp->{'name'}} = $grp;
-	foreach my $user (keys(%{$grp->{'user'}})){
-	    if(!defined($users{$user})){
-		$users{$user} = ();
-	    }
-	    push(@{$users{$user}},$grp->{'name'});
-	}
+        $self->logger->debug("Processing workgroup: " . Data::Dumper::Dumper($workgroup));
+        my $grp = {};
+        $grp->{'name'} = $workgroup->{'name'};
+        $grp->{'admin'} = $workgroup->{'admin'};
+        $grp->{'description'} = $workgroup->{'description'};
+        $grp->{'user'} = $workgroup->{'user'};
+        $workgroups{$grp->{'name'}} = $grp;
+        foreach my $user (keys(%{$grp->{'user'}})){
+            if(!defined($users{$user})){
+                $users{$user} = ();
+            }
+            push(@{$users{$user}},$grp->{'name'});
+        }
     }
-    
+
     my $cfg = {};
     $cfg->{'users'} = \%users;
     $cfg->{'workgroups'} = \%workgroups;
-    
+
     my %switches;
     my $switches = $config->get('/accessPolicy/switch');
+
     foreach my $switch (@$switches){
-	$self->logger->debug("Processing config for $switch->{'name'}");
-	my $s = {};
-	$s->{'name'} = $switch->{'name'};
-	$s->{'description'} = $switch->{'description'};
+        $self->logger->debug("Processing config for $switch->{'name'}");
+        my $s = {};
+        $s->{'name'} = $switch->{'name'};
+        $s->{'description'} = $switch->{'description'};
         $s->{'ssh_port'} = $switch->{'ssh_port'};
         $s->{'vendor'} = $switch->{'vendor'};
         $s->{'model'} = $switch->{'model'};
         $s->{'version'} = $switch->{'version'};
-        $s->{'username'} = $switch->{'username'};
-        $s->{'password'} = $switch->{'password'};
         $s->{'ip'} = $switch->{'ip'};
 
-	$s->{'commands'} = $self->_process_command_config($switch->{'commands'}->[0]);
+        $s->{'commands'} = $self->_process_command_config($switch->{'commands'}->[0]);
 
-	my %ports;
-	foreach my $port (keys(%{$switch->{'port'}})){
-	    my $p = {};
-	    my %tags;
-            
-	    foreach my $tag (@{$switch->{'port'}->{$port}->{'tags'}}){
-                warn Dumper($tag);
+        my %ports;
+        foreach my $port (keys(%{$switch->{'port'}})){
+            my $p = {};
+            my %tags;
+
+            foreach my $tag (@{$switch->{'port'}->{$port}->{'tags'}}){
                 for(my $i=$tag->{'start'};$i<=$tag->{'end'};$i++){
                     $tags{$i} = $tag->{'workgroup'};
                 }
-	    }
-	    
-	    $p->{'tags'} = \%tags;
-	    $s->{'ports'}->{$port} = $p;
-	    $p->{'owner'} = $switch->{'port'}->{$port}->{'owner'};
+            }
+
+            $p->{'tags'} = \%tags;
+            $s->{'ports'}->{$port} = $p;
+            $p->{'owner'} = $switch->{'port'}->{$port}->{'owner'};
             $p->{'description'} = $switch->{'port'}->{$port}->{'description'};
         }
 
-	$switches{$switch->{'name'}} = $s;
-	
-	
+        $switches{$switch->{'name'}} = $s;
     }
+    $self->logger->error(Dumper($switches));
 
     $cfg->{'switches'} = \%switches;
     $self->_set_config($cfg);
@@ -270,20 +268,22 @@ sub _process_command_config{
     my $cfg = {};
 
     $self->logger->debug("Processing switch commands.");
+
     foreach my $type ("system","port","vlan"){
         my %commands = %{$config->{$type}->[0]->{'command'}};
+
         foreach my $cmd (keys(%commands)){
-	    
-            my $val = {name => $cmd,
-                       method_name => $commands{$cmd}{'method_name'},
-                       interaction => $commands{$cmd}{'interaction'},
-                       actual_command => $commands{$cmd}{'cmd'}->[0],
-                       type => $commands{$cmd}{'type'},
-                       configure => $commands{$cmd}{'configure'},
-                       params => $commands{$cmd}{'parameter'},
-                       description => $commands{$cmd}{'description'},
-                       context => $commands{$cmd}{'context'}};
-	    
+            my $val = {
+                name => $cmd,
+                method_name => $commands{$cmd}{'method_name'},
+                interaction => $commands{$cmd}{'interaction'},
+                actual_command => $commands{$cmd}{'cmd'}->[0],
+                type => $commands{$cmd}{'type'},
+                configure => $commands{$cmd}{'configure'},
+                params => $commands{$cmd}{'parameter'},
+                description => $commands{$cmd}{'description'},
+                context => $commands{$cmd}{'context'}
+            };
             if(!defined($val->{'configure'})){
                 delete $val->{'configure'};
             }
@@ -291,9 +291,8 @@ sub _process_command_config{
             if(!defined($val->{'context'})){
                 delete $val->{'context'};
             }
-	    
-            push(@{$cfg->{$type}},$val);
 
+            push(@{$cfg->{$type}},$val);
         }
     }
 
@@ -303,7 +302,6 @@ sub _process_command_config{
 =head2 get_workgroups
 
 =cut
-
 sub get_workgroups{
     my $self = shift;
 
@@ -318,9 +316,7 @@ sub get_workgroups{
 	return $self->config->{'users'}->{$params{'username'}};
     }
 
-    
     return [];
-
 }
 
 

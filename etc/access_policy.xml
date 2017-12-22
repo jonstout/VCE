@@ -2,7 +2,7 @@
   <rabbit host="localhost" port="5672" user="guest" pass="guest" />
   <network_model path="/var/run/vce/network_model.json"/>
 
-  <switch name="switch" ip="127.0.0.1" username="username" password="password" description="switch description" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0">
+  <switch name="switch" ip="127.0.0.1" description="switch description" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0">
     <commands>
       <port>
         <command method_name='show_interface' name='show interface' type='show' interaction='cli' description='shows a list of all interfaces'>
