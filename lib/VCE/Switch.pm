@@ -309,7 +309,7 @@ sub _register_rpc_methods{
     $method->add_input_parameter(
         name        => "port",
         description => "Name of the interface to remove tag from",
-        required    => 1,
+        required    => 0, # If required == 1, an empty array can't be passed.
         multiple    => 1,
         pattern     => $GRNOC::WebService::Regex::TEXT
     );
@@ -520,7 +520,7 @@ sub no_interface_tagged {
     my $success = $method->{'success_callback'};
     my $error   = $method->{'error_callback'};
 
-    my $port = $params->{'port'}{'value'};
+    my $port = $params->{'port'}{'value'} || [];
     my $vlan = $params->{'vlan'}{'value'};
 
     if (!$self->device->connected) {
