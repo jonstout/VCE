@@ -110,7 +110,7 @@ sub BUILD{
 
     $self->logger->debug("Creating timers");
 
-    $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 30, cb => sub { $self->_gather_operational_status() });
+    $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 300, cb => sub { $self->_gather_operational_status() });
 
     $self->{'reconnect_timer'} = AnyEvent->timer(after => 10, interval => 10, cb => sub { $self->_reconnect_to_device() });
 
