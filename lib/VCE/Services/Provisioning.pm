@@ -23,7 +23,7 @@ has dispatcher => (is => 'rwp');
 has switch => (is => 'rwp');
 
 has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
-has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.sqlite');
 has rabbit_mq => (is => 'rwp');
 
 =head2 BUILD

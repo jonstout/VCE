@@ -3,18 +3,18 @@
 use strict;
 use warnings;
 
-use Test::More tests => 16;
+use Test::More tests => 12;
 use Test::Deep;
 
 use VCE;
 use GRNOC::Log;
 
-`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',
-                    network_model_file => './t/etc/nm1.json'  );
+                    network_model_file => './t/etc/nm1.sqlite'  );
 
 ok(defined($vce), "VCE object created");
 
@@ -24,12 +24,8 @@ ok(defined($details), "returned circuit");
 ok($details->{'workgroup'} eq 'ajco', "proper workgroup");
 ok($details->{'description'} eq 'test', "proper description");
 ok($#{$details->{'endpoints'}} == 1, "proper number of endpoints");
-ok($details->{'endpoints'}->[0]->{'switch'} eq 'foobar', "proper endpoint 1 switch");
 ok($details->{'endpoints'}->[0]->{'port'} eq 'eth0/1', "proper endpoint 1 port");
-ok($details->{'endpoints'}->[0]->{'tag'} eq '102', "proper endpoint 1 tag");
-ok($details->{'endpoints'}->[1]->{'switch'} eq 'foobar', "proper endpoint 2 switch");
 ok($details->{'endpoints'}->[1]->{'port'} eq 'eth0/2', "proper endpoint 2 port");
-ok($details->{'endpoints'}->[1]->{'tag'} eq '102', "proper endpoint 2 tag");
 ok($details->{'create_time'} eq '1479158369', "proper create time specified");
 
 $details = $vce->network_model->get_vlan_details( vlan_id => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2');

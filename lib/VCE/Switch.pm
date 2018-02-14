@@ -14,8 +14,10 @@ use GRNOC::WebService::Regex;
 
 use VCE::Device;
 use VCE::Device::Brocade::MLXe::5_8_0;
+use VCE::NetworkDB;
 
 has logger => (is => 'rwp');
+has db => (is => 'rwp');
 has device => (is => 'rwp');
 has type => (is => 'rwp');
 has vendor => (is => 'rwp');
@@ -53,6 +55,8 @@ has name => (is => 'rwp');
 
 =item hostname
 
+=item db
+
 =item dispatcher
 
 =item rabbit_mq
@@ -74,6 +78,8 @@ sub BUILD{
     $self->_set_logger($logger);
 
     $0 = "VCE(" . $self->username . ")";
+
+    $self->_set_db(VCE::NetworkDB->new());
 
     $self->logger->debug("Creating Dispatcher");
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( host => $self->rabbit_mq->{'host'},
@@ -104,10 +110,11 @@ sub BUILD{
 
     $self->logger->debug("Creating timers");
 
-    $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 300, cb => sub { $self->_gather_operational_status() });
+    $self->{'operational_status_timer'} = AnyEvent->timer(after => 10, interval => 30, cb => sub { $self->_gather_operational_status() });
 
     $self->{'reconnect_timer'} = AnyEvent->timer(after => 10, interval => 10, cb => sub { $self->_reconnect_to_device() });
 
+    $self->{interfaces} = {};
     return $self;
 }
 
@@ -180,32 +187,9 @@ sub _register_rpc_methods{
     $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new(
-        name => "get_interface_status",
-        callback => sub { return $self->get_interface_status( @_ )  },
-        description => "Get the device interfaces",
-        async => 1
-    );
-    $method->add_input_parameter(
-        name => "interface",
-        description => "Name of the interface to gather data about",
-        required => 1,
-        multiple => 0,
-        pattern => $GRNOC::WebService::Regex::NAME_ID
-    );
-    $d->register_method($method);
-
-    $method = GRNOC::RabbitMQ::Method->new(
         name => "get_vlans",
         callback => sub { return $self->get_vlans(@_) },
         description => "Get the device vlans",
-        async => 1
-    );
-    $d->register_method($method);
-
-    $method = GRNOC::RabbitMQ::Method->new(
-        name => "get_interfaces_op",
-        callback => sub { return $self->get_interfaces_op( @_ )  },
-        description => "Get the device interfaces",
         async => 1
     );
     $d->register_method($method);
@@ -354,7 +338,6 @@ sub _register_rpc_methods{
 =head2 get_interfaces
 
 =cut
-
 sub get_interfaces{
     my $self   = shift;
     my $method = shift;
@@ -369,26 +352,6 @@ sub get_interfaces{
         $self->logger->error("Error device is not connected");
         return &$success({});
     }
-}
-
-=head2 get_interfaces_op
-
-=cut
-
-sub get_interfaces_op {
-    my $self   = shift;
-    my $method = shift;
-    my $params = shift;
-
-    my $success = $method->{'success_callback'};
-    my $error   = $method->{'error_callback'};
-
-    $self->logger->error("Calling Switch.get_interfaces_op");
-    if (!defined $self->op_state || !defined $self->op_state->{'ports'}) {
-        return &$success({});
-    }
-
-    return &$success($self->op_state->{'ports'});
 }
 
 =head2 get_vlans
@@ -423,7 +386,6 @@ sub get_vlans {
 =head2 vlan_description
 
 =cut
-
 sub vlan_description {
     my $self   = shift;
     my $method = shift;
@@ -610,7 +572,6 @@ sub no_vlan_spanning_tree {
 =head2 no_vlan
 
 =cut
-
 sub no_vlan {
     my $self   = shift;
     my $method = shift;
@@ -637,7 +598,6 @@ sub no_vlan {
 =head2 get_device_status
 
 =cut
-
 sub get_device_status {
     my $self   = shift;
     my $method = shift;
@@ -649,69 +609,86 @@ sub get_device_status {
     return &$success($self->device->connected);
 }
 
-=head2 get_interface_status
-
-=cut
-
-sub get_interface_status{
-    my $self   = shift;
-    my $method = shift;
-    my $params = shift;
-
-    my $success = $method->{'success_callback'};
-    my $error   = $method->{'error_callback'};
-
-    my $interface = $params->{'interface'}{'value'};
-
-    if(!defined($interface)){
-        $self->logger->error("No Interface defined");
-        return &$error("No state specified");
-    }
-
-    if(!defined($self->op_state)){
-        $self->logger->error("No operational state specified yet!!");
-        return &$error("No operational status yet, probably not connected to device");
-    }
-
-    if(!defined($self->op_state->{'ports'}{$interface})){
-        $self->logger->error("NO Port named: " . $interface);
-        return &$error("No interface was found by that name on the device");
-    }
-
-    return &$success($self->op_state->{'ports'}{$interface}{'status'});
-}
-
 =head2 _gather_operational_status
 
 =cut
-
 sub _gather_operational_status{
     my $self = shift;
+    $self->logger->info('_gather_operational_status');
 
-    my $operational_status = {ports => {}, vlans => {}};
+    if (!$self->device->connected) {
+        $self->logger->error("Couldn't gather operational status. Device is disconnected.");
+        return undef;
+    }
 
-    if ($self->device->connected) {
-        my $interfaces = $self->device->get_interfaces();
-        foreach my $interface (keys (%{$interfaces->{'interfaces'}})) {
-            $self->logger->info("Found interface $interface.");
-            $operational_status->{'ports'}->{$interface} = $interfaces->{'interfaces'}->{$interface};
-        }
+    my $interfaces_state = $self->db->get_interfaces();
+    my $ifaces = {};
+    foreach my $intf (@{$interfaces_state}) {
+        $ifaces->{$intf->{name}} = $intf;
+    }
 
-        my $vlans = $self->device->get_vlans();
-        foreach my $vlan (@{$vlans}) {
-            $self->logger->info("Found vlan $vlan->{'vlan'}.");
-            $operational_status->{'vlans'}->{$vlan->{'vlan'}} = $vlan;
+    $interfaces_state = $self->device->get_interfaces();
+    $interfaces_state = $interfaces_state->{'interfaces'};
+
+    foreach my $name (keys %{$interfaces_state}) {
+        if (defined $ifaces->{$name}) {
+            $self->logger->info('Updating info on interface');
+            $self->db->update_interface(
+                id            => $ifaces->{$name}->{id},
+                admin_status  => $interfaces_state->{$name}->{admin_status},
+                description   => $interfaces_state->{$name}->{description},
+                mtu           => $interfaces_state->{$name}->{mtu},
+                speed         => $interfaces_state->{$name}->{speed},
+                status        => $interfaces_state->{$name}->{status}
+            );
+        } else {
+            $self->logger->info('Creating interface');
+            $self->db->add_interface(
+                admin_status  => $interfaces_state->{$name}->{admin_status},
+                description   => $interfaces_state->{$name}->{description},
+                hardware_type => $interfaces_state->{$name}->{hardware_type},
+                mac_addr      => $interfaces_state->{$name}->{mac_addr},
+                mtu           => $interfaces_state->{$name}->{mtu},
+                name          => $interfaces_state->{$name}->{name},
+                speed         => $interfaces_state->{$name}->{speed},
+                status        => $interfaces_state->{$name}->{status},
+                switch        => $self->name
+            );
         }
     }
 
-    $self->_set_op_state($operational_status);
+    my $vlans_state = $self->db->get_vlans_state();
+    my $vlans = {};
+    foreach my $vlan (@{$vlans_state}) {
+        $vlans->{$vlan->{vlan}} = $vlan;
+    }
+
+    $vlans_state = $self->device->get_vlans();
+    foreach my $vlan (@{$vlans_state}) {
+        if (defined $vlans->{$vlan->{vlan}}) {
+            $self->logger->info('Updating ports on vlan');
+            $self->db->set_vlan_endpoints(
+                vlan_id   => $vlans->{$vlan->{vlan}}->{vlan_id},
+                endpoints => $vlan->{ports}
+            );
+        } else {
+            $self->logger->info('Creating vlan');
+            $self->db->add_vlan(
+                description => $vlan->{name},
+                endpoints   => $vlan->{ports},
+                switch      => $self->name,
+                username    => 'admin',
+                vlan        => $vlan->{vlan},
+                workgroup   => 'admin'
+            );
+        }
+    }
 }
 
 
 =head2 start
 
 =cut
-
 sub start{
     my $self = shift;
 

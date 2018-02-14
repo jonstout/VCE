@@ -8,7 +8,7 @@ use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;
 
-`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
@@ -32,13 +32,9 @@ cmp_deeply($vlan->{results}->[0], {
         'vlan' => '102',
         'endpoints' => [
             {
-                'switch' => 'foobar',
-                'tag' => '102',
                 'port' => 'eth0/1'
             },
             {
-                'switch' => 'foobar',
-                'tag' => '102',
                 'port' => 'eth0/2'
             }
         ],
@@ -64,13 +60,9 @@ cmp_deeply($vlan, {
                 'vlan' => 101,
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '101',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '101',
                         'port' => 'eth0/2'
                     }
                     ],
@@ -115,13 +107,9 @@ cmp_deeply($vlan, {
                 'username' => 'aragusa',
                 'endpoints' => [
                     {
-                        'switch' => 'foobar',
-                        'tag' => '10',
                         'port' => 'eth0/1'
                     },
                     {
-                        'switch' => 'foobar',
-                        'tag' => '10',
                         'port' => 'eth0/2'
                     }
                     ]

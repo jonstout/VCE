@@ -9,7 +9,7 @@ use GRNOC::WebService::Client;
 use Data::Dumper;
 use Test::Deep;
 
-`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
@@ -26,8 +26,8 @@ cmp_deeply($switches->{'results'}->[0],  {
     'switch' => [
         {
             'vlans' => [
-                '979f9708-7102-4762-8a6a-8e30ed80b88c',
-                'b0c0103e-b2dc-47cd-a687-c73dd9100fd2'
+                'b0c0103e-b2dc-47cd-a687-c73dd9100fd2',
+                '979f9708-7102-4762-8a6a-8e30ed80b88c'
                 ],
                 'ports' => [
                     'eth0/2',

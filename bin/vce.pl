@@ -16,7 +16,7 @@ use Parallel::ForkManager;
 use Proc::Daemon;
 
 use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
-use constant DEFAULT_MODEL_FILE => '/var/run/vce/network_model.json';
+use constant DEFAULT_MODEL_FILE => '/var/run/vce/network_model.sqlite';
 use constant DEFAULT_PASSWORD_FILE => '/etc/vce/password.json';
 
 use Data::Dumper;
@@ -81,12 +81,12 @@ sub main {
 
     my $log = GRNOC::Log->get_logger("VCE");
     $log->info("access_policy.xml: $config_file");
-    $log->info("network_model.json: $model_file");
+    $log->info("network_model.sqlite: $model_file");
     $log->info("password.json: $password_file");
 
     $vce = VCE->new(
         config_file => $config_file,
-        model_file => $model_file,
+        network_model_file => $model_file,
         password_file => $password_file
     );
 

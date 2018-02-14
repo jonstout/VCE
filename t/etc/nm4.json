@@ -1,1 +1,0 @@
-{"vlans":{"0f5eb644-ade0-4876-9d77-06e01e4390b2":{"status":"Active","create_time":1484149219,"vlan":101,"description":"14-check_tag-availability circuit 1","endpoints":[{"port":"eth0/1"},{"port":"eth0/2"}],"username":"aragusa","vlan_id":"0f5eb644-ade0-4876-9d77-06e01e4390b2","workgroup":"ajco","switch":"foobar"}}}

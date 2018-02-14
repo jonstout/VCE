@@ -6,7 +6,7 @@ BEGIN {
         use_ok( 'VCE' );
         use_ok( 'VCE::Access' );
         use_ok( 'VCE::Services::Access' );
-        use_ok( 'VCE::NetworkModel');
+        use_ok( 'VCE::NetworkDB');
         use_ok( 'VCE::Services::Provisioning' );
         use_ok( 'VCE::Services::Switch' );
         use_ok( 'VCE::Device' );

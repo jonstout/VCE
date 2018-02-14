@@ -8,7 +8,7 @@ use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;
 
-`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',

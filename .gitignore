@@ -8,6 +8,10 @@ Makefile
 blib/
 pm_to_blib
 cover_db
+t/etc/nm1.sqlite
+t/etc/nm2.sqlite
+t/etc/nm3.sqlite
+t/etc/nm4.sqlite
 t/conf/apache_test_config.pm
 t/conf/extra.conf
 t/conf/httpd.conf

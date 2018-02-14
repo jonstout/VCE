@@ -18,7 +18,7 @@ if($ENV{'TESTING'}){
                                                                               port => '5672'} );
 }else{
     $provisioning_services = VCE::Services::Provisioning->new( config_file => '/etc/vce/access_policy.xml',
-                                                               network_model_file => '/var/run/vce/network_model.json',
+                                                               network_model_file => '/var/run/vce/network_model.sqlite',
                                                                rabbit_mq => { user => 'guest',
                                                                               pass => 'guest',
                                                                               host => 'localhost',
