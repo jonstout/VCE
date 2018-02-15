@@ -310,6 +310,7 @@ sub get_interfaces {
         $interfaces{$int->{'id'}} = $int_details->{'parsed'};
     }
 
+    $self->logger->debug(Dumper(\%interfaces));
     return {interfaces => \%interfaces, raw => $raw};
 }
 
@@ -687,6 +688,7 @@ sub _get_interface{
                 $int->{'name'} =~ s/10GigabitEthernet/ethernet /;
                 $int->{'name'} =~ s/GigabitEthernet/ethernet /;
                 $int->{'name'} =~ s/Ethernetmgmt/management /;
+                $int->{'name'} =~ s/Loopback/loopback /;
 
                 $line =~ /is (\S+), line protocol is (\S+)/;
                 $int->{'admin_status'} = $1;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 15;
 use Test::Deep;
 
 use VCE;
@@ -13,10 +13,10 @@ use GRNOC::Log;
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 #remove our temprorary nm file
-`rm ./t/etc/nm2.json`;
+`cp t/etc/nm2.sqlite.orig t/etc/nm2.sqlite`;
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',
-                    network_model_file => './t/etc/nm2.json'  );
+                    network_model_file => './t/etc/nm2.sqlite'  );
 
 ok(defined($vce), "VCE object created");
 
@@ -84,18 +84,3 @@ $vlan_id = $vce->network_model->add_vlan( description => '12-addvlan circuit 4 s
                                                          port => 'eth0/2'
                                                          }]);
 ok(defined($vlan_id), "Was able to create a second vlan with different VLAN IDs");
-
-my $str;
-open(my $fh, "<", "./t/etc/nm2.json");
-while(my $line = <$fh>){
-    $str .= $line;
-}
-my $json = decode_json($str);
-
-ok(defined($json), "JSON was defined");
-
-my @vlan_ids = (keys %{$json->{'vlans'}});
-
-ok($#vlan_ids == 1, "proper number of VLANs defined");
-
-

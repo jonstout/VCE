@@ -20,7 +20,7 @@ has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 
 has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
-has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.sqlite');
 
 =head2 BUILD
 
@@ -280,8 +280,6 @@ sub _register_webservice_methods{
 
 sub handle_request{
     my $self = shift;
-
-    $self->vce->refresh_state();
 
     $self->dispatcher->handle_request();
 }

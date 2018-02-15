@@ -6,7 +6,7 @@ etc/apache-vce.conf
 etc/apache_logging.conf
 etc/config.xsd
 etc/logging.conf
-etc/network_model.json
+etc/network_model.sqlite
 etc/password.json
 etc/vce.init
 etc/vce.systemd

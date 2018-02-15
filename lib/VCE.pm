@@ -41,13 +41,13 @@ use GRNOC::Config;
 use GRNOC::RabbitMQ::Client;
 
 use VCE::Access;
-use VCE::NetworkModel;
+use VCE::NetworkDB;
 
 use JSON::XS;
 use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
-has network_model_file => (is => 'rwp', default => "/var/run/vce/network_model.json");
+has network_model_file => (is => 'rwp', default => "/var/run/vce/network_model.sqlite");
 
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
@@ -112,7 +112,7 @@ sub BUILD{
 
     $self->_set_access( VCE::Access->new( config => $self->config ));
 
-    $self->_set_network_model( VCE::NetworkModel->new( file => $self->network_model_file ));
+    $self->_set_network_model( VCE::NetworkDB->new( path => $self->network_model_file ));
 
     $self->_set_device_client( GRNOC::RabbitMQ::Client->new( host => $self->rabbit_mq->{'host'},
                                                              port => $self->rabbit_mq->{'port'},
@@ -120,57 +120,7 @@ sub BUILD{
                                                              pass => $self->rabbit_mq->{'pass'},
                                                              exchange => 'VCE',
                                                              topic => 'VCE.Switch.RPC'));
-
-    $self->{'get_network_state_timer'} = AnyEvent->timer(
-        after => 30,
-        interval => 300,
-        cb => sub { $self->_get_network_state() }
-    );
-
     return $self;
-}
-
-sub _get_network_state {
-    my $self = shift;
-
-    $self->device_client->get_vlans( async_callback => sub {
-        my $response = shift;
-        if (defined $response->{'error'}) {
-            return $self->logger->error($response->{'error'});
-        }
-
-        foreach my $vlan_id (keys %{$response->{'results'}}) {
-            my $vlan = $self->network_model->get_vlan_details_by_number(number => $vlan_id);
-            if (!defined $vlan) {
-                my $switch_name = (keys(%{$self->config->{'switches'}}))[0];
-                my $workgroup = $self->access->get_admin_workgroup();
-                my $user = (keys %{$workgroup->{'user'}})[0];
-
-                my $id = $self->network_model->add_vlan(
-                    description => $response->{'results'}->{$vlan_id}->{'name'},
-                    workgroup => $workgroup->{'name'},
-                    vlan => $response->{'results'}->{$vlan_id}->{'vlan'},
-                    switch => $switch_name,
-                    endpoints => [],
-                    username => $user
-                );
-
-                $vlan = $self->network_model->get_vlan_details(vlan_id => $id);
-            }
-
-            my $endpoints = [];
-            foreach my $port (@{$response->{'results'}->{$vlan_id}->{'ports'}}) {
-                $port->{'port'} =~ s/^\s+|\s+$//g;
-                push(@{$endpoints}, { port => $port->{'port'} });
-            }
-
-            my $result = $self->network_model->set_vlan_endpoints(
-                vlan_id => $vlan->{'vlan_id'},
-                endpoints => $endpoints
-            );
-            $self->logger->debug('updated vlan: ' . Dumper($result));
-        }
-    });
 }
 
 sub _process_config{
@@ -251,7 +201,6 @@ sub _process_config{
 
         $switches{$switch->{'name'}} = $s;
     }
-    $self->logger->error(Dumper($switches));
 
     $cfg->{'switches'} = \%switches;
     $self->_set_config($cfg);
@@ -439,7 +388,18 @@ sub get_interfaces_operational_state {
         return;
     }
 
-    return $self->device_client->get_interfaces_op()->{'results'};
+    my $result = {};
+    eval {
+        my $interfaces = $self->network_model->get_interfaces(switch => $params{switch});
+        foreach my $intf (@{$interfaces}) {
+            $result->{$intf->{name}} = $intf;
+        }
+    };
+    if ($@) {
+        $self->logger->error("$@");
+    }
+
+    return $result;
 }
 
 =head2 get_switches_operational_state
@@ -459,22 +419,35 @@ sub get_switches_operational_state{
     foreach my $switch (@$switches){
         my %int_state;
         $switch->{'status'} = $self->_get_switch_status( switch => $switch );
+
+        my $interface_list = $self->network_model->get_interfaces(switch => $switch->{name});
+        my $interfaces = {};
+        foreach my $intf (@{$interface_list}) {
+            $interfaces->{$intf->{name}} = $intf;
+        }
+
         my $up_ports = 0;
         my @ports;
-        foreach my $port (@{$switch->{'ports'}}){
+        foreach my $port (@{$switch->{'ports'}}) {
             my $obj = {};
-            $obj->{'name'} = $port;
-            $obj->{'status'} = $self->_get_interface_status( switch => $switch,
-                                                             interface => $port );
-            $int_state{$port} = $obj->{'status'};
-            if($obj->{'status'} eq 'Up'){
-                $int_state{$port} = 1;
-                $up_ports++;
-            }else{
-                $int_state{$port} = 0;
+            $obj->{'name'}   = $port;
+            $obj->{'status'} = 'Up';
+
+            my $intf  = $interfaces->{$port};
+            my $state = 1;
+            if (!defined $intf || $intf->{status} == 0 || $intf->{admin_status} == 0) {
+                $state = 0;
+                $obj->{'status'} = 'Down';
             }
-            push(@ports,$obj);
+
+            $int_state{$port} = $state;
+            if ($state == 1) {
+                $up_ports++;
+            }
+
+            push(@ports, $obj);
         }
+
         $switch->{'up_ports'} = $up_ports;
         $switch->{'total_ports'} = scalar(@ports);
         $switch->{'ports'} = \@ports;
@@ -524,29 +497,9 @@ sub _get_switch_status{
     }
 }
 
-sub _get_interface_status{
-    my $self = shift;
-    my %params = @_;
-
-    my $state = $self->device_client->get_interface_status(interface => $params{'interface'});
-    if (defined $state->{'error'}) {
-        $self->logger->error($state->{'error'});
-        return "Unknown";
-    }
-
-    if ($state->{'results'} == 1) {
-        return 'Up';
-    } elsif ($state->{'results'} == 0) {
-        return 'Down';
-    } else {
-        return 'Unknown';
-    }
-}
-
 =head2 is_tag_available
 
 =cut
-
 sub is_tag_available{
     my $self = shift;
     my %params = @_;
@@ -689,19 +642,6 @@ sub get_workgroup_details{
     $obj->{'switches'} = $self->access->get_workgroup_switches( workgroup => $workgroup);
 
     return $obj;
-}
-
-=head2 refresh_state
-
-=cut
-
-sub refresh_state{
-    my $self = shift;
-    my %params = @_;
-    
-    $self->network_model->reload_state();
-
-
 }
 
 =head2 get_all_switches

@@ -100,7 +100,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
 
-%{__install} etc/network_model.json %{buildroot}%{_var}/run/vce/network_model.json
+%{__install} etc/network_model.sqlite %{buildroot}%{_var}/run/vce/network_model.sqlite
 
 # Final Step
 %{_fixperms} $RPM_BUILD_ROOT/*
@@ -140,4 +140,4 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
 
-%config(noreplace) %attr(664,vce,vce) %{_var}/run/vce/network_model.json
+%config(noreplace) %attr(664,vce,vce) %{_var}/run/vce/network_model.sqlite

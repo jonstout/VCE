@@ -14,7 +14,7 @@ use GRNOC::RabbitMQ::Method;
 use JSON::XS;
 use Data::Dumper;
 
-`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
 
 sub make_request{
     my $params = shift;
@@ -104,11 +104,15 @@ ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "We now see that we have a VLAN
 
 my $vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                               workgroup => 'ajco');
-
 ok(defined($vlan_details), "Got vlan details response");
 
 delete $vlan_details->{'results'}->[0]->{'circuit'}->{'create_time'};
 delete $vlan_details->{'results'}->[0]->{'circuit'}->{'vlan_id'};
+
+if (defined $vlan_details->{error}) {
+    warn Dumper($vlan_details);
+    return undef;
+}
 
 cmp_deeply($vlan_details,{
     'results' => [
@@ -152,15 +156,15 @@ ok(defined($edit_vlan), "got a response");
 ok($edit_vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
 ok(defined($edit_vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 
-$vlan_details = $client->get_vlan_details( vlan_id => $edit_vlan->{'results'}->[0]->{'vlan_id'},
+my $vlan_details2 = $client->get_vlan_details( vlan_id => $edit_vlan->{'results'}->[0]->{'vlan_id'},
                                            workgroup => 'ajco');
 
-ok(defined($vlan_details), "Got vlan details response");
+ok(defined($vlan_details2), "Got vlan details response");
 
-delete $vlan_details->{'results'}->[0]->{'circuit'}->{'create_time'};
-delete $vlan_details->{'results'}->[0]->{'circuit'}->{'vlan_id'};
+delete $vlan_details2->{'results'}->[0]->{'circuit'}->{'create_time'};
+delete $vlan_details2->{'results'}->[0]->{'circuit'}->{'vlan_id'};
 
-cmp_deeply($vlan_details,{
+cmp_deeply($vlan_details2,{
     'results' => [
         {
             'circuit' => {
@@ -225,15 +229,15 @@ if($response->is_success){
 ok(defined($edit_vlan2), "Got a response");
 ok($edit_vlan2->{'results'}->[0]->{'success'} == 1, "Correctly edited circuit. Didn't change anything.");
 
-$vlan_details = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
+my $vlan_details3 = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
                                            workgroup => 'ajco');
 
-ok(defined($vlan_details), "Got vlan details response");
+ok(defined($vlan_details3), "Got vlan details response");
 
-delete $vlan_details->{'results'}->[0]->{'circuit'}->{'create_time'};
-delete $vlan_details->{'results'}->[0]->{'circuit'}->{'vlan_id'};
+delete $vlan_details3->{'results'}->[0]->{'circuit'}->{'create_time'};
+delete $vlan_details3->{'results'}->[0]->{'circuit'}->{'vlan_id'};
 
-cmp_deeply($vlan_details,{
+cmp_deeply($vlan_details3,{
     'results' => [
         {
             'circuit' => {

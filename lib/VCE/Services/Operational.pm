@@ -20,7 +20,7 @@ has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 
 has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
-has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.json');
+has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.sqlite');
 
 has rabbit_mq => (is => 'rwp');
 
@@ -103,8 +103,6 @@ sub _register_webservice_methods{
 sub handle_request{
     my $self = shift;
 
-    $self->vce->refresh_state();
-
     $self->dispatcher->handle_request();
 }
 
@@ -142,39 +140,44 @@ sub get_interfaces_operational_status {
     my $self = shift;
     my $m_ref = shift;
     my $p_ref = shift;
-    
+
     my $user = $ENV{'REMOTE_USER'};
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
-    $self->logger->error("Calling get_interfaces_operational_status");
+    $self->logger->info("Calling get_interfaces_operational_status");
 
     #verify user in workgroup
-    if ($self->vce->access->user_in_workgroup( username => $user,
-                                               workgroup => $workgroup )) {
-
-        my $ports = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch, ports => undef);
-        my $port_info = $self->vce->get_interfaces_operational_state(workgroup => $workgroup, switch => $switch);
-        if (!defined $port_info) {
-            my $err = "Could not get interface state from device.";
-            $self->logger->error($err);
-            return {results => [], error => {msg => $err}};
-        }
-
-        my $result = [];
-        foreach my $port (@{$ports}) {
-            my $pdata = $port_info->{$port->{'port'}};
-            $pdata->{'tags'} = $self->vce->access->friendly_display_vlans($port->{'tags'});
-            push(@{$result}, $pdata);
-        }
-
-	return {results => [{ ports => $result}]};
-    } else {
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         my $err = "User $user not in specified workgroup $workgroup";
         $self->logger->error($err);
-
         return {results => [], error => {msg => $err}};
     }
+
+    my $ports = $self->vce->get_available_ports(
+        workgroup => $workgroup,
+        switch => $switch,
+        ports => undef
+    );
+
+    my $port_info = $self->vce->get_interfaces_operational_state(
+        workgroup => $workgroup,
+        switch => $switch
+    );
+    if (!defined $port_info) {
+        my $err = "Could not get interface state from device.";
+        $self->logger->error($err);
+        return {results => [], error => {msg => $err}};
+    }
+
+    my $result = [];
+    foreach my $port (@{$ports}) {
+        my $pdata = $port_info->{$port->{'port'}};
+        $pdata->{'tags'} = $self->vce->access->friendly_display_vlans($port->{'tags'});
+        push(@{$result}, $pdata);
+    }
+
+	return {results => [{ ports => $result}]};
 }
 
 1;

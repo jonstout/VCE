@@ -11,26 +11,13 @@ use JSON::XS;
 use GRNOC::Log;
 
 
-sub _read_config{
-
-    my $str;
-    open(my $fh, "<", "./t/etc/nm4.json");
-    while(my $line = <$fh>){
-        $str .= $line;
-    }
-    my $json = decode_json($str);
-
-    return $json;
-}
-
-
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 #remove our temprorary nm file
-`rm ./t/etc/nm4.json`;
+`cp t/etc/nm4.sqlite.orig t/etc/nm4.sqlite`;
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',
-                    network_model_file => './t/etc/nm4.json'  );
+                    network_model_file => './t/etc/nm4.sqlite'  );
 
 ok(defined($vce), "VCE object created");
 

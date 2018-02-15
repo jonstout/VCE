@@ -15,7 +15,7 @@ use JSON::XS;
 use Data::Dumper;
 
 
-`cp t/etc/nm1.json.orig t/etc/nm1.json`;
+`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
 
 sub make_request{
     my $params = shift;
@@ -80,9 +80,9 @@ ok(defined($vlans), "Got a response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Expected circuits found!");
 
 my $vlan;
-my $req = make_request({ method => 'add_vlan', 
-                         description => 'Automated test suite!', 
-                         switch => 'foobar', 
+my $req = make_request({ method => 'add_vlan',
+                         description => 'Automated test suite!',
+                         switch => 'foobar',
                          port =>['eth0/1','eth0/2'],
                          vlan => 104,
                          workgroup => 'ajco'});
