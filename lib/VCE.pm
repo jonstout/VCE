@@ -23,11 +23,11 @@
 
 =head1 VCE - VCE Virtual Customer Equipement
 
-Version 0.2.4
+Version 0.3.0
 
 =cut
 
-our $VERSION = '0.2.4';
+our $VERSION = '0.3.0';
 
 package VCE;
 
