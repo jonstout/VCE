@@ -14,7 +14,7 @@ lib/VCE.pm
 lib/VCE/Access.pm
 lib/VCE/Device.pm
 lib/VCE/Device/Brocade/MLXe/5_8_0.pm
-lib/VCE/NetworkModel.pm
+lib/VCE/NetworkDB.pm
 lib/VCE/Services/Access.pm
 lib/VCE/Services/Operational.pm
 lib/VCE/Services/Provisioning.pm

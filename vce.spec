@@ -1,6 +1,6 @@
 Summary: Virtual Customer Equipment
 Name: vce
-Version: 0.2.4
+Version: 0.3.0
 Release: 1%{?dist}
 License: Apache
 Group: GRNOC
@@ -55,7 +55,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE.pm %{buildroot}%{perl_vendorlib}/VCE.pm
 %{__install} lib/VCE/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Access.pm
 %{__install} lib/VCE/Device.pm %{buildroot}%{perl_vendorlib}/VCE/Device.pm
-%{__install} lib/VCE/NetworkModel.pm %{buildroot}%{perl_vendorlib}/VCE/NetworkModel.pm
+%{__install} lib/VCE/NetworkDB.pm %{buildroot}%{perl_vendorlib}/VCE/NetworkDB.pm
 %{__install} lib/VCE/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Switch.pm
 %{__install} lib/VCE/Services/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Access.pm
 %{__install} lib/VCE/Services/Operational.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Operational.pm
@@ -112,7 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE.pm
 %{perl_vendorlib}/VCE/Access.pm
 %{perl_vendorlib}/VCE/Device.pm
-%{perl_vendorlib}/VCE/NetworkModel.pm
+%{perl_vendorlib}/VCE/NetworkDB.pm
 %{perl_vendorlib}/VCE/Switch.pm
 %{perl_vendorlib}/VCE/Services/Access.pm
 %{perl_vendorlib}/VCE/Services/Operational.pm
