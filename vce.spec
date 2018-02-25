@@ -27,8 +27,11 @@ Requires: perl-Moo
 Requires: perl-Parallel-ForkManager
 Requires: perl-Test-Deep
 Requires: perl-Type-Tiny
+
 Requires: rabbitmq-server
 Requires: httpd
+Requires: sqlite
+Requires: perl-DBD-SQLite
 
 %description
 Installs VCE and its prerequisites.
