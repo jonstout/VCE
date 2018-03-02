@@ -437,11 +437,10 @@ sub get_vlans{
     my $query = undef;
     eval {
         $query = $self->db->prepare(
-            'SELECT network.number, network.uuid FROM network
-             JOIN vlan on network.id=vlan.network_id ' .
+            'SELECT network.number, network.uuid FROM network ' .
              $where .
-             'GROUP BY network.id
-              ORDER BY network.number ASC'
+            'GROUP BY network.id
+             ORDER BY network.number ASC'
         );
         $query->execute(@{$args});
     };
@@ -498,7 +497,7 @@ sub get_vlans_state {
     eval {
         $query = $self->db->prepare(
             'SELECT * FROM network
-             JOIN vlan on network.id=vlan.network_id ' .
+             LEFT JOIN vlan on network.id=vlan.network_id ' .
              $where .
             'ORDER BY network.number ASC'
         );
@@ -531,6 +530,9 @@ sub get_vlans_state {
             };
         }
 
+        if (!defined $endpoint->{interface}) {
+            next;
+        }
         my $info = {
             port => $endpoint->{interface}
         };
@@ -566,7 +568,7 @@ sub get_vlan_details{
     eval {
         $query = $self->db->prepare(
             'SELECT * FROM network
-             JOIN vlan on network.id=vlan.network_id
+             LEFT JOIN vlan on network.id=vlan.network_id
              WHERE network.uuid=?
              ORDER BY network.number ASC'
         );
@@ -596,6 +598,9 @@ sub get_vlan_details{
 
     };
     foreach my $endpoint (@{$endpoints}) {
+        if (!defined $endpoint->{interface}) {
+            next;
+        }
         my $info = {
             port => $endpoint->{interface}
         };
