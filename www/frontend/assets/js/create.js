@@ -24,8 +24,13 @@ function loadVlanDropdown() {
             
             // Loads valid VLANS
             var parts = ports[0].tags[0].split("-");
-            var low = parts[0];
-            var high = parts[1];
+            var low   = parts[0];
+            var high  = parts[0];
+
+            if (parts.length > 1) {
+                high = parts[1];
+            }
+
             for (var i = low; i <= high; i++) {
                 var opt = document.createElement('option');
                 opt.innerHTML = i;
