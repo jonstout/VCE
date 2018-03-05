@@ -93,7 +93,7 @@ button#workgroup_select.btn.btn-default.btn-xs.dropdown-toggle.col-xs-12.cold-md
 }
 
 button.btn.btn-success {
-  margin:10px;
+  /*margin:10px;*/
 }
 
 .form-group.endpoint {

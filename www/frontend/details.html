@@ -19,10 +19,9 @@
         <div class="header-dark">
             <nav class="navbar navbar-default navigation-clean-search">
                 <div class="container">
-                    <div class="navbar-header"><a class="navbar-brand" href="#">Virtual Customer Equipment </a>
-                        <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
-                    </div>
-                    <div class="collapse navbar-collapse" id="navcol-1">
+                    <div class="navbar-header"><a class="navbar-brand" href="#">Virtual Customer Equipment </a><button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button></div>
+                    <div
+                        class="collapse navbar-collapse" id="navcol-1">
                         <ul class="nav navbar-nav">
                             <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" href="#">Switches <span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu" id="switch_menu">
@@ -33,15 +32,13 @@
                             </li>
                         </ul>
                         <form class="navbar-form navbar-left" target="_self">
-                            <div class="form-group">
-                                <label class="control-label" for="search-field"></label>
-                            </div>
+                            <div class="form-group"><label class="control-label" for="search-field"></label></div>
                         </form>
                         <p class="navbar-text navbar-right"><a class="navbar-link login" href="#">Log In</a> </p>
-                    </div>
                 </div>
-            </nav>
         </div>
+        </nav>
+    </div>
     </div>
     <div style="background-color:#f0f0f0;">
         <ol class="breadcrumb container">
@@ -53,9 +50,9 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <div class="alert alert-danger" role="alert" id="error" style="display:none;"><span id="error_text"> </span>
-                    <button class="btn btn-danger" type="button" id="error_exit" style="background-color:rgb(231, 76, 60);padding:0px 5px;float:right;"><i class="glyphicon glyphicon-remove"></i></button>
-                </div>
+                <div class="alert alert-success" role="alert" id="success" style="display:none;"><span id="success_text"> </span><button class="btn btn-success" type="button" id="success_exit" style="background-color:#18bc9c;padding:0px 5px;float:right;"><i class="glyphicon glyphicon-remove"></i></button></div>
+                <div class="alert alert-danger"
+                    role="alert" id="error" style="display:none;"><span id="error_text"> </span><button class="btn btn-danger" type="button" id="error_exit" style="background-color:rgb(231, 76, 60);padding:0px 5px;float:right;"><i class="glyphicon glyphicon-remove"></i></button></div>
                 <div>
                     <ul class="nav nav-tabs">
                         <li class="active"><a href="#switch" role="tab" data-toggle="tab">Switch</a></li>
@@ -105,14 +102,7 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <form class="form-horizontal">
-                                            <div class="form-group">
-                                                <label class="control-label">Commands </label>
-                                                <select class="form-control" id="switch_select">
-                                                    <option value="" selected=""></option>
-                                                    <optgroup label="Show Commands" id="switch_show_commands"></optgroup>
-                                                    <optgroup label="Config Actions" id="switch_action_commands"></optgroup>
-                                                </select>
-                                            </div>
+                                            <div class="form-group"><label class="control-label">Commands </label><select class="form-control" id="switch_select"><option value="" selected=""></option><optgroup label="Show Commands" id="switch_show_commands"></optgroup><optgroup label="Config Actions" id="switch_action_commands"></optgroup></select></div>
                                         </form>
                                     </div>
                                 </div>
@@ -150,18 +140,7 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <form class="form-horizontal">
-                                            <div class="form-group">
-                                                <label class="control-label">Commands </label>
-                                                <select class="form-control" id="vlan_select">
-                                                    <option value=""></option>
-                                                    <optgroup label="Show Commands" id="vlan_show_commands"></optgroup>
-                                                    <optgroup label="Config Actions" id="vlan_action_commandss">
-                                                        <option value="add_vlan">Create</option>
-                                                        <option value="edit_vlan">Edit</option>
-                                                        <option value="delete_vlan">Delete</option>
-                                                    </optgroup>
-                                                </select>
-                                            </div>
+                                            <div class="form-group"><label class="control-label">Commands </label><select class="form-control" id="vlan_select"><option value=""></option><optgroup label="Show Commands" id="vlan_show_commands"></optgroup><optgroup label="Config Actions" id="vlan_action_commandss"><option value="add_vlan">Create</option><option value="edit_vlan">Edit</option><option value="delete_vlan">Delete</option></optgroup></select></div>
                                         </form>
                                     </div>
                                 </div>
@@ -199,14 +178,7 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <form class="form-horizontal">
-                                            <div class="form-group">
-                                                <label class="control-label">Commands </label>
-                                                <select class="form-control" id="port_select">
-                                                    <option value="" selected=""></option>
-                                                    <optgroup label="Show Commands" id="port_show_commands"></optgroup>
-                                                    <optgroup label="Config Actions" id="port_action_commands"></optgroup>
-                                                </select>
-                                            </div>
+                                            <div class="form-group"><label class="control-label">Commands </label><select class="form-control" id="port_select"><option value="" selected=""></option><optgroup label="Show Commands" id="port_show_commands"></optgroup><optgroup label="Config Actions" id="port_action_commands"></optgroup></select></div>
                                         </form>
                                     </div>
                                 </div>
