@@ -137,7 +137,7 @@ function navigateOnSelect(e) {
                     return displayError(data.error.msg);
                 }
 
-                window.location.href = 'details.html';
+                window.location.href = 'details.html?tab=vlan';
             });
         });
     }
