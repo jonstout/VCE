@@ -221,6 +221,12 @@ sub _register_rpc_methods{
         pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $method->add_input_parameter(
+        name        => "cli_type",
+        description => "Type of command to be run. Must be 'action' or 'show'.",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
+    $method->add_input_parameter(
         name        => "config",
         description => "Does this command need to be done in commadn mode",
         required    => 1,
@@ -773,6 +779,17 @@ sub execute_command{
 
     if($in_configure){
         $self->device->exit_configure();
+    }
+
+    # TODO _gather_operational_status takes a while to complete which
+    # holds up the response. Based on the provided information it
+    # should be possible to limit what is queried from the switch to
+    # increase response time. It would also be best to wrap this
+    # request in an async method so the web user gets his response
+    # immediately while the backend completes its query against the
+    # device.
+    if (defined $p_ref->{'cli_type'}{'value'} && $p_ref->{'cli_type'}{'value'} eq 'action') {
+        $self->_gather_operational_status();
     }
 
     if (defined $prompt) {

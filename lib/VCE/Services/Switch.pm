@@ -88,8 +88,8 @@ sub _register_commands{
         my $commands = $switch->{'commands'};
         foreach my $type (keys (%{$commands})){
             foreach my $command (@{$commands->{$type}}){
-                
-                $command->{'type'} = $type;
+                $command->{'cli_type'} = $command->{'type'};
+                $command->{'type'}     = $type;
 
                 my $method = GRNOC::WebService::Method->new( name => $command->{'method_name'},
                                                              description => $command->{'description'},
@@ -192,7 +192,6 @@ sub _execute_command{
     my $p_ref = shift;
 
     $p_ref->{'command'} = $command;
-
     $self->logger->debug("In _execute_command");
 
     # Verify we have the permissions to execute this
@@ -245,11 +244,13 @@ sub _execute_command{
         $self->logger->debug("Running $cmd_string in context $context_string: " . Dumper($command));
         $res = $self->rabbit_client->execute_command( context => $context_string,
                                                       command => $cmd_string,
-                                                      config => $command->{'configure'} );
+                                                      config => $command->{'configure'},
+                                                      cli_type => $command->{'cli_type'} );
     } else {
         $self->logger->debug("Running $cmd_string with no context: " . Dumper($command));
         $res = $self->rabbit_client->execute_command( command => $cmd_string,
-                                                      config => $command->{'configure'} );
+                                                      config => $command->{'configure'},
+                                                      cli_type => $command->{'cli_type'} );
     }
 
     if ($res->{'results'}->{'error'}) {
