@@ -67,8 +67,6 @@ sub BUILD{
 
     $self->_set_template(Template->new());
 
-    $self->_register_webservice_methods($dispatcher);
-
     $self->_register_commands($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
@@ -135,44 +133,6 @@ sub _register_commands{
             }
         }
     }
-}
-
-
-sub _register_webservice_methods{
-    my $self = shift;
-    my $d = shift;
-
-    my $method = GRNOC::WebService::Method->new(
-	name => "get_interfaces",
-	description => "returns a list of interfaces and the interfaces details",
-	callback => sub{ return $self->get_interfaces(@_) });
-
-    $method->add_input_parameter( name => "interface_name",
-				  pattern => $GRNOC::WebService::Regex::NAME_ID,
-				  required => 0,
-				  multiple => 1,
-				  description => "Interface name to query");
-
-    $d->register_method($method);
-}
-
-=head2 get_interfaces
-
-=cut
-
-sub get_interfaces{
-    my $self = shift;
-    my $m_ref = shift;
-    my $p_ref = shift;
-    
-    my $interfaces = $self->rabbit_client->get_interfaces( interface_name => $p_ref->{'interface_name'}{'value'} )->{'results'};
-
-    my @ints;
-    foreach my $int (keys(%{$interfaces->{'interfaces'}})){
-        push(@ints,$interfaces->{'interfaces'}{$int});
-    }
-
-    return {results => [{interfaces => \@ints, raw => $interfaces->{'raw'}}]};
 }
 
 =head2 handle_request
