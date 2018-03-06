@@ -134,7 +134,9 @@ function navigateOnSelect(e) {
         fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
             response.json().then(function(data) {
                 if (typeof data.error !== 'undefined') {
-                    return displayError(data.error.msg);
+                    setDisplayMessage('error', data.error.msg);
+                } else {
+                    setDisplayMessage('success', `VLAN was successfully removed from ${name}.`);
                 }
 
                 window.location.href = 'details.html?tab=vlan';
