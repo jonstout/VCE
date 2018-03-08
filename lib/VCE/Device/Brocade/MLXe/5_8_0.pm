@@ -102,6 +102,28 @@ sub connect{
     return $err;
 }
 
+=head2 disconnect
+
+    disconnect();
+
+disconnect closes any connections to the device.
+
+=cut
+sub disconnect{
+    my $self = shift;
+    my %params = @_;
+
+    $self->_set_connected(0);
+
+    $self->comm->close();
+    $self->_set_comm(undef);
+
+    $self->conn->disconnect();
+    $self->_set_conn(undef);
+
+    return 1;
+}
+
 =head2 get_interfaces_state
 
     my ($interfaces, $err) = get_interfaces_state();
@@ -146,6 +168,16 @@ sub get_interfaces_state {
     }
 
     my $res = $self->conn->recv();
+    if (!defined $res) {
+        $self->logger->error("Device connection failed! Attempting to reconnect...");
+        $self->device->disconnect();
+
+        my $err = $self->device->connect();
+        if (defined $err) {
+            $self->logger->error($err);
+        }
+        return undef, "Connection failure occurred while processing response.";
+    }
     if (!defined $res->{'nc:ok'} && keys %{$res->{'nc:rpc-error'}}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
         return undef, $err;
