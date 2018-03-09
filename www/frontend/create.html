@@ -19,10 +19,9 @@
         <div class="header-dark">
             <nav class="navbar navbar-default navigation-clean-search">
                 <div class="container">
-                    <div class="navbar-header"><a class="navbar-brand" href="#">Virtual Customer Equipment </a>
-                        <button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
-                    </div>
-                    <div class="collapse navbar-collapse" id="navcol-1">
+                    <div class="navbar-header"><a class="navbar-brand" href="#">Virtual Customer Equipment </a><button class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navcol-1"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button></div>
+                    <div
+                        class="collapse navbar-collapse" id="navcol-1">
                         <ul class="nav navbar-nav">
                             <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false" href="#">Switches <span class="caret"></span></a>
                                 <ul class="dropdown-menu" role="menu" id="switch_menu">
@@ -33,15 +32,13 @@
                             </li>
                         </ul>
                         <form class="navbar-form navbar-left" target="_self">
-                            <div class="form-group">
-                                <label class="control-label" for="search-field"></label>
-                            </div>
+                            <div class="form-group"><label class="control-label" for="search-field"></label></div>
                         </form>
                         <p class="navbar-text navbar-right"><a class="navbar-link login" href="#">Log In</a> </p>
-                    </div>
                 </div>
-            </nav>
         </div>
+        </nav>
+    </div>
     </div>
     <div style="background-color:#f0f0f0;">
         <ol class="breadcrumb container">
@@ -53,35 +50,16 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <div class="alert alert-danger" role="alert" id="error" style="display:none;"><span id="error_text"> </span>
-                    <button class="btn btn-danger" type="button" id="error_exit" style="background-color:rgb(231, 76, 60);padding:0px 5px;float:right;"><i class="glyphicon glyphicon-remove"></i></button>
-                </div>
+                <div class="alert alert-danger" role="alert" id="error" style="display:none;"><span id="error_text"> </span><button class="btn btn-danger" type="button" id="error_exit" style="background-color:rgb(231, 76, 60);padding:0px 5px;float:right;"><i class="glyphicon glyphicon-remove"></i></button></div>
                 <form>
-                    <div class="form-group">
-                        <label class="control-label">Description </label>
-                        <input class="form-control" type="text" placeholder="Simple VLAN" id="description" style="min-width:360px;width:90%;">
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label">VLAN </label>
-                        <select class="form-control" id="vlan" style="min-width:360px;width:90%;">
-                            <optgroup label="This is a group" id="vlan_optgroup">
-                                <option value="12" selected="">200</option>
-                                <option value="13">210</option>
-                                <option value="14">220</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div id="endpoint-container">
-                        <label>Endpoints </label>
-                    </div>
-                    <div class="col-md-12" style="padding:0px;">
-                        <button class="btn btn-info" type="button" id="create_endpoint_button" style="min-width:360px;width:90%;"><i class="glyphicon glyphicon-plus"></i> Add Endpoint</button>
-                    </div>
-                    <button class="btn btn-success" type="button" id="create_button">Create </button>
-                    <button class="btn btn-danger" type="button" id="cancel_button">Cancel </button>
-                </form>
-            </div>
+                    <div class="form-group"><label class="control-label">Description </label><input class="form-control" type="text" placeholder="Simple VLAN" id="description" style="min-width:360px;width:90%;"></div>
+                    <div class="form-group"><label class="control-label">VLAN </label><select class="form-control" id="vlan" style="min-width:360px;width:90%;"><optgroup label="This is a group" id="vlan_optgroup"><option value="12" selected="">200</option><option value="13">210</option><option value="14">220</option></optgroup></select></div>
+                    <div
+                        id="endpoint-container"><label>Endpoints </label></div>
+            <div class="col-md-12" style="padding:0px;"><button class="btn btn-info" type="button" id="create_endpoint_button" style="min-width:360px;width:90%;"><i class="glyphicon glyphicon-plus"></i> Add Endpoint</button></div><button class="btn btn-success" type="button" id="create_button"
+                style="margin:5px 5px 5px 0px;">Create </button><button class="btn btn-danger" type="button" id="cancel_button">Cancel </button></form>
         </div>
+    </div>
     </div>
     <div></div>
     <div class="footer-dark">

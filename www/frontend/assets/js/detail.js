@@ -105,47 +105,54 @@ function loadPorts() {
                 var cookie = Cookies.getJSON('vce');
                 cookie.port = $(this)[0].id;
                 Cookies.set('vce', cookie);
+
+                document.getElementById('port_select').disabled = false;
+                document.getElementById('port_select').selectedIndex = 0;
+                document.getElementById('port_form_container').setAttribute('style', 'display: none;');
             });
         });
     });
 }
 
-function navigateOnSelect(e) {
-    var command = e.target.selectedOptions[0].value;
-    
+function configureVLANButtons(e) {
     var cookie    = Cookies.getJSON('vce');
     var name      = cookie.switch;
     var vlanId    = cookie.selectedVlanId;
     var workgroup = cookie.workgroup;
     
-    if (command === 'add_vlan') {
+    document.getElementById('add_vlan').onclick = function(e) {
         window.location.href = 'create.html';
     }
     
-    if (command === 'edit_vlan') {
+    document.getElementById('edit_vlan').onclick = function(e) {
         window.location.href = 'edit.html';
     }
     
-    if (command === 'delete_vlan') {
+    document.getElementById('delete_vlan').onclick = function(e) {
         var url = baseUrl + 'provisioning.cgi?method=delete_vlan';
         url += '&workgroup=' + workgroup;
         url += '&vlan_id=' + vlanId;
 
+        if (!confirm(`This action will delete VLAN ${vlanId}.\n\n Do you wish to continue?`)) {
+            return 1;
+        }
+
         fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
             response.json().then(function(data) {
                 if (typeof data.error !== 'undefined') {
-                    return displayError(data.error.msg);
+                    setDisplayMessage('error', data.error.msg);
+                } else {
+                    setDisplayMessage('success', `VLAN was successfully removed from ${name}.`);
                 }
 
-                window.location.href = 'details.html';
+                window.location.href = 'details.html?tab=vlan';
             });
         });
     }
 }
 
 function loadVlans() {
-    var create = document.getElementById('vlan_select');
-    create.addEventListener("change", navigateOnSelect, false);
+    configureVLANButtons(null);
     
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
@@ -194,6 +201,13 @@ function loadVlans() {
                 var cookie = Cookies.getJSON('vce');
                 cookie.selectedVlanId = $(this)[0].id;
                 Cookies.set('vce', cookie);
+
+                document.getElementById('edit_vlan').setAttribute('style', 'display: block; margin: 2px;');
+                document.getElementById('delete_vlan').setAttribute('style', 'display: block; margin: 2px;');
+
+                document.getElementById('vlan_select').disabled = false;
+                document.getElementById('vlan_select').selectedIndex = 0;
+                document.getElementById('vlan_form_container').setAttribute('style', 'display: none;');
             });
         });
     });
@@ -206,6 +220,8 @@ function loadPortCommands() {
         var form = $('#' + e.target.value);
         form.css("display", "block");
         form.siblings().css("display", "none");
+
+        document.getElementById('port_form_container').setAttribute('style', 'display: block;');
     });
     
     var url = baseUrl + 'access.cgi?method=get_port_commands';
@@ -300,6 +316,8 @@ function loadVlanCommands() {
         var form = $('#' + e.target.value);
         form.css("display", "block");
         form.siblings().css("display", "none");
+
+        document.getElementById('vlan_form_container').setAttribute('style', 'display: block;');
     });
     
     var url = baseUrl + 'access.cgi?method=get_vlan_commands';

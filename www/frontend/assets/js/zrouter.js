@@ -14,6 +14,34 @@ function loadCookie() {
     */
 }
 
+function setDisplayMessage(type, text) {
+    cookie = Cookies.getJSON('vce');
+    cookie['message'] = {
+        type: type,
+        text: text
+    };
+    Cookies.set('vce', cookie);
+}
+
+function showDisplayMessage() {
+    cookie = Cookies.getJSON('vce');
+    if (!cookie.hasOwnProperty('message') || cookie.message === null) {
+        return 1;
+    }
+
+    if (cookie.message.type === 'error') {
+        displayError(cookie.message.text);
+    } else if (cookie.message.type === 'success') {
+        displaySuccess(cookie.message.text);
+    } else {
+        console.log(cookie.message);
+    }
+
+    cookie.message = null;
+    Cookies.set('vce', cookie);
+    return 1;
+}
+
 function loadErrorCloseButton() {
     var errorCloseButton = document.getElementById("error_exit");
     var errorContainer = document.getElementById("error");
@@ -31,6 +59,27 @@ function displayError(error) {
     errorContainer.setAttribute('style', 'display: block;');
 }
 
+function loadSuccessCloseButton() {
+    var successCloseButton = document.getElementById("success_exit");
+    var successContainer = document.getElementById("success");
+
+    successCloseButton.onclick = function(e) {
+        successContainer.setAttribute('style', 'display: none;');
+    };
+}
+
+function displaySuccess(success) {
+    var successContainer = document.getElementById("success");
+    var successText = document.getElementById("success_text");
+
+    successText.innerText = success;
+    successContainer.setAttribute('style', 'display: block;');
+
+    setTimeout(function(e) {
+        successContainer.setAttribute('style', 'display: none;');
+    }, 7000);
+}
+
 // The var $allow_credentials in Method.pm must be set to 'true'
 // for cors.
 window.onload = function() {
@@ -42,6 +91,7 @@ window.onload = function() {
 
     var url = window.location;
     if (url.pathname.indexOf('details.html') > -1) {
+        loadSuccessCloseButton();
         selectTab();
 
         loadPorts();
@@ -72,4 +122,6 @@ window.onload = function() {
         
         setInterval(loadSwitches, 15000);
     }
+
+    showDisplayMessage();
 }
