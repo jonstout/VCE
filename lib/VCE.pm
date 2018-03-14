@@ -220,7 +220,6 @@ sub _process_command_config{
 
     foreach my $type ("system","port","vlan"){
         my %commands = %{$config->{$type}->[0]->{'command'}};
-
         foreach my $cmd (keys(%commands)){
             my $val = {
                 name => $cmd,
@@ -231,7 +230,8 @@ sub _process_command_config{
                 configure => $commands{$cmd}{'configure'},
                 params => $commands{$cmd}{'parameter'},
                 description => $commands{$cmd}{'description'},
-                context => $commands{$cmd}{'context'}
+                context => $commands{$cmd}{'context'},
+                user_type => $commands{$cmd}{'user_type'} || 'admin'
             };
             if(!defined($val->{'configure'})){
                 delete $val->{'configure'};
