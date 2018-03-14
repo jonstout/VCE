@@ -138,7 +138,7 @@ reconnect closes all connections to this device and then reopens them.
 sub reconnect {
     my $self = shift;
 
-    $self->logger->info("Attempting to reconnect to $self->hostname.");
+    $self->logger->info("Attempting to reconnect to " . $self->hostname);
     $self->disconnect();
 
     my $err = $self->connect();
