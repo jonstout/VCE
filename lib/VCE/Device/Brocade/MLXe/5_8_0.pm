@@ -113,14 +113,18 @@ sub disconnect{
     my $self = shift;
     my %params = @_;
 
-    $self->_set_connected(0);
+    eval {
+        $self->_set_connected(0);
 
-    $self->comm->close();
-    $self->_set_comm(undef);
+        $self->comm->close();
+        $self->_set_comm(undef);
 
-    $self->conn->disconnect();
-    $self->_set_conn(undef);
-
+        $self->conn->device->ssh->disconnect();
+        $self->_set_conn(undef);
+    };
+    if ($@) {
+        $self->logger->fatal("$@");
+    }
     return 1;
 }
 
@@ -163,16 +167,16 @@ sub get_interfaces_state {
     my $ok = $self->conn->send($req);
     if (!defined $ok) {
         $err = "Could not get interfaces' state.";
-        $self->conn->disconnect();
+        $self->disconnect();
         return undef, $err;
     }
 
     my $res = $self->conn->recv();
     if (!defined $res) {
         $self->logger->error("Device connection failed! Attempting to reconnect...");
-        $self->device->disconnect();
+        $self->disconnect();
 
-        my $err = $self->device->connect();
+        my $err = $self->connect();
         if (defined $err) {
             $self->logger->error($err);
         }
