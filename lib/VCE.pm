@@ -271,8 +271,15 @@ sub get_workgroups{
 
 =head2 get_available_ports
 
-=cut
+    my $ports = get_available_ports(
+      workgroup => 'admin',
+      switch    => '127.0.0.1'
+    );
 
+get_available_ports returns a list of all ports C<workgroup> has
+access to based on the configuration.
+
+=cut
 sub get_available_ports{
     my $self = shift;
     my %params = @_;

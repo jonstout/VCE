@@ -106,10 +106,61 @@ function loadPorts() {
                 cookie.port = $(this)[0].id;
                 Cookies.set('vce', cookie);
 
+                // Reset the command selection box
                 document.getElementById('port_select').disabled = false;
                 document.getElementById('port_select').selectedIndex = 0;
                 document.getElementById('port_form_container').setAttribute('style', 'display: none;');
+
+                // Load commands available for this port
+                getPortCommands();
             });
+        });
+    });
+}
+
+function getPortCommands() {
+    var cookie = Cookies.getJSON('vce');
+
+    var url = baseUrl + 'access.cgi?method=get_port_commands';
+    url += '&workgroup=' + cookie.workgroup;
+    url += '&switch=' + cookie.switch;
+    url += '&port=' + cookie.port;
+
+    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+        response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
+            var cmds = data.results;
+
+            // Remove commands from dropdown for command population
+            document.getElementById("port_show_commands").innerHTML = '';
+            document.getElementById("port_action_commands").innerHTML = '';
+
+            for (var i = 0; i < cmds.length; i++) {
+                var commandForm = NewCommandForm(cmds[i], function(raw) {
+                    var well = document.getElementById("port_response_well");
+                    well.innerHTML = "";
+
+                    var pre = document.createElement("pre");
+                    pre.innerHTML = raw;
+                    well.appendChild(pre);
+                });
+
+                var formContainer = document.getElementById("port_form_container");
+                formContainer.appendChild(commandForm);
+
+                var opt = document.createElement('option');
+                opt.innerHTML = cmds[i].name;
+                opt.setAttribute('value', cmds[i].method_name);
+
+                if (cmds[i].type == "show") {
+                    document.getElementById("port_show_commands").appendChild(opt);
+                } else {
+                    document.getElementById("port_action_commands").appendChild(opt);
+                }
+            }
         });
     });
 }
