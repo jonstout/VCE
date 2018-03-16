@@ -113,15 +113,38 @@ sub disconnect{
     my $self = shift;
     my %params = @_;
 
-    $self->_set_connected(0);
+    eval {
+        $self->_set_connected(0);
 
-    $self->comm->close();
-    $self->_set_comm(undef);
+        $self->comm->close();
+        $self->_set_comm(undef);
 
-    $self->conn->disconnect();
-    $self->_set_conn(undef);
-
+        $self->conn->device->ssh->disconnect();
+        $self->_set_conn(undef);
+    };
+    if ($@) {
+        $self->logger->fatal("$@");
+    }
     return 1;
+}
+
+=head2 reconnect
+
+    reconnect();
+
+reconnect closes all connections to this device and then reopens them.
+
+=cut
+sub reconnect {
+    my $self = shift;
+
+    $self->logger->info("Attempting to reconnect to " . $self->hostname);
+    $self->disconnect();
+
+    my $err = $self->connect();
+    if (defined $err) {
+        $self->logger->error($err);
+    }
 }
 
 =head2 get_interfaces_state
@@ -163,20 +186,16 @@ sub get_interfaces_state {
     my $ok = $self->conn->send($req);
     if (!defined $ok) {
         $err = "Could not get interfaces' state.";
-        $self->conn->disconnect();
+        $self->disconnect();
         return undef, $err;
     }
 
     my $res = $self->conn->recv();
     if (!defined $res) {
-        $self->logger->error("Device connection failed! Attempting to reconnect...");
-        $self->device->disconnect();
-
-        my $err = $self->device->connect();
-        if (defined $err) {
-            $self->logger->error($err);
-        }
-        return undef, "Connection failure occurred while processing response.";
+        my $err = "Could not get interfaces' state. Device connection failed on recv!";
+        $self->logger->error($err);
+        $self->reconnect();
+        return undef, $err;
     }
     if (!defined $res->{'nc:ok'} && keys %{$res->{'nc:rpc-error'}}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
@@ -273,6 +292,12 @@ sub get_vlans {
     }
 
     my $res = $self->conn->recv();
+    if (!defined $res) {
+        my $err = "Could not get vlans. Device connection failed on recv!";
+        $self->logger->error($err);
+        $self->reconnect();
+        return undef, $err;
+    }
     if (!defined $res->{'nc:ok'} && keys %{$res->{'nc:rpc-error'}}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
         return undef, $err;
@@ -494,6 +519,13 @@ sub vlan_description {
     }
 
     my $res = $self->conn->recv();
+    if (!defined $res) {
+        my $err = "Could not set VLAN description. Device connection failed on recv!";
+        $self->logger->error($err);
+        $self->reconnect();
+        return undef, $err;
+    }
+
     if (!defined $res->{'nc:ok'}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
     }
@@ -539,6 +571,12 @@ sub no_vlan {
     }
 
     my $res = $self->conn->recv();
+    if (!defined $res) {
+        my $err = "Could not remove VLAN. Device connection failed on recv!";
+        $self->logger->error($err);
+        $self->reconnect();
+        return undef, $err;
+    }
     if (!defined $res->{'nc:ok'}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
     }
@@ -595,6 +633,12 @@ sub interface_tagged {
     }
 
     my $res = $self->conn->recv();
+    if (!defined $res) {
+        my $err = "Could not tag interfaces. Device connection failed on recv!";
+        $self->logger->error($err);
+        $self->reconnect();
+        return undef, $err;
+    }
     if (!defined $res->{'nc:ok'}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
     }
@@ -651,6 +695,12 @@ sub no_interface_tagged {
     }
 
     my $res = $self->conn->recv();
+    if (!defined $res) {
+        my $err = "Could remove tag from interfaces. Device connection failed on recv!";
+        $self->logger->error($err);
+        $self->reconnect();
+        return undef, $err;
+    }
     if (!defined $res->{'nc:ok'}) {
         $err = $res->{'nc:rpc-error'}->{'nc:error-message'};
     }
