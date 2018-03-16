@@ -319,56 +319,6 @@ function getVlanCommands() {
     });
 }
 
-
-function loadPortCommands() {
-    var cookie = Cookies.getJSON('vce');
-    
-    $('#port_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
-
-        document.getElementById('port_form_container').setAttribute('style', 'display: block;');
-    });
-    
-    var url = baseUrl + 'access.cgi?method=get_port_commands';
-    url += '&workgroup=' + cookie.workgroup;
-    url += '&switch=' + cookie.switch;
-    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
-        response.json().then(function(data) {
-            if (typeof data.error !== 'undefined') {
-                return displayError(data.error.msg);
-            }
-
-            var cmds = data.results;
-            
-            for (var i = 0; i < cmds.length; i++) {
-                var commandForm = NewCommandForm(cmds[i], function(raw) {
-                    var well = document.getElementById("port_response_well");
-                    well.innerHTML = "";
-
-                    var pre = document.createElement("pre");
-                    pre.innerHTML = raw;
-                    well.appendChild(pre);
-                });
-                
-                var formContainer = document.getElementById("port_form_container");
-                formContainer.appendChild(commandForm);
-                
-                var opt = document.createElement('option');
-                opt.innerHTML = cmds[i].name;
-                opt.setAttribute('value', cmds[i].method_name);
-                
-                if (cmds[i].type == "show") {
-                    document.getElementById("port_show_commands").appendChild(opt);
-                } else {
-                    document.getElementById("port_action_commands").appendChild(opt);
-                }
-            }
-        });
-    });
-}
-
 function loadSwitchCommands() {
     var cookie = Cookies.getJSON('vce');
     

@@ -250,7 +250,7 @@ sub _register_webservice_methods{
                                   description => "Switch to get the commands that can be run");
     $method->add_input_parameter( name => "port",
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                  required => 0,
+                                  required => 1,
                                   multiple => 0,
                                   description => "Port to get the commands that can be run");
 
@@ -453,77 +453,7 @@ sub get_port_commands{
         }
     }
 
-    if(scalar($available_ports) >= 0){
-        my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
-        my $is_owner = $self->vce->access->workgroup_owns_port(workgroup => $workgroup, switch => $switch, port => $port);
-
-        my $switch_commands = $self->vce->access->get_port_commands( switch => $switch, port => $available_ports->[0] );
-        my @results;
-        foreach my $cmd (@$switch_commands){
-            my $authorized = 0;
-            if ($cmd->{user_type} eq 'user') {
-                $authorized = 1;
-            }
-
-            if ($cmd->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
-                $authorized = 1;
-            }
-
-            if ($cmd->{user_type} eq 'admin' && $is_admin) {
-                $authorized = 1;
-            }
-
-            if (!$authorized) {
-                next;
-            }
-
-            my $obj = {};
-            $obj->{'method_name'} = $cmd->{'method_name'};
-            $obj->{'name'} = $cmd->{'name'};
-            $obj->{'type'} = $cmd->{'type'};
-            $obj->{'user_type'} = $cmd->{'user_type'};
-            $obj->{'parameters'} = ();
-
-            push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                            name => 'workgroup',
-                                            description => "workgroup to run the command as",
-                                            required => 1 });
-                
-            push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                            name => 'switch',
-                                            description => "switch to run the command on",
-                                            required => 1 });
-                
-            push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                            name => 'port',
-                                            description => "port to run the command on",
-                                            required => 1 });
-                
-            foreach my $param (keys (%{$cmd->{'params'}})){
-                warn Dumper($cmd->{'params'}{$param});
-                my $p = {};
-                    
-                if($cmd->{'params'}{$param}{'type'} eq 'select'){
-                    @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-                }else{
-                        
-                }
-                $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-                $p->{'name'} = $param;
-                $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-                $p->{'required'} = 1;
-
-
-                push(@{$obj->{'parameters'}}, $p);
-            }
-
-            push(@results, $obj);
-        }
-
-        return {results => \@results};
-    }else{
-        
-    }
+    return {results => [], error => {msg => "Unabled to find port $port on switch $switch for workgroup $workgroup."}};
 }
 
 =head2 get_vlan_commands
