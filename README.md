@@ -52,6 +52,16 @@ In order to execute some commands, the user must enter into a specific device co
 </command>
 ```
 
+Attribute | Description
+:-------- | :----------
+name | Command name as shown to the user
+context | Network device CLI context that will be entered prior to running the command.
+type | What group the command shall be listed under. Possible values are `show` and `action`.
+user_type | Workgroup permissions required to execute. Possible values are `admin`, `owner`, and `user`.
+
+<command method_name='show_interface' name='show interface' type='show' interaction='cli' description='show all interfaces'>
+
+
 #### Network device credentials
 Setup network device credentials under `<switch>`. **Important:** Each device must expose a port for SSH and allow for netconf connections on port `830`.
 
