@@ -267,13 +267,16 @@ sub _register_webservice_methods{
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
-
     $method->add_input_parameter( name => "switch",
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "port to get the commands that can be run");
-
+    $method->add_input_parameter( name => "vlan_id",
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "vlan to get the commands that can be run");
 
     $d->register_method($method);
 }
@@ -536,6 +539,7 @@ sub get_vlan_commands{
     my $switch = $p_ref->{'switch'}{'value'};
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $user = $ENV{'REMOTE_USER'};
+    my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
     my $in_workgroup = $self->vce->access->user_in_workgroup(
         username => $user,
@@ -545,14 +549,41 @@ sub get_vlan_commands{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
+    my $vlan_details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan_id);
+    if (!defined $vlan_details) {
+        return {results => [], error => {msg => "VLAN $vlan_id could not be found."}};
+    }
+
+    my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
+    my $is_owner = $vlan_details->{'workgroup'} eq $workgroup;
+
 	my $switch_commands = $self->vce->access->get_vlan_commands( switch => $switch );
     my @results;
     foreach my $cmd (@$switch_commands){
+        my $authorized = 0;
+        if ($cmd->{user_type} eq 'user') {
+            $authorized = 1;
+        }
+
+        if ($cmd->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+            $authorized = 1;
+        }
+
+        if ($cmd->{user_type} eq 'admin' && $is_admin) {
+            $authorized = 1;
+        }
+
+        if (!$authorized) {
+            next;
+        }
+
         my $obj = {};
         $obj->{'method_name'} = $cmd->{'method_name'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
+        $obj->{'user_type'} = $cmd->{'user_type'};
+
         push(@{$obj->{'parameters'}}, { type => 'hidden',
                                         name => 'workgroup',
                                         description => "workgroup to run the command as",
