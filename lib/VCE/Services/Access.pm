@@ -463,8 +463,6 @@ sub get_port_commands{
                 push(@{$results}, $command);
             }
 
-            $self->logger->error(Dumper($results));
-
             return { results => $results };
         }
     }
