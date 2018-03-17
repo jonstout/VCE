@@ -243,13 +243,17 @@ sub _register_webservice_methods{
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
-    
     $method->add_input_parameter( name => "switch",
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Switch to get the commands that can be run");
-    
+    $method->add_input_parameter( name => "port",
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "Port to get the commands that can be run");
+
 
     $d->register_method($method);
 
@@ -263,13 +267,16 @@ sub _register_webservice_methods{
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
-
     $method->add_input_parameter( name => "switch",
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "port to get the commands that can be run");
-
+    $method->add_input_parameter( name => "vlan_id",
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
+                                  required => 1,
+                                  multiple => 0,
+                                  description => "vlan to get the commands that can be run");
 
     $d->register_method($method);
 }
@@ -288,7 +295,6 @@ sub handle_request{
 =head2 get_switch_commands
 
 =cut
-
 sub get_switch_commands{
     my $self = shift;
     my $method_ref = shift;
@@ -299,126 +305,169 @@ sub get_switch_commands{
     my $user = $ENV{'REMOTE_USER'};
 
     my $switch = $p_ref->{'switch'}{'value'};
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup)){
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
 
-	if(scalar($self->vce->get_available_ports( workgroup => $workgroup, switch => $switch)) >= 1){
-            my $switch_commands = $self->vce->access->get_switch_commands( switch => $switch );
-            my @results;
-            foreach my $cmd (@$switch_commands){
-                my $obj = {};
-                $obj->{'method_name'} = $cmd->{'method_name'};
-                $obj->{'name'} = $cmd->{'name'};
-                $obj->{'parameters'} = ();
-                $obj->{'type'} = $cmd->{'type'};
-                push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                                name => 'workgroup',
-                                                description => "workgroup to run the command as",
-                                                required => 1 });
+    my $ports = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch);
+	if(!defined $ports || @{$ports} == 0) {
+	    return {results => [], error => {msg => "Workgroup $workgroup not authorized for switch $switch."}};
+    }
 
-                push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                                name => 'switch',
-                                                description => "switch to run the command on",
-                                                required => 1 });
+    my $switch_commands = $self->vce->access->get_switch_commands( switch => $switch );
+    my @results;
+    foreach my $cmd (@$switch_commands){
+        my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
+        my $is_owner = 0;
 
-                foreach my $param (keys (%{$cmd->{'params'}})){
-                    
-                    my $p = {};
-                    
-                    if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-                    }else{
-                        
-                    }
-                    $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-                    $p->{'name'} = $param;
-                    $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-                    $p->{'required'} = 1;
-                    push(@{$obj->{'parameters'}}, $p);
-                }
+        my $authorized = 0;
+        if ($cmd->{user_type} eq 'user') {
+            $authorized = 1;
+        }
 
-                push(@results, $obj);
+        if ($cmd->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+            $authorized = 1;
+        }
+
+        if ($cmd->{user_type} eq 'admin' && $is_admin) {
+            $authorized = 1;
+        }
+
+        if (!$authorized) {
+            next;
+        }
+
+        my $obj = {};
+        $obj->{'method_name'} = $cmd->{'method_name'};
+        $obj->{'name'} = $cmd->{'name'};
+        $obj->{'parameters'} = ();
+        $obj->{'type'} = $cmd->{'type'};
+        push(@{$obj->{'parameters'}}, { type => 'hidden',
+                                        name => 'workgroup',
+                                        description => "workgroup to run the command as",
+                                        required => 1 });
+
+        push(@{$obj->{'parameters'}}, { type => 'hidden',
+                                        name => 'switch',
+                                        description => "switch to run the command on",
+                                        required => 1 });
+
+        foreach my $param (keys (%{$cmd->{'params'}})){
+            my $p = {};
+
+            if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
+                @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
             }
 
-	    return {results => \@results};
-	}else{
-	    return {results => [], error => {msg => "Workgroup not authorized for switch $switch"}};
-	}
-    }else{
-	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+            $p->{'type'} = $cmd->{'params'}{$param}{'type'};
+            $p->{'name'} = $param;
+            $p->{'description'} = $cmd->{'params'}{$param}{'description'};
+            $p->{'required'} = 1;
+            push(@{$obj->{'parameters'}}, $p);
+        }
+
+        push(@results, $obj);
     }
+
+    return {results => \@results};
 }
 
 =head2 get_port_commands
 
 =cut
-
 sub get_port_commands{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
-    
+
+    my $port      = $p_ref->{'port'}{'value'};
+    my $switch    = $p_ref->{'switch'}{'value'};
+    my $user      = $ENV{'REMOTE_USER'};
     my $workgroup = $p_ref->{'workgroup'}{'value'};
-    
-    my $user = $ENV{'REMOTE_USER'};
-    
-    my $switch = $p_ref->{'switch'}{'value'};
-    
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup)){
-        
-        my $ports = $self->vce->get_available_ports( workgroup => $workgroup, switch => $switch);
-        if(scalar($ports) >= 0){
-            my $switch_commands = $self->vce->access->get_port_commands( switch => $switch, port => $ports->[0] );
-            my @results;
-            foreach my $cmd (@$switch_commands){
-                my $obj = {};
-                $obj->{'method_name'} = $cmd->{'method_name'};
-                $obj->{'name'} = $cmd->{'name'};
-                $obj->{'type'} = $cmd->{'type'};
-                $obj->{'parameters'} = ();
-                
-                push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                                name => 'workgroup',
-                                                description => "workgroup to run the command as",
-                                                required => 1 });
-                
-                push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                                name => 'switch',
-                                                description => "switch to run the command on",
-                                                required => 1 });
-                
-                push(@{$obj->{'parameters'}}, { type => 'hidden',
-                                                name => 'port',
-                                                description => "port to run the command on",
-                                                required => 1 });
-                
-                foreach my $param (keys (%{$cmd->{'params'}})){
-                    warn Dumper($cmd->{'params'}{$param});
-                    my $p = {};
-                    
-                    if($cmd->{'params'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-                    }else{
-                        
-                    }
-                    $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-                    $p->{'name'} = $param;
-                    $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-                    $p->{'required'} = 1;
-                    push(@{$obj->{'parameters'}}, $p);
-                }
-                
-                push(@results, $obj);
-            }
-            
-            return {results => \@results};
-        }else{
-            return {results => [], error => {msg => "Workgroup not authorized for switch $switch"}};
-        }
-    }else{
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    my $available_ports = $self->vce->get_available_ports(workgroup => $workgroup, switch => $switch);
+    if (!defined $available_ports || @{$available_ports} == 0) {
+        return {results => [], error => {msg => "Workgroup $workgroup not authorized for switch $switch."}};
+    }
+
+    foreach my $available_port (@{$available_ports}) {
+        if ($available_port->{port} eq $port) {
+            my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
+            my $is_owner = $self->vce->access->workgroup_owns_port(workgroup => $workgroup, switch => $switch, port => $port);
+
+            my $commands = $self->vce->access->get_port_commands(switch => $switch, port => $port);
+            my $authorized_commands = [];
+
+            foreach my $command (@{$commands}) {
+                if ($command->{user_type} eq 'user') {
+                    push(@{$authorized_commands}, $command);
+                }
+
+                if ($command->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+                    push(@{$authorized_commands}, $command);
+                }
+
+                if ($command->{user_type} eq 'admin' && $is_admin) {
+                    push(@{$authorized_commands}, $command);
+                }
+            }
+
+            $self->logger->info("Workgroup: $workgroup - Admin: $is_admin Owner: $is_owner User: 1");
+            my $results = [];
+            foreach my $command (@{$authorized_commands}) {
+                my $params = [
+                    {
+                        type => 'hidden',
+                        name => 'workgroup',
+                        description => "workgroup to run the command as",
+                        required => 1
+                    },
+                    {
+                        type => 'hidden',
+                        name => 'switch',
+                        description => "switch to run the command on",
+                        required => 1
+                    },
+                    {
+                        type => 'hidden',
+                        name => 'port',
+                        description => "port to run the command on",
+                        required => 1
+                    }
+                ];
+
+                foreach my $param (keys %{$command->{'params'}}) {
+                    my $p = {};
+
+                    if($command->{'params'}{$param}{'type'} eq 'select'){
+                        @{$p->{'options'}} = split(',',$command->{'params'}{$param}{'options'});
+                    }
+
+                    $p->{'type'} = $command->{'params'}{$param}{'type'};
+                    $p->{'name'} = $param;
+                    $p->{'description'} = $command->{'params'}{$param}{'description'};
+                    $p->{'required'} = 1;
+                    push(@{$params}, $p);
+                }
+
+                $command->{parameters} = $params;
+                delete $command->{params};
+                delete $command->{interaction};
+                delete $command->{description};
+                delete $command->{actual_command};
+
+                push(@{$results}, $command);
+            }
+
+            return { results => $results };
+        }
+    }
+
+    return {results => [], error => {msg => "Unabled to find port $port on switch $switch for workgroup $workgroup."}};
 }
 
 =head2 get_vlan_commands
@@ -434,6 +483,7 @@ sub get_vlan_commands{
     my $switch = $p_ref->{'switch'}{'value'};
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $user = $ENV{'REMOTE_USER'};
+    my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
     my $in_workgroup = $self->vce->access->user_in_workgroup(
         username => $user,
@@ -443,14 +493,41 @@ sub get_vlan_commands{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
+    my $vlan_details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan_id);
+    if (!defined $vlan_details) {
+        return {results => [], error => {msg => "VLAN $vlan_id could not be found."}};
+    }
+
+    my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
+    my $is_owner = $vlan_details->{'workgroup'} eq $workgroup;
+
 	my $switch_commands = $self->vce->access->get_vlan_commands( switch => $switch );
     my @results;
     foreach my $cmd (@$switch_commands){
+        my $authorized = 0;
+        if ($cmd->{user_type} eq 'user') {
+            $authorized = 1;
+        }
+
+        if ($cmd->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+            $authorized = 1;
+        }
+
+        if ($cmd->{user_type} eq 'admin' && $is_admin) {
+            $authorized = 1;
+        }
+
+        if (!$authorized) {
+            next;
+        }
+
         my $obj = {};
         $obj->{'method_name'} = $cmd->{'method_name'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
+        $obj->{'user_type'} = $cmd->{'user_type'};
+
         push(@{$obj->{'parameters'}}, { type => 'hidden',
                                         name => 'workgroup',
                                         description => "workgroup to run the command as",

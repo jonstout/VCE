@@ -2,6 +2,7 @@
 vce-*.tar.gz
 Makefile.old
 t/TEST
+MANIFEST.bak
 MYMETA.json
 MYMETA.yml
 Makefile

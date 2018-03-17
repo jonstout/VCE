@@ -506,8 +506,7 @@ sub get_vlan_commands{
         return;
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'vlan'};    
-
+    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'vlan'};
 }
 
 =head2 get_switch_ports

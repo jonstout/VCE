@@ -60,6 +60,14 @@ function loadPorts() {
     var cookie = Cookies.getJSON('vce');
     var name = cookie.switch;
     
+    $('#port_select').change(function(e) {
+        var form = $('#' + e.target.value);
+        form.css("display", "block");
+        form.siblings().css("display", "none");
+
+        document.getElementById('port_form_container').setAttribute('style', 'display: block;');
+    });
+
     var url = baseUrl + 'operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
@@ -98,7 +106,7 @@ function loadPorts() {
                     status.innerHTML = 'Disabled';
                 }
             }
-            
+
             $('#port_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
                 
@@ -106,10 +114,62 @@ function loadPorts() {
                 cookie.port = $(this)[0].id;
                 Cookies.set('vce', cookie);
 
+                // Reset the command selection box
                 document.getElementById('port_select').disabled = false;
                 document.getElementById('port_select').selectedIndex = 0;
                 document.getElementById('port_form_container').setAttribute('style', 'display: none;');
+
+                // Load commands available for this port
+                getPortCommands();
             });
+        });
+    });
+}
+
+function getPortCommands() {
+    var cookie = Cookies.getJSON('vce');
+
+    var url = baseUrl + 'access.cgi?method=get_port_commands';
+    url += '&workgroup=' + cookie.workgroup;
+    url += '&switch=' + cookie.switch;
+    url += '&port=' + cookie.port;
+
+    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+        response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
+            var cmds = data.results;
+
+            // Remove commands from dropdown for command population
+            document.getElementById("port_show_commands").innerHTML = '';
+            document.getElementById("port_action_commands").innerHTML = '';
+
+            var formContainer = document.getElementById("port_form_container");
+            formContainer.innerHTML = '';
+
+            for (var i = 0; i < cmds.length; i++) {
+                var commandForm = NewCommandForm(cmds[i], function(raw) {
+                    var well = document.getElementById("port_response_well");
+                    well.innerHTML = "";
+
+                    var pre = document.createElement("pre");
+                    pre.innerHTML = raw;
+                    well.appendChild(pre);
+                });
+                formContainer.appendChild(commandForm);
+
+                var opt = document.createElement('option');
+                opt.innerHTML = cmds[i].name;
+                opt.setAttribute('value', cmds[i].method_name);
+
+                if (cmds[i].type == "show") {
+                    document.getElementById("port_show_commands").appendChild(opt);
+                } else {
+                    document.getElementById("port_action_commands").appendChild(opt);
+                }
+            }
         });
     });
 }
@@ -208,25 +268,28 @@ function loadVlans() {
                 document.getElementById('vlan_select').disabled = false;
                 document.getElementById('vlan_select').selectedIndex = 0;
                 document.getElementById('vlan_form_container').setAttribute('style', 'display: none;');
+
+                getVlanCommands();
             });
         });
     });
 }
 
-function loadPortCommands() {
+function getVlanCommands() {
     var cookie = Cookies.getJSON('vce');
     
-    $('#port_select').change(function(e) {
+    $('#vlan_select').change(function(e) {
         var form = $('#' + e.target.value);
         form.css("display", "block");
         form.siblings().css("display", "none");
 
-        document.getElementById('port_form_container').setAttribute('style', 'display: block;');
+        document.getElementById('vlan_form_container').setAttribute('style', 'display: block;');
     });
     
-    var url = baseUrl + 'access.cgi?method=get_port_commands';
+    var url = baseUrl + 'access.cgi?method=get_vlan_commands';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + cookie.switch;
+    url += '&vlan_id=' + cookie.selectedVlanId;
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             if (typeof data.error !== 'undefined') {
@@ -235,17 +298,21 @@ function loadPortCommands() {
 
             var cmds = data.results;
             
+            // Remove commands from dropdown for command population
+            document.getElementById("vlan_show_commands").innerHTML = '';
+
+            var formContainer = document.getElementById("vlan_form_container");
+            formContainer.innerHTML = '';
+
             for (var i = 0; i < cmds.length; i++) {
                 var commandForm = NewCommandForm(cmds[i], function(raw) {
-                    var well = document.getElementById("port_response_well");
+                    var well = document.getElementById("vlan_response_well");
                     well.innerHTML = "";
 
                     var pre = document.createElement("pre");
                     pre.innerHTML = raw;
                     well.appendChild(pre);
                 });
-                
-                var formContainer = document.getElementById("port_form_container");
                 formContainer.appendChild(commandForm);
                 
                 var opt = document.createElement('option');
@@ -253,9 +320,9 @@ function loadPortCommands() {
                 opt.setAttribute('value', cmds[i].method_name);
                 
                 if (cmds[i].type == "show") {
-                    document.getElementById("port_show_commands").appendChild(opt);
+                    document.getElementById("vlan_show_commands").appendChild(opt);
                 } else {
-                    document.getElementById("port_action_commands").appendChild(opt);
+                    console.log('Could not add command: ' + String(opt));
                 }
             }
         });
@@ -303,55 +370,6 @@ function loadSwitchCommands() {
                     document.getElementById("switch_show_commands").appendChild(opt);
                 } else {
                     document.getElementById("switch_action_commands").appendChild(opt);
-                }
-            }
-        });
-    });
-}
-
-function loadVlanCommands() {
-    var cookie = Cookies.getJSON('vce');
-    
-    $('#vlan_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
-
-        document.getElementById('vlan_form_container').setAttribute('style', 'display: block;');
-    });
-    
-    var url = baseUrl + 'access.cgi?method=get_vlan_commands';
-    url += '&workgroup=' + cookie.workgroup;
-    url += '&switch=' + cookie.switch;
-    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
-        response.json().then(function(data) {
-            if (typeof data.error !== 'undefined') {
-                return displayError(data.error.msg);
-            }
-
-            var cmds = data.results;
-            
-            for (var i = 0; i < cmds.length; i++) {
-                var commandForm = NewCommandForm(cmds[i], function(raw) {
-                    var well = document.getElementById("vlan_response_well");
-                    well.innerHTML = "";
-
-                    var pre = document.createElement("pre");
-                    pre.innerHTML = raw;
-                    well.appendChild(pre);
-                });
-                
-                var formContainer = document.getElementById("vlan_form_container");
-                formContainer.appendChild(commandForm);
-                
-                var opt = document.createElement('option');
-                opt.innerHTML = cmds[i].name;
-                opt.setAttribute('value', cmds[i].method_name);
-                
-                if (cmds[i].type == "show") {
-                    document.getElementById("vlan_show_commands").appendChild(opt);
-                } else {
-                    document.getElementById("vlan_action_commands").appendChild(opt);
                 }
             }
         });
