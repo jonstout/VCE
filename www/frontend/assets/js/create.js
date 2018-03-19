@@ -18,10 +18,10 @@ function loadVlanDropdown() {
             }
 
             var ports = data.results[0].ports;
-            
+
             var dropd = document.getElementById("vlan_optgroup");
             dropd.innerHTML = '';
-            
+
             // Loads valid VLANS
             var parts = ports[0].tags[0].split("-");
             var low   = parts[0];
@@ -31,13 +31,41 @@ function loadVlanDropdown() {
                 high = parts[1];
             }
 
+            var vlanIds = [];
             for (var i = low; i <= high; i++) {
-                var opt = document.createElement('option');
-                opt.innerHTML = i;
-                opt.setAttribute('value', i);
-                dropd.appendChild(opt);
+                vlanIds.push(i);
             }
-            
+
+            var url = baseUrl + 'access.cgi?method=get_vlans';
+            url += '&workgroup=' + cookie.workgroup;
+            url += '&switch=' + name;
+            fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+                response.json().then(function(data) {
+                    if (typeof data.error !== 'undefined') {
+                        console.log(data);
+                        return displayError(data.error.msg);
+                    }
+
+                    var _vlans = data.results[0]['vlans'];
+                    var provisionedVlans = {};
+                    for (var i = 0; i < _vlans.length; i++) {
+                        provisionedVlans[_vlans[i]['vlan']] = true;
+                    }
+
+                    for (var i = 0; i < vlanIds.length; i++) {
+                        if (vlanIds[i] in provisionedVlans) {
+                            continue;
+                        }
+
+                        var opt = document.createElement('option');
+                        opt.innerHTML = vlanIds[i];
+                        opt.setAttribute('value', vlanIds[i]);
+                        dropd.appendChild(opt);
+                    }
+                });
+            });
+
+
             // Loads valid endpoints
             for (var i = 0; i < ports.length; i++) {
                 endpointOptions.push(ports[i].name);
