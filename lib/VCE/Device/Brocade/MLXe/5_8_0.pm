@@ -327,6 +327,8 @@ sub get_vlans {
         }
 
         foreach my $port (@{$vlan->{'brcd:port'}}) {
+            # Remove whitespace surrounding port-id
+            $port->{'brcd:port-id'} =~ s/^\s+|\s+$//g;
             push(@{$ports}, { port => $port->{'brcd:port-id'}, mode => $port->{'brcd:tag-mode'} });
         }
 
