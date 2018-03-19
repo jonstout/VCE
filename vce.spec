@@ -1,6 +1,6 @@
 Summary: Virtual Customer Equipment
 Name: vce
-Version: 0.3.1
+Version: 0.3.2
 Release: 1%{?dist}
 License: Apache
 Group: GRNOC
@@ -142,4 +142,5 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
 
+%dir               %attr(775,vce,vce) %{_sharedstatedir}/vce
 %config(noreplace) %attr(664,vce,vce) %{_sharedstatedir}/vce/network_model.sqlite
