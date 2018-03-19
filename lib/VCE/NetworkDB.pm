@@ -14,7 +14,7 @@ use DBI;
 
 has db     => (is => 'rwp');
 has logger => (is => 'rwp');
-has path   => (is => 'rwp', default => '/var/run/vce/network_model.sqlite' );
+has path   => (is => 'rwp', default => '/var/lib/vce/network_model.sqlite' );
 has uuid   => (is => 'rwp');
 
 =head2 BUILD

@@ -20,7 +20,7 @@ has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 
 has config_file => (is => 'rwp', default => '/etc/vce/access_policy.xml');
-has network_model_file => (is => 'rwp', default => '/var/run/vce/network_model.sqlite');
+has network_model_file => (is => 'rwp', default => '/var/lib/vce/network_model.sqlite');
 
 =head2 BUILD
 
