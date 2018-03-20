@@ -282,6 +282,17 @@ sub workgroup_has_access_to_port{
 
 =head2 get_tags_on_port
 
+    my $tags = get_tags_on_port(
+      workgroup => $string,
+      switch    => $string,
+      port      => $string
+    );
+
+get_tags_on_ports returns an array of the VLAN tags that C<workgroup>
+may create on C<switch>'s C<port>. If C<workgroup> is the admin
+workgroup or C<port>'s owner, the resulting array will include all
+VLAN tags.
+
 =cut
 sub get_tags_on_port{
     my $self = shift;
@@ -312,7 +323,22 @@ sub get_tags_on_port{
     }
     my $port = $switch->{'ports'}->{$params{'port'}};
 
-    my $available_tags;
+
+    my $is_owner = $self->workgroup_owns_port(
+        workgroup => $params{workgroup},
+        switch => $params{switch},
+        port => $params{port}
+    );
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
+
+    my $available_tags = [];
+
+    if ($is_admin || $is_owner) {
+        for (my $i = 2; $i < 4095; $i++) {
+            push(@{$available_tags}, $i);
+        }
+        return $available_tags;
+    }
 
     foreach my $vlan (keys %{$port->{'tags'}}) {
         if ($port->{'tags'}->{$vlan} eq $params{'workgroup'}) {
