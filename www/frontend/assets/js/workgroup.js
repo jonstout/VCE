@@ -33,7 +33,7 @@ function loadWorkgroups() {
             if (workgroupName === null) {
                 workgroupName = workgroups[0];
             }
-            selectedWorkgroup.innerHTML = workgroups[0] + ' ▾';
+            selectedWorkgroup.innerHTML = workgroupName + ' ▾';
             
             var workgroupList = document.getElementById('workgroup_select_list');
             workgroupList.innerHTML = '';

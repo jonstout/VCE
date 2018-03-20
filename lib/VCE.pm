@@ -23,11 +23,11 @@
 
 =head1 VCE - VCE Virtual Customer Equipement
 
-Version 0.3.1
+Version 0.3.2
 
 =cut
 
-our $VERSION = '0.3.1';
+our $VERSION = '0.3.2';
 
 package VCE;
 
@@ -47,7 +47,7 @@ use JSON::XS;
 use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
-has network_model_file => (is => 'rwp', default => "/var/run/vce/network_model.sqlite");
+has network_model_file => (is => 'rwp', default => "/var/lib/vce/network_model.sqlite");
 
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
@@ -220,7 +220,6 @@ sub _process_command_config{
 
     foreach my $type ("system","port","vlan"){
         my %commands = %{$config->{$type}->[0]->{'command'}};
-
         foreach my $cmd (keys(%commands)){
             my $val = {
                 name => $cmd,
@@ -231,7 +230,8 @@ sub _process_command_config{
                 configure => $commands{$cmd}{'configure'},
                 params => $commands{$cmd}{'parameter'},
                 description => $commands{$cmd}{'description'},
-                context => $commands{$cmd}{'context'}
+                context => $commands{$cmd}{'context'},
+                user_type => $commands{$cmd}{'user_type'} || 'admin'
             };
             if(!defined($val->{'configure'})){
                 delete $val->{'configure'};
@@ -271,8 +271,15 @@ sub get_workgroups{
 
 =head2 get_available_ports
 
-=cut
+    my $ports = get_available_ports(
+      workgroup => 'admin',
+      switch    => '127.0.0.1'
+    );
 
+get_available_ports returns a list of all ports C<workgroup> has
+access to based on the configuration.
+
+=cut
 sub get_available_ports{
     my $self = shift;
     my %params = @_;
@@ -291,16 +298,24 @@ sub get_available_ports{
 
     my $switch = $self->config->{'switches'}->{$params{'switch'}};
     foreach my $port (keys %{$switch->{'ports'}}){
-        if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                        switch => $params{'switch'},
-                                                        port => $port)){
+        my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
+        my $has_access = $self->access->workgroup_has_access_to_port(
+            workgroup => $params{'workgroup'},
+            switch => $params{'switch'},
+            port => $port
+        );
 
-            my $tags = $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
-                                                       switch => $params{'switch'},
-                                                       port => $port);
-
-            push(@ports, {port => $port, tags => $tags});
+        if (!$is_admin && !$has_access) {
+            next;
         }
+
+        my $tags = $self->access->get_tags_on_port(
+            workgroup => $params{'workgroup'},
+            switch => $params{'switch'},
+            port => $port
+        );
+
+        push(@ports, {port => $port, tags => $tags});
     }
 
     return \@ports;

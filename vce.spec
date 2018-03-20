@@ -1,6 +1,6 @@
 Summary: Virtual Customer Equipment
 Name: vce
-Version: 0.3.1
+Version: 0.3.2
 Release: 1%{?dist}
 License: Apache
 Group: GRNOC
@@ -83,7 +83,6 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
 
-
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
 %{__install} -d -p %{buildroot}/usr/lib/systemd/scripts
@@ -94,7 +93,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 # Configuration Files
 %{__install} -d -p %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce
-%{__install} -d -p %{buildroot}%{_var}/run/vce
+%{__install} -d -p %{buildroot}%{_sharedstatedir}/vce
 
 %{__install} etc/apache-vce.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/vce.conf
 %{__install} etc/access_policy.xml %{buildroot}%{_sysconfdir}/vce/access_policy.xml
@@ -103,7 +102,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
 
-%{__install} etc/network_model.sqlite %{buildroot}%{_var}/run/vce/network_model.sqlite
+%{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
 
 # Final Step
 %{_fixperms} $RPM_BUILD_ROOT/*
@@ -143,4 +142,5 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
 
-%config(noreplace) %attr(664,vce,vce) %{_var}/run/vce/network_model.sqlite
+%dir               %attr(775,vce,vce) %{_sharedstatedir}/vce
+%config(noreplace) %attr(664,vce,vce) %{_sharedstatedir}/vce/network_model.sqlite

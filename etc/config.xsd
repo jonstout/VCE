@@ -48,6 +48,7 @@
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="type" type="xs:string" use="required"/>
     <xs:attribute name="interaction" type="xs:string" use="required"/>
+    <xs:attribute name="user_type" type="xs:string" use="optional" default="admin"/>
     <xs:attribute name="description" type="xs:string" use="optional"/>
     <xs:attribute name="configure" type="xs:string" use="optional"/>
     <xs:attribute name="context" type="xs:string" use="optional"/>
