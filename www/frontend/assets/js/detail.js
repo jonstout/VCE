@@ -175,11 +175,6 @@ function getPortCommands() {
 }
 
 function configureVLANButtons(e) {
-    var cookie    = Cookies.getJSON('vce');
-    var name      = cookie.switch;
-    var vlanId    = cookie.selectedVlanId;
-    var workgroup = cookie.workgroup;
-    
     document.getElementById('add_vlan').onclick = function(e) {
         window.location.href = 'create.html';
     }
@@ -189,6 +184,11 @@ function configureVLANButtons(e) {
     }
     
     document.getElementById('delete_vlan').onclick = function(e) {
+        var cookie    = Cookies.getJSON('vce');
+        var name      = cookie.switch;
+        var vlanId    = cookie.selectedVlanId;
+        var workgroup = cookie.workgroup;
+
         var url = baseUrl + 'provisioning.cgi?method=delete_vlan';
         url += '&workgroup=' + workgroup;
         url += '&vlan_id=' + vlanId;
