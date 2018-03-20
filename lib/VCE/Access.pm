@@ -654,6 +654,11 @@ sub is_vlan_permittee {
         $self->logger->warn("Checking VLAN permissions on zero endpoints.");
     }
 
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        return (1, undef);
+    }
+
     foreach my $port (@{$ports}) {
         if (!defined $self->config->{switches}->{$switch}) {
             return (0, "Couldn't find a switch named $switch.");
@@ -661,6 +666,15 @@ sub is_vlan_permittee {
 
         if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
             return (0, "Couldn't find a port named $port on $switch.");
+        }
+
+        my $is_owner = $self->workgroup_owns_port(
+            workgroup => $workgroup,
+            switch => $switch,
+            port => $port
+        );
+        if ($is_owner) {
+            next;
         }
 
         my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
