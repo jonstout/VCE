@@ -298,16 +298,24 @@ sub get_available_ports{
 
     my $switch = $self->config->{'switches'}->{$params{'switch'}};
     foreach my $port (keys %{$switch->{'ports'}}){
-        if($self->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                        switch => $params{'switch'},
-                                                        port => $port)){
+        my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
+        my $has_access = $self->access->workgroup_has_access_to_port(
+            workgroup => $params{'workgroup'},
+            switch => $params{'switch'},
+            port => $port
+        );
 
-            my $tags = $self->access->get_tags_on_port(workgroup => $params{'workgroup'},
-                                                       switch => $params{'switch'},
-                                                       port => $port);
-
-            push(@ports, {port => $port, tags => $tags});
+        if (!$is_admin && !$has_access) {
+            next;
         }
+
+        my $tags = $self->access->get_tags_on_port(
+            workgroup => $params{'workgroup'},
+            switch => $params{'switch'},
+            port => $port
+        );
+
+        push(@ports, {port => $port, tags => $tags});
     }
 
     return \@ports;
