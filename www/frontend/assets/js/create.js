@@ -99,6 +99,9 @@ function createVlan(e) {
     var workgroup = cookie.workgroup;
     
     var endpoints = document.forms[1].endpoint;
+    
+    if(typeof endpoints === 'undefined')
+	return displayError('Please select atleast one endpoint');
     if (endpoints.value === '') {
         var epNames = [];
         for (var i = 0; i < endpoints.length; i++) {
@@ -136,7 +139,7 @@ function createVlan(e) {
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
-
+            setDisplayMessage('success', 'Vlan created successfully'); 
             window.location.href = 'details.html?tab=vlan';
         });
     });
