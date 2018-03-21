@@ -638,8 +638,8 @@ sub is_port_owner {
     );
 
 is_vlan_permittee returns 1 if C<$workgroup> has the right to
-provision C<$vlan> on C<($switch, $port)>. An error string describing
-the authorization failure is returned on failure.
+provision C<$vlan> on all C<$ports> on C<$switch>. An error string
+describing the authorization failure is returned on failure.
 
 =cut
 sub is_vlan_permittee {

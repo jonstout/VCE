@@ -256,7 +256,6 @@ sub provision_vlan{
     return {results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
-
 =head2 edit_vlan
 
 =cut
@@ -293,7 +292,10 @@ sub edit_vlan{
 
     my $details       = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id );
     my $is_vlan_owner = $details->{'workgroup'} eq $workgroup;
-    my ($is_vlan_permittee, undef) = $self->vce->access->is_vlan_permittee($workgroup, $switch, $ports, $vlan);
+    my ($is_vlan_permittee, $err) = $self->vce->access->is_vlan_permittee($workgroup, $switch, $ports, $vlan);
+    if (defined $err) {
+        $self->logger->error($err);
+    }
 
     if (!($is_vlan_owner && $is_vlan_permittee)) {
         my $mk_interfaces = [];
