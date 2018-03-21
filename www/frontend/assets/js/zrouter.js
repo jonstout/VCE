@@ -1,9 +1,9 @@
 function loadCookie() {
     cookie = Cookies.getJSON('vce');
     if (cookie === undefined) {
-        console.log('setting cookie');
         Cookies.set('vce', {workgroup: 'admin', switches: ['switch']});
     }
+
     /*
     {
         workgroup:      'ajco' // Name of the currently active workgroup
@@ -12,6 +12,8 @@ function loadCookie() {
         selectedVlanId: ''     // Currently selected VLAN ID
     }
     */
+
+    return loadWorkgroups();
 }
 
 function setDisplayMessage(type, text) {
@@ -83,43 +85,40 @@ function displaySuccess(success) {
 // The var $allow_credentials in Method.pm must be set to 'true'
 // for cors.
 window.onload = function() {
-    loadErrorCloseButton();
-    loadCookie();
-    cookie = Cookies.getJSON('vce');
+    loadCookie().then(function(cookie) {
+        loadErrorCloseButton();
 
-    setHeader(cookie.switches);
+        setHeader(cookie.switches);
 
-    var url = window.location;
-    if (url.pathname.indexOf('details.html') > -1) {
-        loadSuccessCloseButton();
-        selectTab();
+        var url = window.location;
+        if (url.pathname.indexOf('details.html') > -1) {
+            loadSuccessCloseButton();
+            selectTab();
 
-        loadPorts();
-        loadVlans();
-        loadSwitch();
+            loadPorts();
+            loadVlans();
+            loadSwitch();
         
-        loadSwitchCommands();
+            loadSwitchCommands();
         
-        setInterval(loadPorts, 30000);
-        setInterval(loadVlans, 30000);
-    } else if (url.pathname.indexOf('create.html') > -1) {
-        loadVlanDropdown();
-        configureButtons();
-    } else if (url.pathname.indexOf('edit.html') > -1) {
-        loadVlanDropdown()
-        .then(
-            loadVlanDetails
-        );
-        configureEditButtons();
-    } else {
-        // Must be run first
-        loadWorkgroups();
+            setInterval(loadPorts, 30000);
+            setInterval(loadVlans, 30000);
+        } else if (url.pathname.indexOf('create.html') > -1) {
+            loadVlanDropdown();
+            configureButtons();
+        } else if (url.pathname.indexOf('edit.html') > -1) {
+            loadVlanDropdown()
+                .then(
+                    loadVlanDetails
+                );
+            configureEditButtons();
+        } else {
+            loadSwitches();
+            loadWorkgroup();
         
-        loadSwitches();
-        loadWorkgroup();
-        
-        setInterval(loadSwitches, 15000);
-    }
+            setInterval(loadSwitches, 15000);
+        }
 
-    showDisplayMessage();
+        showDisplayMessage();
+    });
 }

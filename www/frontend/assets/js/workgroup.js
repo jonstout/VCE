@@ -13,27 +13,35 @@ function selectWorkgroup(e) {
 // Get all workgroups for this user. If the workgroup has not yet been set,
 // use the first found.
 function loadWorkgroups() {
-    var workgroupName;
-    
-    cookie = Cookies.getJSON('vce');
-    if (cookie != undefined) {
-        workgroupName = cookie.workgroup;
-    }
-    
     var url = baseUrl + 'access.cgi?method=get_workgroups';
-    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
-        response.json().then(function(data) {
+    return fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+        return response.json().then(function(data) {
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
 
+            var cookie = Cookies.getJSON('vce');
+            var workgroup = cookie.workgroup;
+
             var workgroups = data.results[0].workgroups;
-            
-            var selectedWorkgroup = document.getElementById('workgroup_select');
-            if (workgroupName === null) {
-                workgroupName = workgroups[0];
+            if (workgroup === null) {
+                    workgroup = workgroups[0];
+            } else {
+                var workgroupFound = false;
+
+                for (var i = 0; i < workgroups.length; i++) {
+                    if (workgroups[i] === workgroup) {
+                        workgroupFound = true;
+                    }
+                }
+
+                if (!workgroupFound) {
+                    workgroup = workgroups[0];
+                }
             }
-            selectedWorkgroup.innerHTML = workgroupName + ' ▾';
+
+            var selectedWorkgroup = document.getElementById('workgroup_select');
+            selectedWorkgroup.innerHTML = workgroup + ' ▾';
             
             var workgroupList = document.getElementById('workgroup_select_list');
             workgroupList.innerHTML = '';
@@ -50,8 +58,10 @@ function loadWorkgroups() {
                 workgroupList.appendChild(li);
             }
             
-            cookie.workgroup = workgroupName;
+            cookie.workgroup = workgroup;
             Cookies.set('vce', cookie);
+
+            return Cookies.getJSON('vce');
         });
     });
 }
