@@ -1,6 +1,6 @@
 <accessPolicy>
   <rabbit host="localhost" port="5672" user="guest" pass="guest" />
-  <network_model path="/var/lib/vce/network_model.json"/>
+  <network_model path="/var/lib/vce/network_model.sqlite"/>
 
   <switch name="switch" ip="127.0.0.1" description="switch description" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0">
     <commands>
