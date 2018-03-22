@@ -132,7 +132,7 @@ sub workgroup_owns_port{
                 $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is owned by " . $params{'workgroup'});
                 return 1;
             }
-            $self->logger->error("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
+            $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
             return 0;
         }
         $self->logger->error("switch " . $params{'switch'} . " does not have port: " . $params{'port'});
@@ -190,7 +190,7 @@ sub user_in_workgroup{
     if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
 	foreach my $user (keys(%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}})){
 	    if($params{'username'} eq $user){
-		$self->logger->error("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
+		$self->logger->debug("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
 		return 1;
 	    }
 	}
@@ -638,8 +638,8 @@ sub is_port_owner {
     );
 
 is_vlan_permittee returns 1 if C<$workgroup> has the right to
-provision C<$vlan> on C<($switch, $port)>. An error string describing
-the authorization failure is returned on failure.
+provision C<$vlan> on all C<$ports> on C<$switch>. An error string
+describing the authorization failure is returned on failure.
 
 =cut
 sub is_vlan_permittee {
@@ -654,6 +654,11 @@ sub is_vlan_permittee {
         $self->logger->warn("Checking VLAN permissions on zero endpoints.");
     }
 
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        return (1, undef);
+    }
+
     foreach my $port (@{$ports}) {
         if (!defined $self->config->{switches}->{$switch}) {
             return (0, "Couldn't find a switch named $switch.");
@@ -661,6 +666,15 @@ sub is_vlan_permittee {
 
         if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
             return (0, "Couldn't find a port named $port on $switch.");
+        }
+
+        my $is_owner = $self->workgroup_owns_port(
+            workgroup => $workgroup,
+            switch => $switch,
+            port => $port
+        );
+        if ($is_owner) {
+            next;
         }
 
         my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};

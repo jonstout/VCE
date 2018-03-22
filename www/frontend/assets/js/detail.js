@@ -107,6 +107,7 @@ function loadPorts() {
                 }
             }
 
+            $('#port_table').off('click', '.clickable-row');
             $('#port_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
                 
@@ -255,6 +256,7 @@ function loadVlans() {
                 status.innerHTML = vlans[i].status;
             }
             
+            $('#vlan_table').off('click', '.clickable-row');
             $('#vlan_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
                 

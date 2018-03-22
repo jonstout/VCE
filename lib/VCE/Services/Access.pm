@@ -733,6 +733,7 @@ sub get_vlans{
     my $user = $ENV{'REMOTE_USER'};
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
+    my $is_admin  = ($workgroup eq 'admin') ? 1 : 0;
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
@@ -743,6 +744,11 @@ sub get_vlans{
     my @vlans;
     foreach my $vlan (@$vlans) {
         my $vlan_details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan);
+        if ($is_admin) {
+            push(@vlans, $vlan_details);
+            next;
+        }
+
         # Check if the VLAN is owned by $workgroup.
         if ($vlan_details->{'workgroup'} eq $workgroup) {
             push(@vlans, $vlan_details);
