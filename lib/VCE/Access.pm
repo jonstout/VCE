@@ -248,6 +248,11 @@ sub workgroup_has_access_to_port{
         return 0;
     }
 
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{'workgroup'} ? 1 : 0;
+    if ($is_admin) {
+        return 1;
+    }
+
     # Port owners have total control over any ports they own.
     if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}) {
         $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
@@ -290,8 +295,7 @@ sub workgroup_has_access_to_port{
 
 get_tags_on_ports returns an array of the VLAN tags that C<workgroup>
 may create on C<switch>'s C<port>. If C<workgroup> is the admin
-workgroup or C<port>'s owner, the resulting array will include all
-VLAN tags.
+workgroup, the resulting array will include all VLAN tags.
 
 =cut
 sub get_tags_on_port{
@@ -323,17 +327,11 @@ sub get_tags_on_port{
     }
     my $port = $switch->{'ports'}->{$params{'port'}};
 
-
-    my $is_owner = $self->workgroup_owns_port(
-        workgroup => $params{workgroup},
-        switch => $params{switch},
-        port => $params{port}
-    );
     my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
 
     my $available_tags = [];
 
-    if ($is_admin || $is_owner) {
+    if ($is_admin) {
         for (my $i = 2; $i < 4095; $i++) {
             push(@{$available_tags}, $i);
         }
