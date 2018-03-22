@@ -43,7 +43,7 @@ sub BUILD{
 
     $self->_set_uuid( Data::UUID->new() );
     my $path = $self->path;
-    $self->logger->error("Loading database from: $path");
+    $self->logger->info("Loading database from: $path");
     $self->_set_db(DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {
         AutoCommit => 1,
         RaiseError => 1,
@@ -456,7 +456,6 @@ sub get_vlans{
         push(@{$result}, $network->{uuid});
     }
 
-    $self->logger->error(Dumper($result));
     return $result;
 }
 
