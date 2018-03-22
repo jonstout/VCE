@@ -251,12 +251,14 @@ sub provision_vlan{
     } else {
         $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
     }
+    my $warning='';
     if (defined $response->{'error'}) {
+	$warning = $response->{'error'};
         $self->logger->warn($response->{'error'});
     }
 
     $self->_send_vlan_description($description, $switch, $vlan );
-    return {results => [{success => 1, vlan_id => $vlan_id}]};
+    return {msg => $warning, results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
 =head2 edit_vlan
@@ -403,12 +405,14 @@ sub edit_vlan{
     } else {
         $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
     }
+    my $warning='';
     if (defined $response->{'error'}) {
+	$warning = $response->{'error'};
         $self->logger->warn($response->{'error'});
     }
 
     $self->_send_vlan_description($description, $switch, $vlan );
-    return {results => [{success => 1, vlan_id => $vlan_id}]};
+    return {msg => $warning, results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
 =head2 delete_vlan

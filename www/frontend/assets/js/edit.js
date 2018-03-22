@@ -109,10 +109,11 @@ function editVlan(e) {
     console.log(url);
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            console.log(data);
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
-	    setDisplayMessage('success', 'Vlan edited successfully');
+	    setDisplayMessage('success', 'Vlan edited successfully.' + data.msg);
             window.location.href = 'details.html?tab=vlan';
         });
     });

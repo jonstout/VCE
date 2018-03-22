@@ -161,13 +161,14 @@ function createVlan(e) {
     
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
+            console.log(data);
             if (typeof data.error_text !== 'undefined') {
                 return displayError(data.error_text);
             }
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
-            setDisplayMessage('success', 'Vlan created successfully'); 
+            setDisplayMessage('success', 'Vlan created successfully. '+data.msg); 
             window.location.href = 'details.html?tab=vlan';
         });
     });
