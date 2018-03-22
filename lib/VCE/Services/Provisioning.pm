@@ -212,7 +212,7 @@ sub provision_vlan{
         return {results => [], error => {msg => $error}};
     }
 
-    my $vlan_id = $self->vce->provision_vlan(
+    my %prov_vlan_res = $self->vce->provision_vlan(
         workgroup => $workgroup,
         description => $description,
         username => $user,
@@ -220,8 +220,11 @@ sub provision_vlan{
         port => $ports,
         vlan => $vlan
     );
+    my $vlan_id = $prov_vlan_res{vlan_id};
+    $self->logger->info("id:: $prov_vlan_res{vlan_id}");    
+    $self->logger->info($prov_vlan_res{error});
     if(!defined($vlan_id)){
-        return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
+        return {results => [{success => 0}], error => {msg => $prov_vlan_res{error}}};
     }
 
     my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
