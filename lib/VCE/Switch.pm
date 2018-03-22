@@ -669,7 +669,13 @@ sub _gather_operational_status{
         $vlans->{$vlan->{vlan}} = $vlan;
     }
 
-    $vlans_state = $self->device->get_vlans();
+    my $err = undef;
+    ($vlans_state, $err) = $self->device->get_vlans();
+    if (defined $err) {
+        $self->logger->error($err);
+        return undef;
+    }
+
     foreach my $vlan (@{$vlans_state}) {
         if (defined $vlans->{$vlan->{vlan}}) {
             $self->logger->info('Updating ports on vlan');

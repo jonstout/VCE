@@ -247,6 +247,8 @@ sub get_interfaces_state {
 
 =head2 get_vlans
 
+    my ($vlans, $err) = get_vlans();
+
 get_vlans returns a list of vlan objects describing this devices VLAN
 configuration. This device's control and default VLANs are omitted
 from the resulting list. The mode of each port object will be 'TAGGED'
@@ -293,8 +295,7 @@ sub get_vlans {
 
     my $res = $self->conn->recv();
     if (!defined $res) {
-        my $err = "Could not get vlans. Device connection failed on recv!";
-        $self->logger->error($err);
+        $err = "Could not get vlans. Device connection failed on recv!";
         $self->reconnect();
         return undef, $err;
     }
@@ -335,7 +336,7 @@ sub get_vlans {
         push(@{$result}, { vlan => $vlan->{'brcd:vlan-id'}, name => $name, ports => $ports });
     }
 
-    return $result;
+    return $result, $err;
 }
 
 =head2 get_interfaces
