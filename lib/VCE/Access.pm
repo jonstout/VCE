@@ -132,7 +132,7 @@ sub workgroup_owns_port{
                 $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is owned by " . $params{'workgroup'});
                 return 1;
             }
-            $self->logger->error("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
+            $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
             return 0;
         }
         $self->logger->error("switch " . $params{'switch'} . " does not have port: " . $params{'port'});
