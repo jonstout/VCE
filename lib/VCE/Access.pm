@@ -190,7 +190,7 @@ sub user_in_workgroup{
     if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
 	foreach my $user (keys(%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}})){
 	    if($params{'username'} eq $user){
-		$self->logger->error("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
+		$self->logger->debug("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
 		return 1;
 	    }
 	}
