@@ -41,6 +41,11 @@ function loadWorkgroups() {
             }
 
             var selectedWorkgroup = document.getElementById('workgroup_select');
+            if (selectedWorkgroup === null) {
+                cookie.workgroup = workgroup;
+                Cookies.set('vce', cookie);
+                return Cookies.getJSON('vce');
+            }
             selectedWorkgroup.innerHTML = workgroup + ' ▾';
             
             var workgroupList = document.getElementById('workgroup_select_list');
@@ -60,7 +65,6 @@ function loadWorkgroups() {
             
             cookie.workgroup = workgroup;
             Cookies.set('vce', cookie);
-
             return Cookies.getJSON('vce');
         });
     });
