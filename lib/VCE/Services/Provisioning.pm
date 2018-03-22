@@ -263,6 +263,14 @@ sub provision_vlan{
 
 =head2 edit_vlan
 
+There are two cases when a VLAN may be edited. The first requires that
+the VLAN is owned by $workgroup and that the workgroup has been
+allocated the appropriate VLANs on all of $ports.
+
+The second case is when a port owner decides a VLAN should be removed
+from its port. This case requires the ports being removed are owned by
+$workgroup, and that no other ports are added.
+
 =cut
 sub edit_vlan{
     my $self = shift;
@@ -279,15 +287,6 @@ sub edit_vlan{
     my $vlan_id = $p_ref->{'vlan_id'}{'value'};
 
     # BEGIN - Permissions check
-    # There are two cases when a VLAN may be edited. The first
-    # requires that the VLAN is owned by $workgroup and that the
-    # workgroup has been allocated the appropriate VLANs on all of
-    # $ports.
-    #
-    # The second case is when a port owner decides a VLAN should
-    # be removed from its port. This case requires the ports being
-    # removed are owned by $workgroup, and that no other ports are
-    # added.
     my $valid_user = $self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup);
     if (!$valid_user) {
         my $error = "User $user not in specified workgroup $workgroup.";
@@ -434,9 +433,11 @@ sub delete_vlan{
     }
 
     # Check if is_vlan_owner
-    my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
-    if ($details->{'workgroup'} ne $workgroup) {
-        return {results => [], error => {msg => "Workgroup $workgroup is not allowed to edit vlan $vlan_id"}};
+    my $is_admin = ($self->vce->access->get_admin_workgroup()->{name} eq $workgroup) ? 1 : 0;
+    my $details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan_id);
+
+    if ($details->{'workgroup'} ne $workgroup && !$is_admin) {
+        return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => "Workgroup $workgroup is not authorized to delete vlan $vlan_id."}};
     }
 
     # Do switch removal
@@ -456,7 +457,7 @@ sub delete_vlan{
 
     $self->_send_no_vlan($switch, $vlan);
 
-    $self->vce->network_model->delete_vlan( vlan_id => $vlan_id);
+    $self->vce->network_model->delete_vlan(vlan_id => $vlan_id);
     return {results => [{success => 1}]};
 }
 

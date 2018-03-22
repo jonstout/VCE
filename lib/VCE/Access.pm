@@ -638,8 +638,9 @@ sub is_port_owner {
     );
 
 is_vlan_permittee returns 1 if C<$workgroup> has the right to
-provision C<$vlan> on all C<$ports> on C<$switch>. An error string
-describing the authorization failure is returned on failure.
+provision C<$vlan> on all C<$ports> on C<$switch>. The admin workgroup
+will allways get granted permission. An error string describing the
+authorization failure is returned on failure.
 
 =cut
 sub is_vlan_permittee {
@@ -666,15 +667,6 @@ sub is_vlan_permittee {
 
         if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
             return (0, "Couldn't find a port named $port on $switch.");
-        }
-
-        my $is_owner = $self->workgroup_owns_port(
-            workgroup => $workgroup,
-            switch => $switch,
-            port => $port
-        );
-        if ($is_owner) {
-            next;
         }
 
         my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
