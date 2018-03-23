@@ -367,13 +367,18 @@ sub get_switches{
         return;
     }
 
+    my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
     my $switches = $self->access->get_workgroup_switches( workgroup => $params{'workgroup'});
 
     my @res;
     foreach my $switch (@$switches){
 
-        my $vlans = $self->network_model->get_vlans( workgroup => $params{'workgroup'},
-                                                     switch => $switch);
+        my $vlans = [];
+        if ($is_admin) {
+            $vlans = $self->network_model->get_vlans(switch => $switch);
+        } else {
+            $vlans = $self->network_model->get_vlans(workgroup => $params{'workgroup'}, switch => $switch);
+        }
 
         my $ports = $self->access->get_switch_ports( workgroup => $params{'workgroup'},
                                                      switch => $switch);
@@ -472,9 +477,7 @@ sub get_switches_operational_state{
             my $is_up = 1;
             my $vlan = $self->network_model->get_vlan_details( vlan_id => $vlan );
             foreach my $interface (@{$vlan->{'endpoints'}}){
-                if($int_state{$interface}){
-
-                }else{
+                if (!$int_state{$interface->{port}}) {
                     $is_up = 0;
                 }
             }
