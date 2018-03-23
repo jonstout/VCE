@@ -248,6 +248,11 @@ sub workgroup_has_access_to_port{
         return 0;
     }
 
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{'workgroup'} ? 1 : 0;
+    if ($is_admin) {
+        return 1;
+    }
+
     # Port owners have total control over any ports they own.
     if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}) {
         $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
@@ -290,8 +295,7 @@ sub workgroup_has_access_to_port{
 
 get_tags_on_ports returns an array of the VLAN tags that C<workgroup>
 may create on C<switch>'s C<port>. If C<workgroup> is the admin
-workgroup or C<port>'s owner, the resulting array will include all
-VLAN tags.
+workgroup, the resulting array will include all VLAN tags.
 
 =cut
 sub get_tags_on_port{
@@ -323,17 +327,11 @@ sub get_tags_on_port{
     }
     my $port = $switch->{'ports'}->{$params{'port'}};
 
-
-    my $is_owner = $self->workgroup_owns_port(
-        workgroup => $params{workgroup},
-        switch => $params{switch},
-        port => $params{port}
-    );
     my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
 
     my $available_tags = [];
 
-    if ($is_admin || $is_owner) {
+    if ($is_admin) {
         for (my $i = 2; $i < 4095; $i++) {
             push(@{$available_tags}, $i);
         }
@@ -387,6 +385,10 @@ sub friendly_display_vlans{
                 }
             }
         }
+    }
+
+    if (!defined $first && !defined $last) {
+        return [];
     }
 
     #do the last push
@@ -638,8 +640,9 @@ sub is_port_owner {
     );
 
 is_vlan_permittee returns 1 if C<$workgroup> has the right to
-provision C<$vlan> on all C<$ports> on C<$switch>. An error string
-describing the authorization failure is returned on failure.
+provision C<$vlan> on all C<$ports> on C<$switch>. The admin workgroup
+will allways get granted permission. An error string describing the
+authorization failure is returned on failure.
 
 =cut
 sub is_vlan_permittee {
@@ -668,15 +671,6 @@ sub is_vlan_permittee {
             return (0, "Couldn't find a port named $port on $switch.");
         }
 
-        my $is_owner = $self->workgroup_owns_port(
-            workgroup => $workgroup,
-            switch => $switch,
-            port => $port
-        );
-        if ($is_owner) {
-            next;
-        }
-
         my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
 
         if (!defined $port_config->{tags}->{$vlan}) {
@@ -689,6 +683,55 @@ sub is_vlan_permittee {
     }
 
     return (1, undef);
+}
+
+=head2 get_visible_vlans
+
+    my $vlans = get_visible_vlans(
+      workgroup => 'admin',
+      swich     => 'mlxe16-2.sdn-test.grnoc.iu.edu'
+    );
+
+get_visible_vlans returns a hash of all VLANs C<workgroup> is
+authorized to view on C<switch>. This should not be used to determine
+what VLANs C<workgroup> may provision. The admin workgroup will return
+a hash containing all known tags.
+
+Returns
+
+    {
+      100 => 1,
+      300 => 1
+    }
+
+=cut
+sub get_visible_vlans {
+    my $self      = shift;
+    my %params = @_;
+
+    my $workgroup = $params{workgroup};
+    my $switch    = $params{switch};
+
+    if (!defined $self->config->{switches}->{$switch}) {
+        return (0, "Couldn't find a switch named $switch.");
+    }
+
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        return (1, undef);
+    }
+
+    my $result = {};
+    my $ports = $self->config->{switches}->{$switch}->{ports};
+    foreach my $port (keys %{$ports}) {
+        foreach my $vlan (keys %{$ports->{$port}->{tags}}) {
+            if ($ports->{$port}->{tags}->{$vlan} eq $workgroup || $is_admin) {
+                $result->{$vlan} = 1;
+            }
+        }
+    }
+
+    return $result;
 }
 
 1;
