@@ -193,8 +193,8 @@ function configureVLANButtons(e) {
         var url = baseUrl + 'provisioning.cgi?method=delete_vlan';
         url += '&workgroup=' + workgroup;
         url += '&vlan_id=' + vlanId;
-
-        if (!confirm(`This action will delete VLAN ${vlanId}.\n\n Do you wish to continue?`)) {
+	var vlanName= $('#'+vlanId).contents().first().text();
+        if (!confirm(`This action will delete VLAN ${vlanName}.\n\n Do you wish to continue?`)) {
             return 1;
         }
 
@@ -203,7 +203,7 @@ function configureVLANButtons(e) {
                 if (typeof data.error !== 'undefined') {
                     setDisplayMessage('error', data.error.msg);
                 } else {
-                    setDisplayMessage('success', `VLAN was successfully removed from ${name}.`);
+                    setDisplayMessage('success', `VLAN ${vlanName} was successfully removed from ${name}.`);
                 }
 
                 window.location.href = 'details.html?tab=vlan';
