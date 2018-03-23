@@ -681,4 +681,53 @@ sub is_vlan_permittee {
     return (1, undef);
 }
 
+=head2 get_visible_vlans
+
+    my $vlans = get_visible_vlans(
+      workgroup => 'admin',
+      swich     => 'mlxe16-2.sdn-test.grnoc.iu.edu'
+    );
+
+get_visible_vlans returns a hash of all VLANs C<workgroup> is
+authorized to view on C<switch>. This should not be used to determine
+what VLANs C<workgroup> may provision. The admin workgroup will return
+a hash containing all known tags.
+
+Returns
+
+    {
+      100 => 1,
+      300 => 1
+    }
+
+=cut
+sub get_visible_vlans {
+    my $self      = shift;
+    my %params = @_;
+
+    my $workgroup = $params{workgroup};
+    my $switch    = $params{switch};
+
+    if (!defined $self->config->{switches}->{$switch}) {
+        return (0, "Couldn't find a switch named $switch.");
+    }
+
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        return (1, undef);
+    }
+
+    my $result = {};
+    my $ports = $self->config->{switches}->{$switch}->{ports};
+    foreach my $port (keys %{$ports}) {
+        foreach my $vlan (keys %{$ports->{$port}->{tags}}) {
+            if ($ports->{$port}->{tags}->{$vlan} eq $workgroup || $is_admin) {
+                $result->{$vlan} = 1;
+            }
+        }
+    }
+
+    return $result;
+}
+
 1;

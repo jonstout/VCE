@@ -733,7 +733,6 @@ sub get_vlans{
     my $user = $ENV{'REMOTE_USER'};
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
-    my $is_admin  = ($workgroup eq 'admin') ? 1 : 0;
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
@@ -744,19 +743,13 @@ sub get_vlans{
     my @vlans;
     foreach my $vlan (@$vlans) {
         my $vlan_details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan);
-        if ($is_admin) {
-            push(@vlans, $vlan_details);
-            next;
-        }
-
-        # Check if the VLAN is owned by $workgroup.
+        # VLAN is owned by $workgroup?
         if ($vlan_details->{'workgroup'} eq $workgroup) {
             push(@vlans, $vlan_details);
             next;
         }
 
-        # If $workgroup owns a port on $vlan he should be able to see
-        # it's details.
+        # $workgroup owns a port on $vlan?
         foreach my $endpoint (@{$vlan_details->{'endpoints'}}) {
             my ($ok, undef) = $self->vce->access->is_port_owner(
                 $workgroup,
@@ -767,6 +760,16 @@ sub get_vlans{
                 push(@vlans, $vlan_details);
                 last;
             }
+        }
+
+        # $workgroup granted access to $vlan on any other port?
+        my $auth_vlans = $self->vce->access->get_visible_vlans(
+            workgroup => $workgroup,
+            switch => $vlan_details->{switch}
+        );
+
+        if ($auth_vlans->{$vlan_details->{vlan}}) {
+            push(@vlans, $vlan_details);
         }
     }
 
