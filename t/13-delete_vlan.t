@@ -24,31 +24,41 @@ my $vlans = $vce->network_model->get_vlans();
 
 ok($#{$vlans} == -1, "New configuration created!");
 
-my $vlan_id = $vce->network_model->add_vlan( description => '13-delete_vlan circuit 1',
-                                             workgroup => 'ajco',
-                                             username => 'aragusa',
-                                             switch => 'foobar',
-                                             vlan => 101,
-                                             endpoints => [{ port => 'eth0/1'},
-                                                           { port => 'eth0/2'}]);
+my $vlan = $vce->network_model->add_vlan(
+    description => '13-delete_vlan circuit 1',
+    workgroup => 'ajco',
+    username => 'aragusa',
+    switch => 'foobar',
+    vlan => 101,
+    endpoints => [
+        { port => 'eth0/1'},
+        { port => 'eth0/2'}
+    ]
+);
 
+my $vlan_id = $vlan->{vlan_id};
 ok(defined($vlan_id), "VLAN was create!");
 
-my $vlan_details = $vce->network_model->get_vlan_details( vlan_id => $vlan_id);
+my $vlan_details = $vce->network_model->get_vlan_details(vlan_id => $vlan_id);
 
 ok(defined($vlan_details), "VLAN Was found in the configuration");
 
 $vlans = $vce->network_model->get_vlans();
 ok(@{$vlans} == 1, "JSON has proper number of vlans");
 
-$vlan_id = $vce->network_model->add_vlan( description => '12-delete_vlan circuit 2',
-                                          workgroup => 'ajco',
-                                          username => 'aragusa',
-                                          switch => 'foobar',
-                                          vlan => 102,
-                                          endpoints => [{ port => 'eth0/1'},
-                                                        { port => 'eth0/2'}]);
+$vlan = $vce->network_model->add_vlan(
+    description => '12-delete_vlan circuit 2',
+    workgroup => 'ajco',
+    username => 'aragusa',
+    switch => 'foobar',
+    vlan => 102,
+    endpoints => [
+        { port => 'eth0/1'},
+        { port => 'eth0/2'}
+    ]
+);
 
+$vlan_id = $vlan->{vlan_id};
 ok(defined($vlan_id), "Second circuit created!");
 
 $vlans = $vce->network_model->get_vlans();
