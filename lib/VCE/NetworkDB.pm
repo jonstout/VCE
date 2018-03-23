@@ -315,8 +315,9 @@ sub add_vlan {
         );
     };
     if ($@) {
-        $self->logger->error("$@");
-        return undef;
+	my $error_msg = "$@";
+        $self->logger->error("$error_msg");
+        return (vlan_id => undef, error => "$error_msg");
     }
 
     my $network_id = $self->db->sqlite_last_insert_rowid();
@@ -336,7 +337,7 @@ sub add_vlan {
     }
 
     $self->logger->debug("Called add_vlan");
-    return $vlan_uuid;
+    return (vlan_id=>$vlan_uuid);
 }
 
 =head2 delete_vlan

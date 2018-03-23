@@ -212,7 +212,7 @@ sub provision_vlan{
         return {results => [], error => {msg => $error}};
     }
 
-    my $vlan_id = $self->vce->provision_vlan(
+    my %prov_vlan_res = $self->vce->provision_vlan(
         workgroup => $workgroup,
         description => $description,
         username => $user,
@@ -220,8 +220,11 @@ sub provision_vlan{
         port => $ports,
         vlan => $vlan
     );
+    my $vlan_id = $prov_vlan_res{vlan_id};
+    $self->logger->info("id:: $prov_vlan_res{vlan_id}");    
+    $self->logger->info($prov_vlan_res{error});
     if(!defined($vlan_id)){
-        return {results => [{success => 0}], error => {msg => "Unable to add circuit to network model"}};
+        return {results => [{success => 0}], error => {msg => $prov_vlan_res{error}}};
     }
 
     my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
@@ -248,12 +251,14 @@ sub provision_vlan{
     } else {
         $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
     }
+    my $warning='';
     if (defined $response->{'error'}) {
+	$warning = $response->{'error'};
         $self->logger->warn($response->{'error'});
     }
 
     $self->_send_vlan_description($description, $switch, $vlan );
-    return {results => [{success => 1, vlan_id => $vlan_id}]};
+    return {msg => $warning, results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
 =head2 edit_vlan
@@ -400,12 +405,14 @@ sub edit_vlan{
     } else {
         $response = $self->switch->no_vlan_spanning_tree(vlan => $vlan);
     }
+    my $warning='';
     if (defined $response->{'error'}) {
+	$warning = $response->{'error'};
         $self->logger->warn($response->{'error'});
     }
 
     $self->_send_vlan_description($description, $switch, $vlan );
-    return {results => [{success => 1, vlan_id => $vlan_id}]};
+    return {msg => $warning, results => [{success => 1, vlan_id => $vlan_id}]};
 }
 
 =head2 delete_vlan
