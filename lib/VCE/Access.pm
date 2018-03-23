@@ -387,6 +387,10 @@ sub friendly_display_vlans{
         }
     }
 
+    if (!defined $first && !defined $last) {
+        return [];
+    }
+
     #do the last push
     if($first == $last){
         push(@f_vlans, $first);
