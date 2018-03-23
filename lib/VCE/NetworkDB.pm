@@ -317,7 +317,7 @@ sub add_vlan {
     if ($@) {
         my $error_msg = "$@";
         $self->logger->error("$error_msg");
-        return {vlan_id => undef, error => "$error_msg"};
+        return {vlan_id => undef, error => "Unable to add VLAN to the database. Please verify the VLAN does't already exist."};
     }
 
     my $network_id = $self->db->sqlite_last_insert_rowid();
