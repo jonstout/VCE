@@ -23,12 +23,17 @@ function loadVlanDropdown() {
             dropd.innerHTML = '';
 
             // Loads valid VLANS
-            var parts = ports[0].tags[0].split("-");
-            var low   = parts[0];
-            var high  = parts[0];
+            var low   = 1;
+            var high  = 0;
 
-            if (parts.length > 1) {
-                high = parts[1];
+            if (ports[0].tags.length > 0) {
+                var parts = ports[0].tags[0].split("-");
+                var low   = parts[0];
+                var high  = parts[0];
+
+                if (parts.length > 1) {
+                    high = parts[1];
+                }
             }
 
             var vlanIds = [];
