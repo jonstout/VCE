@@ -203,7 +203,7 @@ function configureVLANButtons(e) {
                 if (typeof data.error !== 'undefined') {
                     setDisplayMessage('error', data.error.msg);
                 } else {
-                    setDisplayMessage('success', `VLAN was successfully removed from ${name}.`);
+                    setDisplayMessage('success', `VLAN ${vlanName} was successfully removed from ${name}.`);
                 }
 
                 window.location.href = 'details.html?tab=vlan';
