@@ -153,7 +153,11 @@ if(!$nofork){
 
     my $uid = getpwnam('vce');
 
-    my $daemon = Proc::Daemon->new( pid_file => "/var/run/vce.pid" );
+    my $daemon = Proc::Daemon->new(
+        pid_file => "/var/run/vce.pid",
+        child_STDOUT => '/var/log/vce.stdout',
+        child_STDERR => '/var/log/vce.stderr'
+    );
 
     if($daemon->Status("/var/run/vce.pid")){
         die "Already running";

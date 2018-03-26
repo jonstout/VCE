@@ -707,6 +707,7 @@ sub start{
     if(!defined($self->dispatcher)){
         $self->logger->error("Dispatcher is not connected");
     }else{
+        warn "Switch dispatcher is now consuming.";
         $self->dispatcher->start_consuming();
         return;
     }
