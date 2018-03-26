@@ -4,7 +4,7 @@ use strict;
 use warnings;
 #use Test::More skip_all => "Busted";
 
-use Test::More tests => 27;
+use Test::More tests => 28;
 use Test::Deep;
 use GRNOC::WebService::Client;
 use AnyEvent::HTTP::LWP::UserAgent;
@@ -153,7 +153,23 @@ if($response->is_success){
 }
 
 ok(defined($edit_vlan), "got a response");
-ok($edit_vlan->{'results'}->[0]->{'success'} == 1, "Success provisioning!");
+ok(defined $edit_vlan->{'error'}->{'msg'}, "Edit to change vlan isn't allowed.");
+
+$req = make_request({ method => 'edit_vlan',
+                     description => "Automated test suite!",
+                     vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
+                     switch => 'foobar',
+                     port => ['eth0/1','eth0/3'],
+                     vlan => '104',
+                     workgroup => 'ajco'});
+
+$response = $ua->simple_request_async($req)->recv;
+if($response->is_success){
+    my $content = $response->content;
+    $edit_vlan = decode_json($content);
+}
+
+ok(defined($edit_vlan), "got a response");
 ok(defined($edit_vlan->{'results'}->[0]->{'vlan_id'}), "Got a VLAN ID Back!");
 
 my $vlan_details2 = $client->get_vlan_details( vlan_id => $edit_vlan->{'results'}->[0]->{'vlan_id'},
@@ -172,15 +188,11 @@ cmp_deeply($vlan_details2,{
                 'status' => 'Active',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
-                'vlan' => '105',
+                'vlan' => '104',
                 'endpoints' => [
-                    {
-                        'port' => 'eth0/1'
-                    },
-                    {
-                        'port' => 'eth0/2'
-                    }
-                    ],
+                    { 'port' => 'eth0/1' },
+                    { 'port' => 'eth0/3' }
+                ],
                 'username' => 'aragusa'
             }
         }
@@ -193,7 +205,7 @@ $req = make_request({ method => 'add_vlan',
                       description => "Automated test suite!",
                       switch => 'foobar',
                       port => ['eth0/1','eth0/2'],
-                      vlan => '104',
+                      vlan => '105',
                       workgroup => 'ajco'});
 
 $response = $ua->simple_request_async($req)->recv;
@@ -216,8 +228,8 @@ $req = make_request({ method => 'edit_vlan',
                       description => "Automated test suite!",
                       vlan_id => $new_vlan->{'results'}->[0]->{'vlan_id'},
                       switch => 'foobar',
-                      port => ['eth0/1','eth0/2'],
-                      vlan => '104',
+                      port => ['eth0/1'],
+                      vlan => '105',
                       workgroup => 'ajco'});
 
 $response = $ua->simple_request_async($req)->recv;
@@ -229,8 +241,7 @@ if($response->is_success){
 ok(defined($edit_vlan2), "Got a response");
 ok($edit_vlan2->{'results'}->[0]->{'success'} == 1, "Correctly edited circuit. Didn't change anything.");
 
-my $vlan_details3 = $client->get_vlan_details( vlan_id => $vlan->{'results'}->[0]->{'vlan_id'},
-                                           workgroup => 'ajco');
+my $vlan_details3 = $client->get_vlan_details(vlan_id => $new_vlan->{'results'}->[0]->{'vlan_id'}, workgroup => 'ajco');
 
 ok(defined($vlan_details3), "Got vlan details response");
 
@@ -247,13 +258,8 @@ cmp_deeply($vlan_details3,{
                 'switch' => 'foobar',
                 'vlan' => '105',
                 'endpoints' => [
-                    {
-                        'port' => 'eth0/1'
-                    },
-                    {
-                        'port' => 'eth0/2'
-                    }
-                    ],
+                    { 'port' => 'eth0/1' }
+                ],
                 'username' => 'aragusa'
             }
         }
@@ -269,7 +275,7 @@ $req = make_request({ method => 'edit_vlan',
                       port => ['eth0/1','eth0/2'],
                       vlan => '104',
                       workgroup => 'edco'});
-    
+
 $response = $ua->simple_request_async($req)->recv;
 if($response->is_success){
     my $content = $response->content;
@@ -295,4 +301,4 @@ my $edit_vlan4 = $provisioner2->edit_vlan( description => "Automated test suite!
                                            workgroup => 'edco');
 
 ok(defined($edit_vlan4), "Got a valid response");
-ok($edit_vlan4->{'error'}->{'msg'} =~ /Workgroup edco not authorized to make this change./, "Proper error message when unable to provision");
+ok($edit_vlan4->{'error'}->{'msg'} =~ /Unable to change VLAN via edit. Please create a new VLAN./, "Proper error message when unable to provision");

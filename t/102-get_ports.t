@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 10;
+use Test::More tests => 12;
 
 use GRNOC::WebService::Client;
 use Data::Dumper;
@@ -21,7 +21,8 @@ my $ports = $client->get_ports( workgroup => 'ajco',
 ok(defined($ports), "ports result was defined for AJ");
 
 ok($ports->{'results'}->[0]->{'ports'}->[0]->{'port'} eq 'eth0/2', "Proper port 1 was returned for aj");
-ok($ports->{'results'}->[0]->{'ports'}->[1]->{'port'} eq 'eth0/1', "Proper port 2 was returned for aj");
+ok($ports->{'results'}->[0]->{'ports'}->[1]->{'port'} eq 'eth0/3', "Proper port 2 was returned for aj");
+ok($ports->{'results'}->[0]->{'ports'}->[2]->{'port'} eq 'eth0/1', "Proper port 3 was returned for aj");
 
 $ports = $client->get_ports( workgroup => 'edco', switch => 'foobar', );
 
@@ -41,7 +42,8 @@ $ports = $client2->get_ports( switch => 'foobar', workgroup => 'edco' );
 ok(defined($ports), "Switch result was defined for Ed");
 
 ok($ports->{'results'}->[0]->{'ports'}->[0]->{'port'} eq 'eth0/2', "Proper port 1 was returned for ed");
-ok($ports->{'results'}->[0]->{'ports'}->[1]->{'port'} eq 'eth0/1', "Proper port 2 was returned for ed");
+ok($ports->{'results'}->[0]->{'ports'}->[1]->{'port'} eq 'eth0/3', "Proper port 2 was returned for aj");
+ok($ports->{'results'}->[0]->{'ports'}->[2]->{'port'} eq 'eth0/1', "Proper port 3 was returned for ed");
 
 my $client3 = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                               realm => 'VCE',
