@@ -51,6 +51,10 @@
       <tags start="101" end="200" workgroup="ajco"/>
     </port>
 
+   <port name="eth0/3" owner="ajco">
+      <tags start="1" end="100" workgroup="edco"/>
+      <tags start="101" end="200" workgroup="ajco"/>
+    </port>
   </switch>
 
   <workgroup name="edco"  description="this is edcos exchange point access workgroup">

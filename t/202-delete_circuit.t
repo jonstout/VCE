@@ -231,16 +231,14 @@ $delete = $provisioner2->delete_vlan( vlan_id => $vlan->{'results'}->[0]->{'vlan
                                       workgroup => 'edco');
 
 ok($delete->{'results'}->[0]->{'success'} == 0, "Unable to delete the circuit");
-ok($delete->{'error'}->{'msg'} =~ /Workgroup edco is not allowed to edit vlan/, "Proper error when not correct workgroup");
+ok($delete->{'error'}->{'msg'} =~ /Workgroup edco is not authorized to delete vlan/, "Proper error when not correct workgroup");
 $vlans = $client->get_vlans( workgroup => 'ajco');
 
 ok(defined($vlans), "Got a valid response");
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 3, "Looks like we did not successfully delete it");
 
-$delete = $provisioner->delete_vlan( vlan_id => '11111',
-                                     workgroup => 'ajco');
-
-ok(!defined($delete->{'results'}->[0]), "Unable to delete the circuit");
+$delete = $provisioner->delete_vlan(vlan_id => '11111', workgroup => 'ajco');
+ok($delete->{'results'}->[0]->{success} == 0, "Unable to delete the circuit");
 
 $vlans = $client->get_vlans( workgroup => 'ajco');
 

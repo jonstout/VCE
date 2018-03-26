@@ -39,7 +39,7 @@ ok($vce->is_tag_available( switch => 'foobar',
                            tag => 2000), "vce says tag is available");
 
 
-my $vlan_id = $vce->network_model->add_vlan( description => '14-check_tag-availability circuit 1',
+my $vlan = $vce->network_model->add_vlan( description => '14-check_tag-availability circuit 1',
                                              workgroup => 'ajco',
                                              username => 'aragusa',
                                              vlan => 101,
@@ -47,6 +47,7 @@ my $vlan_id = $vce->network_model->add_vlan( description => '14-check_tag-availa
                                              endpoints => [{ port => 'eth0/1' },
                                                            { port => 'eth0/2' }]);
 
+my $vlan_id = $vlan->{vlan_id};
 ok(defined($vlan_id), "VLAN was create!");
 
 my $vlan_details = $vce->network_model->get_vlan_details( vlan_id => $vlan_id);

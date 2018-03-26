@@ -23,7 +23,7 @@ cmp_deeply($ports, [{switch => 'foobar', port => 'eth0/1'}]);
 
 $ports = $vce->access->workgroups_owned_ports(workgroup => 'ajco');
 
-cmp_deeply($ports, [{switch => 'foobar', port => 'eth0/2'}]);
+cmp_deeply($ports, [{switch => 'foobar', port => 'eth0/2'}, {switch => 'foobar', port => 'eth0/3'}]);
 
 $ports = $vce->access->workgroups_owned_ports(workgroup => 'foo');
 

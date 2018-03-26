@@ -148,7 +148,8 @@ if($response->is_success){
 
 ok(defined($vlan), "Results was returned even though provisioning failed");
 ok($vlan->{'results'}->[0]->{'success'} == 0, "Unable to provision because tags already in use!");
-ok($vlan->{'error'}->{'msg'} eq 'Unable to add circuit to network model', "Returned an error message saying why we couldn't provision");
+warn Dumper($vlan->{'error'}->{'msg'});
+ok($vlan->{'error'}->{'msg'} eq "Unable to add VLAN to the database. Please verify the VLAN does't already exist.", "Returned an error message saying why we couldn't provision");
 
 
 
@@ -167,7 +168,8 @@ if($response->is_success){
 
 ok(defined($vlan), "Results was returned even though provisioning failed");
 ok($vlan->{'results'}->[0]->{'success'} == 0, "Unable to provision because tags already in use!");
-ok($vlan->{'error'}->{'msg'} eq 'Unable to add circuit to network model', "Returned an error message saying why we couldn't provision");
+warn Dumper($vlan->{'error'}->{'msg'});
+ok($vlan->{'error'}->{'msg'} eq "Unable to add VLAN to the database. Please verify the VLAN does't already exist.", "Returned an error message saying why we couldn't provision");
 
 $vlans = $client->get_vlans( workgroup => 'ajco');
 ok(defined($vlans), "Got a valid response");

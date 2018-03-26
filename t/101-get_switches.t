@@ -31,6 +31,7 @@ cmp_deeply($switches->{'results'}->[0],  {
                 ],
                 'ports' => [
                     'eth0/2',
+                    'eth0/3',
                     'eth0/1'
                 ],
                     'name' => 'foobar',
@@ -65,6 +66,7 @@ cmp_deeply($switches->{'results'}->[0],
                    ],
                    'ports' => [
                        'eth0/2',
+                       'eth0/3',
                        'eth0/1'
                    ],
                        'name' => 'foobar',

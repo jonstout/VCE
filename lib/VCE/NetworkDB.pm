@@ -289,9 +289,9 @@ sub add_vlan {
     if (defined $params{vlan_id}) {
         # Check if vlan already exists; If it does return undef.
         my $existing_vlan = $self->get_vlan_details(vlan_id => $params{vlan_id});
-        if (defined) {
-            $self->logger->error("Add VLAN: with vlan id already existing");
-            return undef;
+
+        if (defined $existing_vlan) {
+            return {vlan_id => undef, error => "Add VLAN: with vlan id already existing"};
         }
 
         $vlan_uuid = $params{vlan_id};
@@ -315,9 +315,9 @@ sub add_vlan {
         );
     };
     if ($@) {
-	my $error_msg = "$@";
+        my $error_msg = "$@";
         $self->logger->error("$error_msg");
-        return (vlan_id => undef, error => "$error_msg");
+        return {vlan_id => undef, error => "Unable to add VLAN to the database. Please verify the VLAN does't already exist."};
     }
 
     my $network_id = $self->db->sqlite_last_insert_rowid();
@@ -337,7 +337,7 @@ sub add_vlan {
     }
 
     $self->logger->debug("Called add_vlan");
-    return (vlan_id=>$vlan_uuid);
+    return {vlan_id => $vlan_uuid, error => undef};
 }
 
 =head2 delete_vlan
