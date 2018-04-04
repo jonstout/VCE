@@ -149,6 +149,67 @@ sub add_interface {
     return $self->db->sqlite_last_insert_rowid();
 }
 
+=head2 delete_interface
+
+    my $ok = delete_interface(id => 1);
+
+delete_interface removes interface C<$id> from the network model and
+any VLANs it was previously associated with.
+
+=cut
+sub delete_interface{
+    my $self = shift;
+    my %params = @_;
+    $self->logger->info("Calling delete_interface");
+
+    if (!defined $params{id}) {
+        $self->logger->error("No interface id specified");
+        return;
+    }
+
+    my $query = undef;
+    eval {
+        $query = $self->db->prepare(
+            'SELECT * FROM interface WHERE id=?'
+        );
+        $query->execute($params{id});
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return;
+    }
+    my $interface = $query->fetchall_arrayref({});
+    if (@{$interface} == 0) {
+        $self->logger->error("Couldn't find interface " . $params{id});
+        return;
+    }
+
+    eval {
+        $query = $self->db->prepare(
+            'DELETE FROM interface WHERE id=?'
+        );
+        $query->execute($interface->[0]->{id});
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return;
+    }
+
+    eval {
+        $query = $self->db->prepare(
+            'DELETE FROM vlan WHERE interface=?'
+        );
+        $query->execute($interface->[0]->{name});
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return;
+    }
+
+    $self->logger->debug("Called delete_interface");
+    return 1;
+}
+
 =head2 update_interface
 
     my $ok = update_interface(
@@ -342,7 +403,7 @@ sub add_vlan {
 
 =head2 delete_vlan
 
-    my $vlan = delete_vlan(
+    my $ok = delete_vlan(
       vlan_id => $string
     );
 
@@ -368,12 +429,12 @@ sub delete_vlan{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
     my $network = $query->fetchall_arrayref({});
     if (@{$network} == 0) {
         $self->logger->error("Couldn't find VLAN " . $params{'vlan_id'});
-        return undef;
+        return;
     }
 
     eval {
@@ -384,7 +445,7 @@ sub delete_vlan{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     eval {
@@ -395,7 +456,7 @@ sub delete_vlan{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     $self->logger->debug("Called delete_vlan");
