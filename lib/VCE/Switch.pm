@@ -647,6 +647,7 @@ sub _gather_operational_status{
                 speed         => $interfaces_state->{$name}->{speed},
                 status        => $interfaces_state->{$name}->{status}
             );
+            delete $ifaces->{$name};
         } else {
             $self->logger->info('Creating interface');
             $self->db->add_interface(
@@ -660,6 +661,16 @@ sub _gather_operational_status{
                 status        => $interfaces_state->{$name}->{status},
                 switch        => $self->name
             );
+        }
+    }
+
+    # Because ifaces doesn't contain new interfaces and interfaces
+    # with updates are removed above, the only thing left are
+    # interfaces which no longer exist on the device.
+    foreach my $name (keys %{$ifaces}) {
+        my $ok = $self->db->delete_interface(id => $ifaces->{$name}->{id});
+        if ($ok) {
+            $self->logger->warn("Interface $name was removed from " . $self->hostname . "; Removing it from database.");
         }
     }
 

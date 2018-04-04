@@ -149,6 +149,67 @@ sub add_interface {
     return $self->db->sqlite_last_insert_rowid();
 }
 
+=head2 delete_interface
+
+    my $ok = delete_interface(id => 1);
+
+delete_interface removes interface C<$id> from the network model and
+any VLANs it was previously associated with.
+
+=cut
+sub delete_interface{
+    my $self = shift;
+    my %params = @_;
+    $self->logger->info("Calling delete_interface");
+
+    if (!defined $params{id}) {
+        $self->logger->error("No interface id specified");
+        return;
+    }
+
+    my $query = undef;
+    eval {
+        $query = $self->db->prepare(
+            'SELECT * FROM interface WHERE id=?'
+        );
+        $query->execute($params{id});
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return undef;
+    }
+    my $interface = $query->fetchall_arrayref({});
+    if (@{$interface} == 0) {
+        $self->logger->error("Couldn't find interface " . $params{id});
+        return undef;
+    }
+
+    eval {
+        $query = $self->db->prepare(
+            'DELETE FROM interface WHERE id=?'
+        );
+        $query->execute($interface->[0]->{id});
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return undef;
+    }
+
+    eval {
+        $query = $self->db->prepare(
+            'DELETE FROM vlan WHERE interface=?'
+        );
+        $query->execute($interface->[0]->{name});
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return undef;
+    }
+
+    $self->logger->debug("Called delete_interface");
+    return 1;
+}
+
 =head2 update_interface
 
     my $ok = update_interface(
