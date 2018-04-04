@@ -176,12 +176,12 @@ sub delete_interface{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
     my $interface = $query->fetchall_arrayref({});
     if (@{$interface} == 0) {
         $self->logger->error("Couldn't find interface " . $params{id});
-        return undef;
+        return;
     }
 
     eval {
@@ -192,7 +192,7 @@ sub delete_interface{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     eval {
@@ -203,7 +203,7 @@ sub delete_interface{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     $self->logger->debug("Called delete_interface");
@@ -403,7 +403,7 @@ sub add_vlan {
 
 =head2 delete_vlan
 
-    my $vlan = delete_vlan(
+    my $ok = delete_vlan(
       vlan_id => $string
     );
 
@@ -429,12 +429,12 @@ sub delete_vlan{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
     my $network = $query->fetchall_arrayref({});
     if (@{$network} == 0) {
         $self->logger->error("Couldn't find VLAN " . $params{'vlan_id'});
-        return undef;
+        return;
     }
 
     eval {
@@ -445,7 +445,7 @@ sub delete_vlan{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     eval {
@@ -456,7 +456,7 @@ sub delete_vlan{
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     $self->logger->debug("Called delete_vlan");

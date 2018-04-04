@@ -694,6 +694,7 @@ sub _gather_operational_status{
                 vlan_id   => $vlans->{$vlan->{vlan}}->{vlan_id},
                 endpoints => $vlan->{ports}
             );
+            delete $vlans->{$vlan->{vlan}};
         } else {
             $self->logger->info('Creating vlan');
             $self->db->add_vlan(
@@ -704,6 +705,16 @@ sub _gather_operational_status{
                 vlan        => $vlan->{vlan},
                 workgroup   => 'admin'
             );
+        }
+    }
+
+    # Because vlans doesn't contain new vlans and vlans with updates
+    # are removed above, the only thing left are vlans which no longer
+    # exist on the device.
+    foreach my $vlan (keys %{$vlans}) {
+        my $ok = $self->db->delete_vlan(vlan_id => $vlans->{$vlan}->{vlan_id});
+        if ($ok) {
+            $self->logger->warn("VLAN $vlan was removed from " . $self->hostname . "; Removing it from database.");
         }
     }
 }
