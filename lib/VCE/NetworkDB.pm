@@ -195,17 +195,6 @@ sub delete_interface{
         return;
     }
 
-    eval {
-        $query = $self->db->prepare(
-            'DELETE FROM vlan WHERE interface=?'
-        );
-        $query->execute($interface->[0]->{name});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return;
-    }
-
     $self->logger->debug("Called delete_interface");
     return 1;
 }
