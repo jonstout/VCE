@@ -57,13 +57,15 @@ sub BUILD{
     $self->_set_vce( VCE->new( config_file => $self->config_file,
                                network_model_file => $self->network_model_file  ) );
 
-    $self->_set_switch( GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
-						      pass => $self->rabbit_mq->{'pass'},
-						      host => $self->rabbit_mq->{'host'},
-						      timeout => 30,
-						      port => $self->rabbit_mq->{'port'},
-						      exchange => 'VCE',
-						      topic => 'VCE.Switch.RPC' ));
+    $self->_set_switch(GRNOC::RabbitMQ::Client->new(
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        host     => $self->rabbit_mq->{'host'},
+        timeout  => 30,
+        port     => $self->rabbit_mq->{'port'},
+        exchange => 'VCE',
+        topic    => 'VCE.Switch.'
+    ));
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
@@ -233,6 +235,7 @@ sub provision_vlan{
         $endpoint_count++;
     }
 
+    $self->switch->{topic} = 'VCE.Switch.' . $switch;
     my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
     if (defined $response->{'error'}) {
         $self->logger->error($response->{'error'});
@@ -347,6 +350,7 @@ sub edit_vlan{
         return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $err}};
     }
 
+    $self->switch->{topic} = 'VCE.Switch.' . $switch;
     my $response = $self->switch->no_interface_tagged(port => $old_interfaces, vlan => $vlan);
     if (defined $response->{'error'}) {
         $self->logger->error($response->{'error'});
@@ -437,6 +441,7 @@ sub delete_vlan{
         push(@{$endpoints}, $e->{'port'});
     }
 
+    $self->switch->{topic} = 'VCE.Switch.' . $switch;
     my $response = $self->switch->no_interface_tagged(port => $endpoints, vlan => $vlan);
     if (defined $response->{'error'}) {
         $self->logger->error($response->{'error'});
@@ -456,6 +461,7 @@ sub _send_vlan_description{
     my $vlan   = shift;
     $self->logger->info("Adding description $desc to vlan $vlan on $switch");
 
+    $self->switch->{topic} = 'VCE.Switch.' . $switch;
    my $response = $self->switch->vlan_description(description => $desc, vlan => $vlan);
    if (exists $response->{'error'}) {
        $self->logger->error($response->{'error'});
@@ -471,6 +477,7 @@ sub _send_no_vlan {
     my $vlan   = shift;
     $self->logger->info("Removing vlan $vlan from $switch");
 
+    $self->switch->{topic} = 'VCE.Switch.' . $switch;
     my $response = $self->switch->no_vlan(vlan => $vlan);
     if (exists $response->{'error'}) {
         $self->logger->error($response->{'error'});

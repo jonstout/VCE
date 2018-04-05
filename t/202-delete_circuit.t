@@ -32,7 +32,7 @@ my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( user => 'guest',
                                                    timeout => 30,
                                                    port => 5672,
                                                    exchange => 'VCE',
-                                                   topic => 'VCE.Switch.RPC' );
+                                                   topic => 'VCE.Switch.foobar' );
 
 
 my $method = GRNOC::RabbitMQ::Method->new( name => "interface_tagged",

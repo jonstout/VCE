@@ -71,9 +71,9 @@ has name => (is => 'rwp');
 
 =cut
 
-sub BUILD{
+sub BUILD {
     my ($self) = @_;
-    
+
     my $logger = GRNOC::Log->get_logger("VCE::Switch");
     $self->_set_logger($logger);
 
@@ -82,14 +82,15 @@ sub BUILD{
     $self->_set_db(VCE::NetworkDB->new());
 
     $self->logger->debug("Creating Dispatcher");
-    my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new( host => $self->rabbit_mq->{'host'},
-                                                       port => $self->rabbit_mq->{'port'},
-                                                       user => $self->rabbit_mq->{'user'},
-                                                       pass => $self->rabbit_mq->{'pass'},
-                                                       exchange => 'VCE',
-                                                       queue => 'VCE-Switch',
-                                                       topic => 'VCE.Switch.RPC');
-
+    my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new(
+        host     => $self->rabbit_mq->{'host'},
+        port     => $self->rabbit_mq->{'port'},
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        exchange => 'VCE',
+        queue    => 'VCE-Switch',
+        topic    => 'VCE.Switch.' . $self->name
+    );
 
     $self->_register_rpc_methods( $dispatcher );
 
