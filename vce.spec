@@ -82,6 +82,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
+%{__install} -m 544 bin/vce-run-check %{buildroot}%{_bindir}/vce-update-db
 
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
@@ -130,6 +131,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %{_bindir}/vce
 %{_bindir}/vce-run-check
+%{_bindir}/vce-update-db
 
 /etc/systemd/system/vce.service
 /usr/lib/systemd/scripts/vce
