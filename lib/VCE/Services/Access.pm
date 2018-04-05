@@ -56,7 +56,6 @@ sub BUILD{
     $self->_register_webservice_methods($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
-
     return $self;
 }
 
@@ -113,8 +112,7 @@ sub _register_webservice_methods{
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
-				  description => "Switch to get ports from");
-    
+                                  description => "Switch to get ports from");
     $method->add_input_parameter( name => "port",
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 0,
@@ -184,13 +182,17 @@ sub _register_webservice_methods{
         name => "get_vlans",
         description => "returns a list of vlans",
         callback => sub{ return $self->get_vlans(@_) });
-    
+
     $method->add_input_parameter( name => "workgroup",
                                   pattern => $GRNOC::WebService::Regex::NAME_ID,
                                   required => 1,
                                   multiple => 0,
                                   description => "Workgroup name");
-    
+    $method->add_input_parameter( name => "switch",
+                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
+                                  required => 0,
+                                  multiple => 0,
+                                  description => "Switch to get ports from");
     $d->register_method($method);
 
     $method = GRNOC::WebService::Method->new(
@@ -738,7 +740,9 @@ sub get_vlans{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
 
-    my $vlans = $self->vce->network_model->get_vlans();
+    my $query = {};
+    if (defined $p_ref->{'switch'}{'value'}) { $query->{switch} = $p_ref->{'switch'}{'value'}; }
+    my $vlans = $self->vce->network_model->get_vlans(%{$query});
 
     my @vlans;
     foreach my $vlan (@$vlans) {

@@ -70,7 +70,6 @@ sub BUILD{
     $self->_register_webservice_methods($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
-
     return $self;
 }
 

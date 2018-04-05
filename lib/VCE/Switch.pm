@@ -627,7 +627,7 @@ sub _gather_operational_status{
         return undef;
     }
 
-    my $interfaces_state = $self->db->get_interfaces();
+    my $interfaces_state = $self->db->get_interfaces(switch => $self->name);
     my $ifaces = {};
     foreach my $intf (@{$interfaces_state}) {
         $ifaces->{$intf->{name}} = $intf;
@@ -670,11 +670,11 @@ sub _gather_operational_status{
     foreach my $name (keys %{$ifaces}) {
         my $ok = $self->db->delete_interface(id => $ifaces->{$name}->{id});
         if ($ok) {
-            $self->logger->warn("Interface $name was removed from " . $self->hostname . "; Removing it from database.");
+            $self->logger->warn("Interface $name was removed from " . $self->name . "; Removing it from database.");
         }
     }
 
-    my $vlans_state = $self->db->get_vlans_state();
+    my $vlans_state = $self->db->get_vlans_state(switch => $self->name);
     my $vlans = {};
     foreach my $vlan (@{$vlans_state}) {
         $vlans->{$vlan->{vlan}} = $vlan;
@@ -714,7 +714,7 @@ sub _gather_operational_status{
     foreach my $vlan (keys %{$vlans}) {
         my $ok = $self->db->delete_vlan(vlan_id => $vlans->{$vlan}->{vlan_id});
         if ($ok) {
-            $self->logger->warn("VLAN $vlan was removed from " . $self->hostname . "; Removing it from database.");
+            $self->logger->warn("VLAN $vlan was removed from " . $self->name . "; Removing it from database.");
         }
     }
 }
