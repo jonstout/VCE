@@ -1,0 +1,140 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Data::Dumper;
+use DBI;
+
+my $path = '/var/lib/vce/network_model.sqlite';
+
+sub main {
+    my $db = DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {
+        AutoCommit => 1,
+        RaiseError => 1,
+        sqlite_see_if_its_a_number => 1
+    });
+
+    my $query = undef;
+    $query = $db->prepare(
+    'CREATE TABLE IF NOT EXISTS network(
+      id          INTEGER PRIMARY KEY,
+      created     INTEGER,
+      description TEXT,
+      number      INTEGER,
+      switch      TEXT,
+      username    TEXT,
+      uuid        TEXT,
+      workgroup   TEXT,
+      CONSTRAINT constraint_number UNIQUE (number),
+      CONSTRAINT constraint_uuid   UNIQUE (uuid)
+    )'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'CREATE TABLE IF NOT EXISTS interface(
+      id            INTEGER PRIMARY KEY,
+      admin_status  INTEGER,
+      description   TEXT,
+      hardware_type TEXT,
+      mac_addr      TEXT,
+      mtu           TEXT,
+      name          TEXT,
+      speed         TEXT,
+      status        INTEGER,
+      switch        TEXT
+    )'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'CREATE TABLE IF NOT EXISTS vlan(
+      id         INTEGER PRIMARY KEY,
+      interface  TEXT,
+      mode       TEXT,
+      network_id INTEGER
+    )'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'CREATE TABLE IF NOT EXISTS version(
+      id      INTEGER PRIMARY KEY,
+      version TEXT
+    )'
+    );
+    $query->execute();
+
+    eval {
+        $query = $db->prepare('SELECT * FROM version');
+        $query->execute;
+    };
+    if ($@) {
+        warn "$@";
+        exit 1;
+    }
+    my $version = $query->fetchall_arrayref({});
+    $version = $version->[0]->{version};
+    warn "Version: $version";
+
+    if (!defined $version) {
+        $version = upgrade_to_0_3_4($db, $version);
+        warn "Version: $version";
+    }
+
+    if ($version eq '0.3.4') {
+        warn 'Database update complete!';
+    }
+
+    return 1;
+}
+
+sub upgrade_to_0_3_4 {
+    my $db              = shift;
+    my $current_version = shift;
+
+    my $query = undef;
+
+    $query = $db->prepare(
+    'ALTER TABLE network RENAME TO network_tmp'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'CREATE TABLE network(
+      id          INTEGER PRIMARY KEY,
+      created     INTEGER,
+      description TEXT,
+      number      INTEGER,
+      switch      TEXT,
+      username    TEXT,
+      uuid        TEXT,
+      workgroup   TEXT,
+      CONSTRAINT constraint_number UNIQUE (switch, number),
+      CONSTRAINT constraint_uuid   UNIQUE (uuid)
+    )'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'INSERT INTO network
+     SELECT id, created, description, number, switch, username, uuid, workgroup
+     FROM network_tmp'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'DROP TABLE network_tmp'
+    );
+    $query->execute();
+
+    $query = $db->prepare(
+    'INSERT INTO version (version) VALUES ("0.3.4")'
+    );
+    $query->execute();
+
+    return "0.3.4";
+}
+
+main();

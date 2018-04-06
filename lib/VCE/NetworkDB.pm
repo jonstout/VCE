@@ -61,7 +61,7 @@ sub BUILD{
       username    TEXT,
       uuid        TEXT,
       workgroup   TEXT,
-      CONSTRAINT constraint_number UNIQUE (number),
+      CONSTRAINT constraint_number UNIQUE (switch, number),
       CONSTRAINT constraint_uuid   UNIQUE (uuid)
     )'
     );
@@ -114,7 +114,7 @@ sub BUILD{
 sub add_interface {
     my $self = shift;
     my %params = @_;
-    $self->logger->info('Calling add_interface');
+    $self->logger->debug('Calling add_interface');
 
     return if(!defined($params{admin_status}));
     return if(!defined($params{description}));
@@ -160,7 +160,7 @@ any VLANs it was previously associated with.
 sub delete_interface{
     my $self = shift;
     my %params = @_;
-    $self->logger->info("Calling delete_interface");
+    $self->logger->debug("Calling delete_interface");
 
     if (!defined $params{id}) {
         $self->logger->error("No interface id specified");
@@ -195,17 +195,6 @@ sub delete_interface{
         return;
     }
 
-    eval {
-        $query = $self->db->prepare(
-            'DELETE FROM vlan WHERE interface=?'
-        );
-        $query->execute($interface->[0]->{name});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return;
-    }
-
     $self->logger->debug("Called delete_interface");
     return 1;
 }
@@ -225,8 +214,7 @@ sub delete_interface{
 sub update_interface {
     my $self = shift;
     my %params = @_;
-    $self->logger->info('Calling update_interface');
-    $self->logger->debug(Dumper(\%params));
+    $self->logger->debug('Calling update_interface');
 
     return if (!defined $params{id});
 
@@ -268,7 +256,7 @@ sub update_interface {
     };
     if ($@) {
         $self->logger->error("$@");
-        return undef;
+        return;
     }
 
     $self->logger->debug('Called update_interface');

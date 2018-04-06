@@ -53,16 +53,17 @@ sub BUILD{
 
     $self->_set_vce( VCE->new() );
 
-    my $client = GRNOC::RabbitMQ::Client->new( user => $self->rabbit_mq->{'user'},
-					       pass => $self->rabbit_mq->{'pass'},
-					       host => $self->rabbit_mq->{'host'},
-					       timeout => 30,
-					       port => $self->rabbit_mq->{'port'},
-					       exchange => 'VCE',
-					       topic => 'VCE.Switch.RPC' );
-    
-    $self->_set_rabbit_client( $client );
-    
+    my $client = GRNOC::RabbitMQ::Client->new(
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        host     => $self->rabbit_mq->{'host'},
+        timeout  => 30,
+        port     => $self->rabbit_mq->{'port'},
+        exchange => 'VCE',
+        topic    => 'VCE.Switch.'
+    );
+    $self->_set_rabbit_client($client);
+
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
     $self->_set_template(Template->new());
@@ -199,6 +200,8 @@ sub _execute_command{
     }
 
     $self->logger->debug("Running $cmd_string with params: " . Dumper($vars));
+    $self->rabbit_client->{topic} = 'VCE.Switch.' . $p_ref->{switch}{value};
+
     my $res;
     if (defined $context_string) {
         $self->logger->debug("Running $cmd_string in context $context_string: " . Dumper($command));

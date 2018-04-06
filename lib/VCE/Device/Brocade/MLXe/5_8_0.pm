@@ -774,6 +774,7 @@ sub _get_interface{
                 $int->{'name'} =~ s/GigabitEthernet/ethernet /;
                 $int->{'name'} =~ s/Ethernetmgmt/management /;
                 $int->{'name'} =~ s/Loopback/loopback /;
+                $int->{'name'} =~ s/Ve/ve /;
 
                 $line =~ /is (\S+), line protocol is (\S+)/;
                 $int->{'admin_status'} = $1;

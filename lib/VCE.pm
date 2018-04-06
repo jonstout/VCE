@@ -114,12 +114,14 @@ sub BUILD{
 
     $self->_set_network_model( VCE::NetworkDB->new( path => $self->network_model_file ));
 
-    $self->_set_device_client( GRNOC::RabbitMQ::Client->new( host => $self->rabbit_mq->{'host'},
-                                                             port => $self->rabbit_mq->{'port'},
-                                                             user => $self->rabbit_mq->{'user'},
-                                                             pass => $self->rabbit_mq->{'pass'},
-                                                             exchange => 'VCE',
-                                                             topic => 'VCE.Switch.RPC'));
+    $self->_set_device_client(GRNOC::RabbitMQ::Client->new(
+        host     => $self->rabbit_mq->{'host'},
+        port     => $self->rabbit_mq->{'port'},
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        exchange => 'VCE',
+        topic    => 'VCE.Switch.'
+    ));
     return $self;
 }
 
@@ -438,7 +440,7 @@ sub get_switches_operational_state{
     my $switches = $self->get_switches( workgroup => $params{'workgroup'});
     foreach my $switch (@$switches){
         my %int_state;
-        $switch->{'status'} = $self->_get_switch_status( switch => $switch );
+        $switch->{'status'} = $self->_get_switch_status(switch => $switch->{name});
 
         my $interface_list = $self->network_model->get_interfaces(switch => $switch->{name});
         my $interfaces = {};
@@ -500,6 +502,7 @@ sub _get_switch_status{
     my $self = shift;
     my %params = @_;
 
+    $self->device_client->{topic} = 'VCE.Switch.' . $params{switch};
     my $state = $self->device_client->get_device_status();
     if (defined $state->{'error'}) {
         $self->logger->error($state->{'error'});

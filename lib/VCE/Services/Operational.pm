@@ -175,7 +175,6 @@ sub get_interfaces_operational_status {
         $pdata->{'tags'} = $self->vce->access->friendly_display_vlans($port->{'tags'});
         push(@{$result}, $pdata);
     }
-
 	return {results => [{ ports => $result}]};
 }
 
