@@ -101,7 +101,7 @@ sub _register_commands{
                                               pattern => $GRNOC::WebService::Regex::NAME_ID,
                                               description => "workgroup to run the command as" );
 
-                if($type eq 'system' || $type eq 'port'){
+                if($type eq 'system' || $type eq 'port' || $type eq 'vlan'){
                     warn "Adding required param switch!\n";
                     $method->add_input_parameter( required => 1,
                                                   name => 'switch',
@@ -130,7 +130,15 @@ sub _register_commands{
                                                   description => $command->{'params'}{$param}->{'description'} );
                 }
 
-                $d->register_method( $method );
+                eval {
+                    $d->register_method($method);
+                };
+                if ($@) {
+                    # Because it's possible (likely) that multiple
+                    # switches have the same command definition, we
+                    # attempt to register the same command multiple
+                    # times. Ignore when this happens and continue on.
+                }
             }
         }
     }

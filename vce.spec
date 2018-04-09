@@ -82,7 +82,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
-%{__install} -m 544 bin/vce-run-check %{buildroot}%{_bindir}/vce-update-db
+%{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-update-db
 
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
