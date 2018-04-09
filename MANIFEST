@@ -1,4 +1,5 @@
 bin/vce-run-check
+bin/vce-update-db
 bin/vce.pl
 bin/vce_switch.pl
 etc/access_policy.xml
