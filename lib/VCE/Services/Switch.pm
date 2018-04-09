@@ -101,7 +101,7 @@ sub _register_commands{
                                               pattern => $GRNOC::WebService::Regex::NAME_ID,
                                               description => "workgroup to run the command as" );
 
-                if($type eq 'system' || $type eq 'port'){
+                if($type eq 'system' || $type eq 'port' || $type eq 'vlan'){
                     warn "Adding required param switch!\n";
                     $method->add_input_parameter( required => 1,
                                                   name => 'switch',
