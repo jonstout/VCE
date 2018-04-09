@@ -536,6 +536,11 @@ sub get_vlan_commands{
                                         required => 1 });
 
         push(@{$obj->{'parameters'}}, { type => 'hidden',
+                                        name => 'switch',
+                                        description => "switch to run the command as",
+                                        required => 1 });
+
+        push(@{$obj->{'parameters'}}, { type => 'hidden',
                                         name => 'vlan_id',
                                         description => "vlan_id of the vlan to run the command on",
                                         required => 1 });
@@ -545,8 +550,6 @@ sub get_vlan_commands{
 
             if($cmd->{'params'}{$param}{'type'} eq 'select'){
                 @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-            }else{
-
             }
 
             $p->{'type'} = $cmd->{'params'}{$param}{'type'};
