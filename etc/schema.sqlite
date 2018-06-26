@@ -1,0 +1,72 @@
+CREATE TABLE IF NOT EXISTS user(
+    id       INTEGER PRIMARY KEY,
+    username TEXT,
+    email    TEXT,
+    name     TEXT
+);
+
+CREATE TABLE IF NOT EXISTS workgroup(
+    id   INTEGER PRIMARY KEY,
+    name TEXT
+);
+
+CREATE TABLE IF NOT EXISTS user_workgroup(
+    id           INTEGER PRIMARY KEY,
+    role         STRING CHECK (role in ("admin", "ro", "rw")),
+    user_id      TEXT,
+    workgroup_id INTEGER,
+    FOREIGN KEY(user_id) REFERENCES user(id),
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
+);
+
+CREATE TABLE IF NOT EXISTS switch(
+    id          INTERGER PRIMARY KEY,
+    name        TEXT,
+    description TEXT,
+    ipv4        TEXT,
+    ssh         INTEGER,
+    netconf     INTEGER,
+    vendor      TEXT,
+    model       TEXT,
+    version     TEXT
+);
+
+CREATE TABLE IF NOT EXISTS interface(
+    id INTEGER PRIMARY KEY,
+    admin_up BOOLEAN CHECK (admin_up in (0, 1)),
+    name TEXT,
+    description TEXT,
+    link_up BOOLEAN CHECK (link_up in (0, 1)),
+    switch_id INTEGER,
+    FOREIGN KEY(switch_id) REFERENCES switch(id)
+);
+
+CREATE TABLE IF NOT EXISTS vlan(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    description TEXT,
+    created_on INTEGER,
+    created_by INTEGER,
+    FOREIGN KEY(created_by) REFERENCES user(id)
+);
+
+CREATE TABLE IF NOT EXISTS vlan_tag(
+    id INTEGER PRIMARY KEY,
+    description TEXT,
+    interface_id INTEGER,
+    name TEXT,
+    number INTEGER CHECK (number > 0 AND number < 4095),
+    vlan_id INTEGER,
+    FOREIGN KEY(interface_id) REFERENCES interface(id),
+    FOREIGN KEY(vlan_id) REFERENCES vlan(id)
+);
+
+CREATE TABLE IF NOT EXISTS interface_workgroup_vlan_acl(
+    id           INTEGER PRIMARY KEY,
+    interface_id INTEGER,
+    workgroup_id INTEGER,
+    low          INTEGER CHECK (low > 0 AND low <= high),
+    high         INTEGER CHECK (high < 4095 AND high >= low),
+    FOREIGN KEY(interface_id) REFERENCES interface(id),
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
+);
