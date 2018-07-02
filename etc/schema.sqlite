@@ -2,12 +2,13 @@ CREATE TABLE IF NOT EXISTS user(
     id       INTEGER PRIMARY KEY,
     username TEXT,
     email    TEXT,
-    name     TEXT
+    fullname TEXT
 );
 
 CREATE TABLE IF NOT EXISTS workgroup(
     id   INTEGER PRIMARY KEY,
-    name TEXT
+    name TEXT,
+    description TEXT
 );
 
 CREATE TABLE IF NOT EXISTS user_workgroup(
@@ -20,7 +21,7 @@ CREATE TABLE IF NOT EXISTS user_workgroup(
 );
 
 CREATE TABLE IF NOT EXISTS switch(
-    id          INTERGER PRIMARY KEY,
+    id          INTEGER PRIMARY KEY,
     name        TEXT,
     description TEXT,
     ipv4        TEXT,
@@ -37,7 +38,9 @@ CREATE TABLE IF NOT EXISTS interface(
     name TEXT,
     description TEXT,
     link_up BOOLEAN CHECK (link_up in (0, 1)),
+    owner_id INTEGER,
     switch_id INTEGER,
+    FOREIGN KEY(owner_id) REFERENCES workgroup(id),
     FOREIGN KEY(switch_id) REFERENCES switch(id)
 );
 
@@ -52,9 +55,7 @@ CREATE TABLE IF NOT EXISTS vlan(
 
 CREATE TABLE IF NOT EXISTS vlan_tag(
     id INTEGER PRIMARY KEY,
-    description TEXT,
     interface_id INTEGER,
-    name TEXT,
     number INTEGER CHECK (number > 0 AND number < 4095),
     vlan_id INTEGER,
     FOREIGN KEY(interface_id) REFERENCES interface(id),

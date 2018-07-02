@@ -1,4 +1,4 @@
-package Database::Connection;
+package VCE::Database::Connection;
 
 use strict;
 use warnings;
@@ -6,9 +6,11 @@ use warnings;
 use DBI;
 use GRNOC::Log;
 
-use Database::Interface;
-use Database::Switch;
-use Database::VLAN;
+use VCE::Database::Interface;
+use VCE::Database::Switch;
+use VCE::Database::User;
+use VCE::Database::VLAN;
+use VCE::Database::Workgroup;
 
 sub new {
     my $class = shift;
