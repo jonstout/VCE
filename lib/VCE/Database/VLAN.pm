@@ -6,13 +6,28 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( get_vlan_acls );
+our @EXPORT = qw( add_vlan_acl get_vlan_acls );
 
+
+sub add_vlan_acl {
+    my ( $self, $interface_id, $workgroup_id, $low, $high ) = @_;
+
+    $self->{log}->debug("get_vlan_acls($interface_id, $workgroup_id, $low, $high)");
+
+    my $q = $self->{conn}->prepare(
+        "insert into interface_workgroup_vlan_acl
+         (interface_id, workgroup_id, low, high)
+         values (?, ?, ?, ?)"
+    );
+    $q->execute($interface_id, $workgroup_id, $low, $high);
+
+    return $self->{conn}->last_insert_id("", "", "interface_workgroup_vlan_acl", "");
+}
 
 sub get_vlan_acls {
-    my ( $self, $workgroup_id, $interface_id ) = @_;
+    my ( $self, $interface_id, $workgroup_id ) = @_;
 
-    $self->{log}->debug("get_vlan_acls($self->{conn}, $workgroup_id, $interface_id)");
+    $self->{log}->debug("get_vlan_acls($self->{conn}, $interface_id, $workgroup_id)");
 
     my $q = $self->{conn}->prepare(
         "select * from interface_workgroup_vlan_acl as iwva
@@ -24,10 +39,7 @@ sub get_vlan_acls {
     my $result = [];
 
     foreach my $acl (@$acls) {
-        push @$result, {
-            high => $acl->{high},
-            low  => $acl->{low}
-        };
+        push @$result, { high => $acl->{high}, low  => $acl->{low} };
     }
 
     return $result;
