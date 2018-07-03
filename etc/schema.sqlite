@@ -71,3 +71,20 @@ CREATE TABLE IF NOT EXISTS interface_workgroup_vlan_acl(
     FOREIGN KEY(interface_id) REFERENCES interface(id),
     FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
 );
+
+CREATE TABLE IF NOT EXISTS command(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    description TEXT,
+    role STRING CHECK (role in ("interface", "switch", "vlan")),
+    template TEXT
+);
+
+CREATE TABLE IF NOT EXISTS parameter(
+    id INTEGER PRIMARY KEY,
+    command_id INTEGER,
+    name TEXT,
+    regex TEXT,
+    type STRING CHECK (type in ("input", "option")),
+    FOREIGN KEY(command_id) REFERENCES command(id)
+);
