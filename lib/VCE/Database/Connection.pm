@@ -9,6 +9,7 @@ use GRNOC::Log;
 use VCE::Database::Command;
 use VCE::Database::Interface;
 use VCE::Database::Switch;
+use VCE::Database::Parameter;
 use VCE::Database::User;
 use VCE::Database::VLAN;
 use VCE::Database::Workgroup;
