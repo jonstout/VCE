@@ -6,6 +6,7 @@ use warnings;
 use DBI;
 use GRNOC::Log;
 
+use VCE::Database::ACL;
 use VCE::Database::Command;
 use VCE::Database::Interface;
 use VCE::Database::Switch;

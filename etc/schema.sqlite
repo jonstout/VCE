@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS workgroup(
 
 CREATE TABLE IF NOT EXISTS user_workgroup(
     id           INTEGER PRIMARY KEY,
-    role         STRING CHECK (role in ("admin", "ro", "rw")),
+    role         STRING CHECK (role in ("admin", "rw", "ro")),
     user_id      TEXT,
     workgroup_id INTEGER,
     FOREIGN KEY(user_id) REFERENCES user(id),
@@ -35,7 +35,11 @@ CREATE TABLE IF NOT EXISTS switch(
 CREATE TABLE IF NOT EXISTS interface(
     id INTEGER PRIMARY KEY,
     admin_up BOOLEAN CHECK (admin_up in (0, 1)),
+    hardware_type TEXT,
+    mac_addr TEXT,
+    mtu INTEGER,
     name TEXT,
+    speed TEXT,
     description TEXT,
     link_up BOOLEAN CHECK (link_up in (0, 1)),
     owner_id INTEGER,
@@ -56,13 +60,14 @@ CREATE TABLE IF NOT EXISTS vlan(
 CREATE TABLE IF NOT EXISTS vlan_tag(
     id INTEGER PRIMARY KEY,
     interface_id INTEGER,
+    mode TEXT,
     number INTEGER CHECK (number > 0 AND number < 4095),
     vlan_id INTEGER,
     FOREIGN KEY(interface_id) REFERENCES interface(id),
     FOREIGN KEY(vlan_id) REFERENCES vlan(id)
 );
 
-CREATE TABLE IF NOT EXISTS interface_workgroup_vlan_acl(
+CREATE TABLE IF NOT EXISTS interface_workgroup_acl(
     id           INTEGER PRIMARY KEY,
     interface_id INTEGER,
     workgroup_id INTEGER,
@@ -76,8 +81,15 @@ CREATE TABLE IF NOT EXISTS command(
     id INTEGER PRIMARY KEY,
     name TEXT,
     description TEXT,
-    role STRING CHECK (role in ("interface", "switch", "vlan")),
+    type STRING CHECK (type in ("interface", "switch", "vlan")),
     template TEXT
+);
+
+CREATE TABLE IF NOT EXISTS switch_command(
+    id INTEGER PRIMARY KEY,
+    role STRING CHECK (role in ("admin", "rw", "ro")),
+    FOREIGN KEY(switch_id) REFERENCES switch(id),
+    FOREIGN KEY(command_id) REFERENCES command(id)
 );
 
 CREATE TABLE IF NOT EXISTS parameter(

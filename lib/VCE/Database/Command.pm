@@ -9,16 +9,16 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_command get_commands );
 
 sub add_command {
-    my ( $self, $name, $description, $role, $template ) = @_;
+    my ( $self, $name, $description, $type, $template ) = @_;
 
-    $self->{log}->debug("add_command($name, $description, $role, $template)");
+    $self->{log}->debug("add_command($name, $description, $type, $template)");
 
     my $q = $self->{conn}->prepare(
         "insert into command
-         (name, description, role, template)
+         (name, description, type, template)
          values (?, ?, ?, ?)"
     );
-    $q->execute($name, $description, $role, $template);
+    $q->execute($name, $description, $type, $template);
 
     return $self->{conn}->last_insert_id("", "", "command", "");
 }
