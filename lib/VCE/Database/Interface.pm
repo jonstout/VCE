@@ -6,28 +6,61 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_interface get_interface get_interfaces );
+our @EXPORT = qw( add_interface get_interface get_interfaces update_interface );
 
 
+=head2 add_interface
+
+    my $id = add_interface(
+      admin_up => 0,
+      description => '',
+      hardware_type => '100GigabitEthernet',
+      link_up => 1,
+      mac_addr => 'cc4e.240c.0cc1',
+      mtu => '9216',
+      name => 'ethernet 5/2',
+      owner_id => 1,
+      speed => 'unknown',
+      switch_id => 1
+    );
+
+=cut
 sub add_interface {
-    my ( $self, $admin_up, $name, $description, $link_up, $owner_id, $switch_id ) = @_;
+    my $self   = shift;
+    my %params = @_;
 
-    $self->{log}->debug("add_switch($admin_up, $name, $description, $link_up, $owner_id, $switch_id)");
+    return if (!defined $params{description});
+    return if (!defined $params{name});
+    return if (!defined $params{switch_id});
+
+    $self->{log}->debug("add_switch($params{name}, $params{description}, $params{switch_id})");
 
     my $q = $self->{conn}->prepare(
-        "insert into interface
-         (admin_up, name, description, link_up, owner_id, switch_id)
-         values (?, ?, ?, ?, ?, ?)"
+        "insert into interface (
+           admin_up, description, hardware_type, link_up,
+           mac_addr, mtu, name, owner_id, speed, switch_id
+         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    $q->execute($admin_up, $name, $description, $link_up, $owner_id, $switch_id);
+    $q->execute(
+        $params{admin_up} || 0,
+        $params{description} || '',
+        $params{hardware_type},
+        $params{link_up} || 0,
+        $params{mac_addr},
+        $params{mtu},
+        $params{name},
+        $params{owner_id} || 1,
+        $params{speed} || 'unknown',
+        $params{switch_id}
+    );
 
     return $self->{conn}->last_insert_id("", "", "interface", "");
 }
 
 sub get_interface {
-    my ( $self, $workgroup_id, $interface_id ) = @_;
+    my ( $self, $interface_id ) = @_;
 
-    $self->{log}->debug("get_interface($self->{conn}, $interface_id)");
+    $self->{log}->debug("get_interface($interface_id)");
 
     my $q = $self->{conn}->prepare(
         "select * from interface as i
@@ -56,6 +89,80 @@ sub get_interfaces {
 
     my $result = $q->fetchall_arrayref({});
     return $result;
+}
+
+=head2 update_interface
+
+    my $ok = update_interface(
+      id => 1,
+      admin_up => 0,
+      description => '',
+      hardware_type => '100GigabitEthernet',
+      link_up => 1,
+      mac_addr => 'cc4e.240c.0cc1',
+      mtu => '9216',
+      name => 'ethernet 5/2',
+      owner_id => 1,
+      speed => 'unknown',
+      switch_id => 1
+    );
+
+=cut
+sub update_interface {
+    my $self   = shift;
+    my %params = @_;
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("update_switch($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{admin_up}) {
+        push @$keys, 'admin_up=?';
+        push @$args, $params{admin_up};
+    }
+    if (defined $params{description}) {
+        push @$keys, 'description=?';
+        push @$args, $params{description};
+    }
+    if (defined $params{hardware_type}) {
+        push @$keys, 'hardware_type=?';
+        push @$args, $params{hardware_type};
+    }
+    if (defined $params{link_up}) {
+        push @$keys, 'link_up=?';
+        push @$args, $params{link_up};
+    }
+    if (defined $params{mac_addr}) {
+        push @$keys, 'mac_addr=?';
+        push @$args, $params{mac_addr};
+    }
+    if (defined $params{mtu}) {
+        push @$keys, 'mtu=?';
+        push @$args, $params{mtu};
+    }
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{owner_id}) {
+        push @$keys, 'owner_id=?';
+        push @$args, $params{owner_id};
+    }
+    if (defined $params{speed}) {
+        push @$keys, 'speed=?';
+        push @$args, $params{speed};
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "UPDATE interface SET $values WHERE id=?"
+    );
+    return $q->execute(@$args);
 }
 
 return 1;

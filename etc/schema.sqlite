@@ -87,6 +87,8 @@ CREATE TABLE IF NOT EXISTS command(
 
 CREATE TABLE IF NOT EXISTS switch_command(
     id INTEGER PRIMARY KEY,
+    command_id INTEGER,
+    switch_id INTEGER,
     role STRING CHECK (role in ("admin", "rw", "ro")),
     FOREIGN KEY(switch_id) REFERENCES switch(id),
     FOREIGN KEY(command_id) REFERENCES command(id)
