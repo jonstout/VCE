@@ -54,10 +54,12 @@ CREATE TABLE IF NOT EXISTS vlan(
     description TEXT,
     created_on INTEGER,
     created_by INTEGER,
-    FOREIGN KEY(created_by) REFERENCES user(id)
+    owner_id INTEGER,
+    FOREIGN KEY(created_by) REFERENCES user(id),
+    FOREIGN KEY(owner_id) REFERENCES workgroup(id)
 );
 
-CREATE TABLE IF NOT EXISTS vlan_tag(
+CREATE TABLE IF NOT EXISTS tag(
     id INTEGER PRIMARY KEY,
     interface_id INTEGER,
     mode TEXT,
