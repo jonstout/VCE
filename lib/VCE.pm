@@ -61,7 +61,7 @@ has device_client => (is => 'rwp');
 
 has rabbit_mq => (is => 'rwp');
 
-=head1 SYNOPSIS
+=head2 SYNOPSIS
 
 This is a module to provide a simplified object oriented way to connect to
 and interact with the VCE database.
@@ -75,6 +75,8 @@ and interact with the VCE database.
     );
 
 =cut
+
+=head2 BUILD
 
 =over 4
 
@@ -96,9 +98,7 @@ and interact with the VCE database.
 
 =item state
 
-=back 
-
-=head2 BUILD
+=back
 
 =cut
 
@@ -125,6 +125,9 @@ sub BUILD{
     return $self;
 }
 
+=head2 _process_config
+
+=cut
 sub _process_config{
     my $self = shift;
 
@@ -498,6 +501,9 @@ sub get_switches_operational_state{
     return $switches;
 }
 
+=head2 _get_switch_status
+
+=cut
 sub _get_switch_status{
     my $self = shift;
     my %params = @_;

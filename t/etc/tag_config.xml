@@ -38,14 +38,20 @@
       <tags start="1" end="100" workgroup="alpha"/>
       <tags start="1" end="100" workgroup="alpha"/>
     </port>
+
+    <port name="eth0/4" owner="charlie">
+      <tags start="100" end="199" workgroup="alpha"/>
+      <tags start="205" end="205" workgroup="alpha"/>
+      <tags start="201" end="201" workgroup="bravo"/>
+    </port>
   </switch>
 
-  <workgroup name="alpha"  description="this is edcos exchange point access workgroup">
+  <workgroup name="alpha" description="this is edcos exchange point access workgroup">
     <user id="cartman"/>
     <user id="kenny" />
   </workgroup>
 
-  <workgroup name="bravo"  description="this is ajcos exchange point access workgroup">
+  <workgroup name="bravo" admin="" description="this is ajcos exchange point access workgroup">
     <user id="kenny" />
     <user id="kyle" />
   </workgroup>
