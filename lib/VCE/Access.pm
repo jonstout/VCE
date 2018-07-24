@@ -590,7 +590,8 @@ sub get_admin_workgroup {
     my $self = shift;
 
     foreach my $wgroup (keys %{$self->config->{'workgroups'}}) {
-        if (defined $self->config->{'workgroups'}->{$wgroup}->{'admin'}) {
+        my $is_admin = $self->config->{'workgroups'}->{$wgroup}->{'admin'};
+        if (defined $is_admin && $is_admin == 1) {
             return $self->config->{'workgroups'}->{$wgroup};
         }
     }
