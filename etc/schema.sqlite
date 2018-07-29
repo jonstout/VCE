@@ -50,26 +50,26 @@ CREATE TABLE IF NOT EXISTS interface(
 
 CREATE TABLE IF NOT EXISTS vlan(
     id INTEGER PRIMARY KEY,
-    name TEXT,
-    description TEXT,
-    created_on INTEGER,
     created_by INTEGER,
-    owner_id INTEGER,
+    created_on INTEGER,
+    description TEXT,
+    name TEXT,
+    number INTEGER CHECK (number > 0 AND number < 4095),
+    workgroup_id INTEGER,
     FOREIGN KEY(created_by) REFERENCES user(id),
-    FOREIGN KEY(owner_id) REFERENCES workgroup(id)
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
 );
 
 CREATE TABLE IF NOT EXISTS tag(
     id INTEGER PRIMARY KEY,
     interface_id INTEGER,
     mode TEXT,
-    number INTEGER CHECK (number > 0 AND number < 4095),
     vlan_id INTEGER,
     FOREIGN KEY(interface_id) REFERENCES interface(id),
     FOREIGN KEY(vlan_id) REFERENCES vlan(id)
 );
 
-CREATE TABLE IF NOT EXISTS interface_workgroup_acl(
+CREATE TABLE IF NOT EXISTS acl(
     id           INTEGER PRIMARY KEY,
     interface_id INTEGER,
     workgroup_id INTEGER,

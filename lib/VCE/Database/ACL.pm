@@ -15,7 +15,7 @@ sub add_acl {
     $self->{log}->debug("add_acl($workgroup_id, $interface_id, $low, $high)");
 
     my $q = $self->{conn}->prepare(
-        "insert into interface_workgroup_acl
+        "insert into acl
          (interface_id, workgroup_id, low, high)
          values (?, ?, ?, ?)"
     );
@@ -30,8 +30,8 @@ sub get_acls {
     $self->{log}->debug("get_acls($self->{conn}, $workgroup_id, $interface_id)");
 
     my $q = $self->{conn}->prepare(
-        "select * from interface_workgroup_acl as iwa
-         where iwa.workgroup_id=? and iwa.interface_id=?"
+        "select * from acl
+         where acl.workgroup_id=? and acl.interface_id=?"
     );
     $q->execute($workgroup_id, $interface_id);
 
