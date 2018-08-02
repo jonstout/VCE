@@ -96,7 +96,7 @@ foreach my $key (keys %$switches) {
             name => $pname,
             description => $p->{description},
             switch_id => $sw_id,
-            owner_id => $w->{id}
+            workgroup_id => $w->{id}
         );
         $intf2id->{$sw->{name}}->{$pname} = $intf_id;
 
@@ -120,6 +120,7 @@ foreach my $key (keys %$switches) {
                 $type
             );
         }
+        $db->add_command_to_switch($cmd_id, $sw_id, $cmd->{user_type});
     }
     $port_commands = $sw->{commands}->{system};
     foreach my $cmd (@$port_commands) {
@@ -135,6 +136,7 @@ foreach my $key (keys %$switches) {
                 $type
             );
         }
+        $db->add_command_to_switch($cmd_id, $sw_id, $cmd->{user_type});
     }
     $port_commands = $sw->{commands}->{vlan};
     foreach my $cmd (@$port_commands) {
@@ -150,6 +152,7 @@ foreach my $key (keys %$switches) {
                 $type
             );
         }
+        $db->add_command_to_switch($cmd_id, $sw_id, $cmd->{user_type});
     }
 }
 
@@ -224,8 +227,6 @@ foreach my $old_vlan (@{$old_vlans}) {
     foreach my $ep (@{$old_vlan->{endpoints}}) {
         $db->add_tag('tagged', $intf2id->{$sw}->{$ep->{port}}, $vlan_id);
     }
-
-    warn Dumper($old_vlan);
 }
 
 my $nvlans = $db->get_vlans();

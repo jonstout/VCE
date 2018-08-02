@@ -19,7 +19,7 @@ our @EXPORT = qw( add_interface get_interface get_interfaces update_interface );
       mac_addr => 'cc4e.240c.0cc1',
       mtu => '9216',
       name => 'ethernet 5/2',
-      owner_id => 1,
+      workgroup_id => 1,
       speed => 'unknown',
       switch_id => 1
     );
@@ -38,7 +38,7 @@ sub add_interface {
     my $q = $self->{conn}->prepare(
         "insert into interface (
            admin_up, description, hardware_type, link_up,
-           mac_addr, mtu, name, owner_id, speed, switch_id
+           mac_addr, mtu, name, workgroup_id, speed, switch_id
          ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $q->execute(
@@ -49,7 +49,7 @@ sub add_interface {
         $params{mac_addr},
         $params{mtu},
         $params{name},
-        $params{owner_id} || 1,
+        $params{workgroup_id} || 1,
         $params{speed} || 'unknown',
         $params{switch_id}
     );
@@ -102,7 +102,7 @@ sub get_interfaces {
       mac_addr => 'cc4e.240c.0cc1',
       mtu => '9216',
       name => 'ethernet 5/2',
-      owner_id => 1,
+      workgroup_id => 1,
       speed => 'unknown',
       switch_id => 1
     );
@@ -114,7 +114,7 @@ sub update_interface {
 
     return if (!defined $params{id});
 
-    $self->{log}->debug("update_switch($params{id}, ...)");
+    $self->{log}->debug("update_interface($params{id}, ...)");
 
     my $keys = [];
     my $args = [];
@@ -147,9 +147,9 @@ sub update_interface {
         push @$keys, 'name=?';
         push @$args, $params{name};
     }
-    if (defined $params{owner_id}) {
-        push @$keys, 'owner_id=?';
-        push @$args, $params{owner_id};
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'workgroup_id=?';
+        push @$args, $params{workgroup_id};
     }
     if (defined $params{speed}) {
         push @$keys, 'speed=?';
