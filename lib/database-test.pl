@@ -8,10 +8,10 @@ use GRNOC::Config;
 use VCE::Database::Connection;
 use VCE::NetworkDB;
 
-`rm delme.db`;
-`sqlite3 delme.db < etc/schema.sqlite`;
+`rm etc/database.sqlite`;
+`sqlite3 etc/database.sqlite < etc/schema.sqlite`;
 
-my $db = VCE::Database::Connection->new("delme.db");
+my $db = VCE::Database::Connection->new("etc/database.sqlite");
 
 my $switch_id = 1;
 my $workgroup_id = 1;
