@@ -83,6 +83,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
 %{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-update-db
+%{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-migrate-access-policy
 
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
@@ -104,6 +105,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
 
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
+%{__install} etc/database.sqlite %{buildroot}%{_sharedstatedir}/vce/database.sqlite
 
 # Final Step
 %{_fixperms} $RPM_BUILD_ROOT/*
@@ -132,6 +134,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/vce
 %{_bindir}/vce-run-check
 %{_bindir}/vce-update-db
+%{_bindir}/vce-migrate-access-policy
 
 /etc/systemd/system/vce.service
 /usr/lib/systemd/scripts/vce
@@ -146,3 +149,4 @@ rm -rf $RPM_BUILD_ROOT
 
 %dir               %attr(775,vce,vce) %{_sharedstatedir}/vce
 %config(noreplace) %attr(664,vce,vce) %{_sharedstatedir}/vce/network_model.sqlite
+%config(noreplace) %attr(664,vce,vce) %{_sharedstatedir}/vce/database.sqlite
