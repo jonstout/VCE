@@ -16,6 +16,17 @@ use VCE::Database::User;
 use VCE::Database::VLAN;
 use VCE::Database::Workgroup;
 
+=head1 VCE::Database::Connection
+
+    use VCE::Database::Connection
+
+=cut
+
+=head2 new
+
+    my $db = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
+
+=cut
 sub new {
     my $class = shift;
     my ( $path ) = @_;
@@ -24,7 +35,6 @@ sub new {
         config => '/etc/vce/logging.conf',
         watch => 5
     );
-    my $log = $logger->get_logger("VCE.Database.Connection");
 
     my $conn = DBI->connect(
         "dbi:SQLite:dbname=$path",
@@ -35,7 +45,7 @@ sub new {
 
     my $self = bless {
         conn => $conn,
-        log => $log,
+        log => $logger->get_logger("VCE.Database.Connection"),
         path => $path
     }, $class;
 

@@ -12,12 +12,15 @@ use GRNOC::RabbitMQ::Method;
 use GRNOC::RabbitMQ::Dispatcher;
 use GRNOC::WebService::Regex;
 
+use VCE::Database::Connection;
 use VCE::Device;
 use VCE::Device::Brocade::MLXe::5_8_0;
 use VCE::NetworkDB;
 
 has logger => (is => 'rwp');
+has id => (is => 'rwp');
 has db => (is => 'rwp');
+has db2 => (is => 'rwp');
 has device => (is => 'rwp');
 has type => (is => 'rwp');
 has vendor => (is => 'rwp');
@@ -55,7 +58,11 @@ has name => (is => 'rwp');
 
 =item hostname
 
+=item id
+
 =item db
+
+=item db2
 
 =item dispatcher
 
@@ -80,6 +87,7 @@ sub BUILD {
     $0 = "VCE(" . $self->username . ")";
 
     $self->_set_db(VCE::NetworkDB->new());
+    $self->_set_db2(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     $self->logger->debug("Creating Dispatcher");
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new(
@@ -629,8 +637,10 @@ sub _gather_operational_status{
     }
 
     my $interfaces_state = $self->db->get_interfaces(switch => $self->name);
+
+    my $interfaces = $self->db2->get_interfaces(switch_id => $self->id);
     my $ifaces = {};
-    foreach my $intf (@{$interfaces_state}) {
+    foreach my $intf (@{$interfaces}) {
         $ifaces->{$intf->{name}} = $intf;
     }
 
@@ -640,27 +650,27 @@ sub _gather_operational_status{
     foreach my $name (keys %{$interfaces_state}) {
         if (defined $ifaces->{$name}) {
             $self->logger->info('Updating info on interface');
-            $self->db->update_interface(
-                id            => $ifaces->{$name}->{id},
-                admin_status  => $interfaces_state->{$name}->{admin_status},
-                description   => $interfaces_state->{$name}->{description},
-                mtu           => $interfaces_state->{$name}->{mtu},
-                speed         => $interfaces_state->{$name}->{speed},
-                status        => $interfaces_state->{$name}->{status}
+            $self->db2->update_interface(
+                id          => $ifaces->{$name}->{id},
+                admin_up    => $interfaces_state->{$name}->{admin_status},
+                link_up     => $interfaces_state->{$name}->{status},
+                description => $interfaces_state->{$name}->{description},
+                mtu         => $interfaces_state->{$name}->{mtu},
+                speed       => $interfaces_state->{$name}->{speed}
             );
             delete $ifaces->{$name};
         } else {
             $self->logger->info('Creating interface');
-            $self->db->add_interface(
-                admin_status  => $interfaces_state->{$name}->{admin_status},
+            $self->db2->add_interface(
+                admin_up      => $interfaces_state->{$name}->{admin_status},
                 description   => $interfaces_state->{$name}->{description},
                 hardware_type => $interfaces_state->{$name}->{hardware_type},
                 mac_addr      => $interfaces_state->{$name}->{mac_addr},
                 mtu           => $interfaces_state->{$name}->{mtu},
                 name          => $interfaces_state->{$name}->{name},
                 speed         => $interfaces_state->{$name}->{speed},
-                status        => $interfaces_state->{$name}->{status},
-                switch        => $self->name
+                link_up       => $interfaces_state->{$name}->{status},
+                switch_id     => $ifaces->{$name}->{id}
             );
         }
     }
@@ -669,7 +679,7 @@ sub _gather_operational_status{
     # with updates are removed above, the only thing left are
     # interfaces which no longer exist on the device.
     foreach my $name (keys %{$ifaces}) {
-        my $ok = $self->db->delete_interface(id => $ifaces->{$name}->{id});
+        my $ok = $self->db2->delete_interface($ifaces->{$name}->{id});
         if ($ok) {
             $self->logger->warn("Interface $name was removed from " . $self->name . "; Removing it from database.");
         }

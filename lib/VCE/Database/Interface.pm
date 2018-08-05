@@ -57,6 +57,31 @@ sub add_interface {
     return $self->{conn}->last_insert_id("", "", "interface", "");
 }
 
+sub delete_interface {
+    my $self = shift;
+    my $interface_id = shift;
+
+    $self->{log}->debug("Calling delete_interface");
+
+    if (!defined $interface_id) {
+        $self->{log}->error("No interface id specified");
+        return;
+    }
+
+    eval {
+        my $query = $self->db->prepare(
+            'DELETE FROM interface WHERE id=?'
+        );
+        $query->execute($interface_id);
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return 0;
+    }
+
+    return 1;
+}
+
 sub get_interface {
     my ( $self, $interface_id ) = @_;
 
@@ -78,14 +103,26 @@ sub get_interface {
 }
 
 sub get_interfaces {
-    my ( $self ) = @_;
+    my $self = shift;
+    my %params = @_;
 
     $self->{log}->debug("get_interfaces( )");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{switch_id}) {
+        push @$keys, 'switch_id=?';
+        push @$args, $params{switch_id};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from interface"
+        "SELECT * FROM interface $where"
     );
-    $q->execute();
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;
@@ -159,10 +196,16 @@ sub update_interface {
     my $values = join(', ', @$keys);
     push @$args, $params{id};
 
-    my $q = $self->{conn}->prepare(
-        "UPDATE interface SET $values WHERE id=?"
-    );
-    return $q->execute(@$args);
+    eval {
+        my $q = $self->{conn}->prepare(
+            "UPDATE interface SET $values WHERE id=?"
+        );
+        return $q->execute(@$args);
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return;
+    }
 }
 
 return 1;

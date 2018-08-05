@@ -122,7 +122,8 @@ sub main {
             type => $switch->{'model'},
             version => $switch->{'version'},
             name => $switch->{'name'},
-            rabbit_mq => $vce->rabbit_mq
+            rabbit_mq => $vce->rabbit_mq,
+            id => $switch->{'id'}
         );
 
         $logger->info("Switch $switch->{name} created.");

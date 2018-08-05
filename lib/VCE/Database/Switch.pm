@@ -9,6 +9,12 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_switch get_switch get_switches );
 
 
+=head1 Package VCE::Database::Switch
+
+    use VCE::Database::Switch
+
+=cut
+
 sub add_switch {
     my ( $self, $name, $description, $ipv4, $ssh, $netconf,
          $vendor, $model, $version ) = @_;
@@ -46,6 +52,23 @@ sub get_switch {
     return $switch;
 }
 
+=head2 get_switches
+
+get_switches returns an array of switch hashs.
+
+    {
+        id => 1,
+        name => 'mlxe16-1.sdn-test.grnoc.iu.edu',
+        description => 'testlab',
+        ipv4 => '192.168.1.1',
+        ssh => 22,
+        netconf => 830,
+        vendor => 'Brocade',
+        model => 'MLXe',
+        version => '5.8.0'
+    }
+
+=cut
 sub get_switches {
     my ( $self ) = @_;
 
