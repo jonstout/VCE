@@ -83,7 +83,7 @@ function NewCommandForm(details, reponseFunc) {
     input.addEventListener("click", function(e) {
         var cookie = Cookies.getJSON('vce');
         
-        var url = baseUrl + 'switch.cgi?method=' + details.method_name;
+        var url = baseUrl + 'command.cgi?method=' + details.method_name;
         for (var i = 0; i < e.target.form.length; i++) {
             var name  = e.target.form[i].name;
             var value = e.target.form[i].value;
