@@ -9,6 +9,8 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_user add_user_to_workgroup get_user get_users );
 
 
+=head2 add_user
+=cut
 sub add_user {
     my ( $self, $username, $email, $fullname ) = @_;
 
@@ -22,6 +24,8 @@ sub add_user {
     return $self->{conn}->last_insert_id("", "", "user", "");
 }
 
+=head2 add_user_to_workgroup
+=cut
 sub add_user_to_workgroup {
     my ( $self, $user_id, $workgroup_id, $role ) = @_;
 
@@ -37,6 +41,8 @@ sub add_user_to_workgroup {
     return $self->{conn}->last_insert_id("", "", "user_workgroup", "");
 }
 
+=head2 get_user
+=cut
 sub get_user {
     my ( $self, $user_id ) = @_;
 
@@ -63,6 +69,8 @@ sub get_user {
     return $user;
 }
 
+=head2 get_users
+=cut
 sub get_users {
     my ( $self ) = @_;
 

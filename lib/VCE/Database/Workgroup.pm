@@ -9,6 +9,10 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_workgroup get_workgroup get_workgroups );
 
 
+=head2 add_workgroup
+
+
+=cut
 sub add_workgroup {
     my ( $self, $name, $description ) = @_;
 
@@ -22,6 +26,10 @@ sub add_workgroup {
     return $self->{conn}->last_insert_id("", "", "workgroup", "");
 }
 
+=head2 get_workgroup
+
+
+=cut
 sub get_workgroup {
     my $self = shift;
     my %params = @_;
@@ -49,6 +57,10 @@ sub get_workgroup {
     return $result;
 }
 
+=head2 get_workgroups
+
+
+=cut
 sub get_workgroups {
     my ( $self ) = @_;
 

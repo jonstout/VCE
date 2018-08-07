@@ -57,6 +57,10 @@ sub add_interface {
     return $self->{conn}->last_insert_id("", "", "interface", "");
 }
 
+=head2 delete_interface
+
+
+=cut
 sub delete_interface {
     my $self = shift;
     my $interface_id = shift;
@@ -82,6 +86,10 @@ sub delete_interface {
     return 1;
 }
 
+=head2 get_interface
+
+
+=cut
 sub get_interface {
     my ( $self, $interface_id ) = @_;
 
@@ -102,6 +110,10 @@ sub get_interface {
     return $interface;
 }
 
+=head2 get_interfaces
+
+
+=cut
 sub get_interfaces {
     my $self = shift;
     my %params = @_;

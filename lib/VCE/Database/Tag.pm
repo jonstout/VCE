@@ -9,6 +9,8 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_tag get_tags delete_tags );
 
 
+=head2 add_tag
+=cut
 sub add_tag {
     my $self = shift;
     my $mode = shift;
@@ -31,6 +33,8 @@ sub add_tag {
     return $self->{conn}->last_insert_id("", "", "tag", "");
 }
 
+=head2 get_tags
+=cut
 sub get_tags {
     my $self = shift;
     my %params = @_;
@@ -68,6 +72,8 @@ sub get_tags {
     return $result;
 }
 
+=head2 delete_tags
+=cut
 sub delete_tags {
     my ( $self, $vlan_id ) = @_;
 

@@ -8,6 +8,8 @@ use Exporter;
 our @ISA = qw( Exporter );
 our @EXPORT = qw( add_command get_commands add_command_to_switch);
 
+=head2 add_command
+=cut
 sub add_command {
     my ( $self, $name, $description, $type, $template ) = @_;
 
@@ -23,6 +25,8 @@ sub add_command {
     return $self->{conn}->last_insert_id("", "", "command", "");
 }
 
+=head2 get_commands
+=cut
 sub get_commands {
     my ( $self ) = @_;
 
@@ -37,6 +41,8 @@ sub get_commands {
     return $result;
 }
 
+=head2 add_command_to_switch
+=cut
 sub add_command_to_switch {
     my ( $self, $command_id, $switch_id, $role ) = @_;
 

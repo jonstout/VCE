@@ -9,6 +9,8 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_vlan get_vlans delete_vlan );
 
 
+=head2 add_vlan
+=cut
 sub add_vlan {
     my $self = shift;
     my %params = @_;
@@ -43,6 +45,8 @@ sub add_vlan {
     return $self->{conn}->last_insert_id("", "", "vlan", "");
 }
 
+=head2 get_vlans
+=cut
 sub get_vlans {
     my $self = shift;
     my %params = @_;
@@ -66,6 +70,8 @@ sub get_vlans {
     return $result;
 }
 
+=head2 delete_vlan
+=cut
 sub delete_vlan {
     my ( $self, $vlan_id ) = @_;
 

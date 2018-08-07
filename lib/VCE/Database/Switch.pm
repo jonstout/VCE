@@ -15,6 +15,10 @@ our @EXPORT = qw( add_switch get_switch get_switches );
 
 =cut
 
+=head2 add_switch
+
+
+=cut
 sub add_switch {
     my ( $self, $name, $description, $ipv4, $ssh, $netconf,
          $vendor, $model, $version ) = @_;
@@ -32,6 +36,10 @@ sub add_switch {
     return $self->{conn}->last_insert_id("", "", "switch", "");
 }
 
+=head2 get_switch
+
+
+=cut
 sub get_switch {
     my ( $self, $switch_id ) = @_;
 
