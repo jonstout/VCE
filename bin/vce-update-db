@@ -6,9 +6,12 @@ use warnings;
 use Data::Dumper;
 use DBI;
 
-my $path = '/var/lib/vce/network_model.sqlite';
-my $path2 = '/var/lib/vce/database.sqlite';
-my $acccess_policy = '/etc/vce/access_policy.xml';
+# my $path = '/var/lib/vce/network_model.sqlite';
+# my $path2 = '/var/lib/vce/database.sqlite';
+# my $access_policy = '/etc/vce/access_policy.xml';
+my $path = 't/etc/nm1.sqlite.orig';
+my $path2 = 't/etc/nm1.sqlite.orig2';
+my $access_policy = 't/etc/test_config.xml';
 
 sub main {
     my $db = DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {
@@ -68,16 +71,7 @@ sub main {
     );
     $query->execute();
 
-    eval {
-        $query = $db->prepare('SELECT * FROM version');
-        $query->execute;
-    };
-    if ($@) {
-        warn "$@";
-        exit 1;
-    }
-    my $version = $query->fetchall_arrayref({});
-    $version = $version->[0]->{version};
+    my $version = get_version($db);
     warn "Current version: $version";
 
     if (!defined $version) {
@@ -91,26 +85,46 @@ sub main {
     }
 
     # NOTE:
-    # All vce versions > 0.3.5 use database.sqlite
+    # All vce versions > 0.3.5 use database.sqlite. Once the version
+    # reaches 0.3.6, the version number should only be incremented on
+    # the new database.
     if ($version eq '0.3.5') {
         `perl /usr/bin/vce-migrate-access-policy $path $access_policy $path2`;
     }
-    $db = DBI->connect("dbi:SQLite:dbname=$path2", undef, undef, {
+    my $db2 = DBI->connect("dbi:SQLite:dbname=$path2", undef, undef, {
         AutoCommit => 1,
         RaiseError => 1,
         sqlite_see_if_its_a_number => 1
     });
 
     if ($version eq '0.3.5') {
-        $version = upgrade_to_0_3_6($db, $version);
+        $version = upgrade_to_0_3_6_old($db, $version);
+        $version = upgrade_to_0_3_6($db2, $version);
         warn "Version: $version";
     }
+    $version = get_version($db2);
 
     if ($version eq '0.3.6') {
         warn 'Database update complete!';
     }
 
     return 1;
+}
+
+sub get_version {
+    my $db = shift;
+
+    my $query;
+    eval {
+        $query = $db->prepare('SELECT * FROM version');
+        $query->execute;
+    };
+    if ($@) {
+        warn "$@";
+        exit 1;
+    }
+    my $version = $query->fetchall_arrayref({});
+    return $version->[0]->{version};
 }
 
 sub upgrade_to_0_3_4 {
@@ -172,6 +186,20 @@ sub upgrade_to_0_3_5 {
     $query->execute();
 
     return "0.3.5";
+}
+
+sub upgrade_to_0_3_6_old {
+    my $db              = shift;
+    my $current_version = shift;
+
+    my $query = undef;
+
+    $query = $db->prepare(
+    'UPDATE version SET version="0.3.6"'
+    );
+    $query->execute();
+
+    return "0.3.6";
 }
 
 sub upgrade_to_0_3_6 {
