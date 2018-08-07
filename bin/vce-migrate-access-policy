@@ -185,9 +185,10 @@ sub load_switches {
         foreach my $pname (keys %$sw->{ports}) {
             my $p = $sw->{ports}->{$pname};
             my $w = $db->get_workgroup(name => $p->{owner});
+
             my $intf_id = $db->add_interface(
                 name => $pname,
-                description => $p->{description},
+                description => $p->{description} || '',
                 switch_id => $sw_id,
                 workgroup_id => $w->{id}
             );
@@ -336,13 +337,17 @@ sub load_existing_vlans {
 }
 
 sub main {
-    `sqlite3 /var/lib/vce/database.sqlite < /etc/vce/schema.sqlite`;
+    my $old_db        = $ARGV[0] || '/var/lib/vce/network_model.sqlite';
+    my $access_policy = $ARGV[1] || '/etc/vce/access_policy.xml';
+    my $new_db        = $ARGV[2] || '/var/lib/vce/database.sqlite';
 
-    my $db1 = VCE::NetworkDB->new(path => '/var/lib/vce/network_model.sqlite');
-    my $db2 = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
+    `sqlite3 $new_db < /etc/vce/schema.sqlite`;
+
+    my $db1 = VCE::NetworkDB->new(path => $old_db);
+    my $db2 = VCE::Database::Connection->new($new_db);
 
     my $config = GRNOC::Config->new(
-        config_file => '/etc/vce/access_policy.xml',
+        config_file => $access_policy,
         force_array => 1,
         schema => '/etc/vce/config.xsd'
     );

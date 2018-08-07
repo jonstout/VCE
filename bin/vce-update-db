@@ -7,6 +7,8 @@ use Data::Dumper;
 use DBI;
 
 my $path = '/var/lib/vce/network_model.sqlite';
+my $path2 = '/var/lib/vce/database.sqlite';
+my $acccess_policy = '/etc/vce/access_policy.xml';
 
 sub main {
     my $db = DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {
@@ -91,10 +93,9 @@ sub main {
     # NOTE:
     # All vce versions > 0.3.5 use database.sqlite
     if ($version eq '0.3.5') {
-        `perl /usr/bin/vce-migrate-access-policy`;
+        `perl /usr/bin/vce-migrate-access-policy $path $access_policy $path2`;
     }
-    $path = '/var/lib/vce/database.sqlite';
-    $db = DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {
+    $db = DBI->connect("dbi:SQLite:dbname=$path2", undef, undef, {
         AutoCommit => 1,
         RaiseError => 1,
         sqlite_see_if_its_a_number => 1

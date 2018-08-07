@@ -33,26 +33,32 @@ sub add_interface {
     return if (!defined $params{name});
     return if (!defined $params{switch_id});
 
-    $self->{log}->debug("add_switch($params{name}, $params{description}, $params{switch_id})");
+    $self->{log}->debug("add_interface($params{name}, $params{description}, $params{switch_id})");
 
-    my $q = $self->{conn}->prepare(
-        "insert into interface (
-           admin_up, description, hardware_type, link_up,
-           mac_addr, mtu, name, workgroup_id, speed, switch_id
-         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-    $q->execute(
-        $params{admin_up} || 0,
-        $params{description} || '',
-        $params{hardware_type},
-        $params{link_up} || 0,
-        $params{mac_addr},
-        $params{mtu},
-        $params{name},
-        $params{workgroup_id} || 1,
-        $params{speed} || 'unknown',
-        $params{switch_id}
-    );
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into interface (
+               admin_up, description, hardware_type, link_up,
+               mac_addr, mtu, name, workgroup_id, speed, switch_id
+             ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+
+        $q->execute(
+            $params{admin_up} || 0,
+            $params{description} || '',
+            $params{hardware_type},
+            $params{link_up} || 0,
+            $params{mac_addr},
+            $params{mtu},
+            $params{name},
+            $params{workgroup_id} || 1,
+            $params{speed} || 'unknown',
+            $params{switch_id}
+        );
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+    }
 
     return $self->{conn}->last_insert_id("", "", "interface", "");
 }
