@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use GRNOC::Config;
-
+use Data::Dumper;
 use VCE::Database::Connection;
 use VCE::NetworkDB;
 
@@ -195,7 +195,7 @@ sub load_switches {
 
             foreach my $acl (@{$p->{tags}}) {
                 my $w2 = $db->get_workgroup(name => $acl->{workgroup});
-                $db->add_acl($intf_id, $w2->{id}, $acl->{start}, $acl->{end});
+                $db->add_acl($w2->{id}, $intf_id, $acl->{start}, $acl->{end});
             }
         }
 
@@ -312,20 +312,22 @@ sub load_existing_vlans {
     my $user2id = shift;
     my $wg2id = shift;
     my $intf2id = shift;
+    my $sw2id = shift;
 
     my $old_vlans = $old_db->get_vlans_state();
     foreach my $old_vlan (@{$old_vlans}) {
+        my $sw = $old_vlan->{switch};
+        my $tag = $old_vlan->{vlan};
+
         my $vlan_id = $db->add_vlan(
             name => $old_vlan->{description},
-            number => $old_vlan->{vlan},
+            number => $tag,
             description => $old_vlan->{description},
             created_by => $user2id->{$old_vlan->{username}},
+            switch_id => $sw2id->{$sw},
             workgroup_id => $wg2id->{$old_vlan->{workgroup}},
             created_on => $old_vlan->{create_time}
         );
-
-        my $sw = $old_vlan->{switch};
-        my $tag = $old_vlan->{vlan};
 
         foreach my $ep (@{$old_vlan->{endpoints}}) {
             $db->add_tag('tagged', $intf2id->{$sw}->{$ep->{port}}, $vlan_id);
@@ -334,6 +336,8 @@ sub load_existing_vlans {
 }
 
 sub main {
+    `sqlite3 /var/lib/vce/database.sqlite < /etc/vce/schema.sqlite`;
+
     my $db1 = VCE::NetworkDB->new(path => '/var/lib/vce/network_model.sqlite');
     my $db2 = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
 
@@ -349,7 +353,7 @@ sub main {
     my ($sw2id, $intf2id) = load_switches($conf, $db2);
 
     load_existing_interfaces($db2, $db1, $sw2id, $intf2id);
-    load_existing_vlans($db2, $db1, $user2id, $wg2id, $intf2id);
+    load_existing_vlans($db2, $db1, $user2id, $wg2id, $intf2id, $sw2id);
 
     return 1;
 }

@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE IF NOT EXISTS user(
     id       INTEGER PRIMARY KEY,
     username TEXT,
@@ -17,7 +19,7 @@ CREATE TABLE IF NOT EXISTS user_workgroup(
     user_id      TEXT,
     workgroup_id INTEGER,
     FOREIGN KEY(user_id) REFERENCES user(id),
-    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS switch(
@@ -55,8 +57,10 @@ CREATE TABLE IF NOT EXISTS vlan(
     description TEXT,
     name TEXT,
     number INTEGER CHECK (number > 0 AND number < 4095),
+    switch_id INTEGER,
     workgroup_id INTEGER,
     FOREIGN KEY(created_by) REFERENCES user(id),
+    FOREIGN KEY(switch_id) REFERENCES switch(id),
     FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
 );
 
@@ -66,7 +70,7 @@ CREATE TABLE IF NOT EXISTS tag(
     mode TEXT,
     vlan_id INTEGER,
     FOREIGN KEY(interface_id) REFERENCES interface(id),
-    FOREIGN KEY(vlan_id) REFERENCES vlan(id)
+    FOREIGN KEY(vlan_id) REFERENCES vlan(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS acl(
@@ -76,7 +80,7 @@ CREATE TABLE IF NOT EXISTS acl(
     low          INTEGER CHECK (low > 0 AND low <= high),
     high         INTEGER CHECK (high < 4095 AND high >= low),
     FOREIGN KEY(interface_id) REFERENCES interface(id),
-    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS command(
@@ -93,7 +97,7 @@ CREATE TABLE IF NOT EXISTS switch_command(
     switch_id INTEGER,
     role STRING CHECK (role in ("admin", "owner", "user")),
     FOREIGN KEY(switch_id) REFERENCES switch(id),
-    FOREIGN KEY(command_id) REFERENCES command(id)
+    FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS parameter(
@@ -103,7 +107,7 @@ CREATE TABLE IF NOT EXISTS parameter(
     description TEXT,
     regex TEXT,
     type STRING CHECK (type in ("input", "option")),
-    FOREIGN KEY(command_id) REFERENCES command(id)
+    FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE
 );
 
 CREATE TABLE version(

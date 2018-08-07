@@ -20,7 +20,6 @@ use VCE::NetworkDB;
 has logger => (is => 'rwp');
 has id => (is => 'rwp');
 has db => (is => 'rwp');
-has db2 => (is => 'rwp');
 has device => (is => 'rwp');
 has type => (is => 'rwp');
 has vendor => (is => 'rwp');
@@ -62,8 +61,6 @@ has name => (is => 'rwp');
 
 =item db
 
-=item db2
-
 =item dispatcher
 
 =item rabbit_mq
@@ -86,8 +83,7 @@ sub BUILD {
 
     $0 = "VCE(" . $self->username . ")";
 
-    $self->_set_db(VCE::NetworkDB->new());
-    $self->_set_db2(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     $self->logger->debug("Creating Dispatcher");
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new(
@@ -636,21 +632,19 @@ sub _gather_operational_status{
         return undef;
     }
 
-    my $interfaces_state = $self->db->get_interfaces(switch => $self->name);
-
-    my $interfaces = $self->db2->get_interfaces(switch_id => $self->id);
+    my $interfaces = $self->db->get_interfaces(switch_id => $self->id);
     my $ifaces = {};
     foreach my $intf (@{$interfaces}) {
         $ifaces->{$intf->{name}} = $intf;
     }
 
-    $interfaces_state = $self->device->get_interfaces();
+    my $interfaces_state = $self->device->get_interfaces();
     $interfaces_state = $interfaces_state->{'interfaces'};
 
     foreach my $name (keys %{$interfaces_state}) {
         if (defined $ifaces->{$name}) {
             $self->logger->info('Updating info on interface');
-            $self->db2->update_interface(
+            $self->db->update_interface(
                 id          => $ifaces->{$name}->{id},
                 admin_up    => $interfaces_state->{$name}->{admin_status},
                 link_up     => $interfaces_state->{$name}->{status},
@@ -661,7 +655,7 @@ sub _gather_operational_status{
             delete $ifaces->{$name};
         } else {
             $self->logger->info('Creating interface');
-            $self->db2->add_interface(
+            $self->db->add_interface(
                 admin_up      => $interfaces_state->{$name}->{admin_status},
                 description   => $interfaces_state->{$name}->{description},
                 hardware_type => $interfaces_state->{$name}->{hardware_type},
@@ -670,7 +664,7 @@ sub _gather_operational_status{
                 name          => $interfaces_state->{$name}->{name},
                 speed         => $interfaces_state->{$name}->{speed},
                 link_up       => $interfaces_state->{$name}->{status},
-                switch_id     => $ifaces->{$name}->{id}
+                switch_id     => $self->{id}
             );
         }
     }
@@ -679,20 +673,27 @@ sub _gather_operational_status{
     # with updates are removed above, the only thing left are
     # interfaces which no longer exist on the device.
     foreach my $name (keys %{$ifaces}) {
-        my $ok = $self->db2->delete_interface($ifaces->{$name}->{id});
+        my $ok = $self->db->delete_interface($ifaces->{$name}->{id});
         if ($ok) {
             $self->logger->warn("Interface $name was removed from " . $self->name . "; Removing it from database.");
         }
     }
 
-    my $vlans_state = $self->db->get_vlans_state(switch => $self->name);
-    my $vlans = {};
-    foreach my $vlan (@{$vlans_state}) {
-        $vlans->{$vlan->{vlan}} = $vlan;
+
+    $interfaces = $self->db->get_interfaces(switch_id => $self->id);
+    $ifaces = {};
+    foreach my $intf (@{$interfaces}) {
+        $ifaces->{$intf->{name}} = $intf;
     }
 
-    my $err = undef;
-    ($vlans_state, $err) = $self->device->get_vlans();
+    my $new_vlans = $self->db->get_vlans(switch_id => $self->id);
+
+    my $vlans = {};
+    foreach my $vlan (@{$new_vlans}) {
+        $vlans->{$vlan->{number}} = $vlan;
+    }
+
+    my ($vlans_state, $err) = $self->device->get_vlans();
     if (defined $err) {
         $self->logger->error($err);
         return undef;
@@ -700,22 +701,36 @@ sub _gather_operational_status{
 
     foreach my $vlan (@{$vlans_state}) {
         if (defined $vlans->{$vlan->{vlan}}) {
-            $self->logger->info('Updating ports on vlan');
-            $self->db->set_vlan_endpoints(
-                vlan_id   => $vlans->{$vlan->{vlan}}->{vlan_id},
-                endpoints => $vlan->{ports}
-            );
-            delete $vlans->{$vlan->{vlan}};
+            $self->logger->info("Updating vlan $vlan->{vlan}!");
+            $self->db->delete_tags($vlans->{$vlan->{vlan}}->{id});
         } else {
-            $self->logger->info('Creating vlan');
-            $self->db->add_vlan(
+            $self->logger->info("Discovered vlan $vlan->{vlan}!");
+            my $id = $self->db->add_vlan(
+                created_by => 1, # admin user
                 description => $vlan->{name},
-                endpoints   => $vlan->{ports},
-                switch      => $self->name,
-                username    => 'admin',
-                vlan        => $vlan->{vlan},
-                workgroup   => 'admin'
+                name => $vlan->{name},
+                number => $vlan->{vlan},
+                switch_id => $self->{id},
+                workgroup_id => 1, # admin workgroup
             );
+            if (!defined $id) {
+                next;
+            }
+            $vlans->{$vlan->{vlan}} = { id => $id };
+        }
+
+        foreach my $port (@{$vlan->{ports}}) {
+            my $mode = 'tagged';
+            if ($port->{mode} ne 'TAGGED') {
+                $mode = 'untagged';
+            }
+            my $int_id = $ifaces->{$port->{port}}->{id};
+            my $vlan_id = $vlans->{$vlan->{vlan}}->{id};
+            $self->db->add_tag($mode, $int_id, $vlan_id);
+        }
+
+        if (defined $vlans->{$vlan->{vlan}}) {
+            delete $vlans->{$vlan->{vlan}};
         }
     }
 
@@ -723,13 +738,12 @@ sub _gather_operational_status{
     # are removed above, the only thing left are vlans which no longer
     # exist on the device.
     foreach my $vlan (keys %{$vlans}) {
-        my $ok = $self->db->delete_vlan(vlan_id => $vlans->{$vlan}->{vlan_id});
+        my $ok = $self->db->delete_vlan($vlans->{$vlan}->{id});
         if ($ok) {
             $self->logger->warn("VLAN $vlan was removed from " . $self->name . "; Removing it from database.");
         }
     }
 }
-
 
 =head2 start
 

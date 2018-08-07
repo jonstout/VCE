@@ -90,6 +90,9 @@ sub main {
 
     # NOTE:
     # All vce versions > 0.3.5 use database.sqlite
+    if ($version eq '0.3.5') {
+        `perl /usr/bin/vce-migrate-access-policy`;
+    }
     $path = '/var/lib/vce/database.sqlite';
     $db = DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {
         AutoCommit => 1,
@@ -98,8 +101,6 @@ sub main {
     });
 
     if ($version eq '0.3.5') {
-        `perl /usr/bin/vce-migrate-access-policy`;
-
         $version = upgrade_to_0_3_6($db, $version);
         warn "Version: $version";
     }

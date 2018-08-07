@@ -42,6 +42,7 @@ sub new {
         undef,
         { AutoCommit => 1, RaiseError => 1, sqlite_see_if_its_a_number => 1 }
     );
+    $conn->do("PRAGMA foreign_keys=ON");
 
     my $self = bless {
         conn => $conn,

@@ -6,7 +6,7 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_tag get_tags );
+our @EXPORT = qw( add_tag get_tags delete_tags );
 
 
 sub add_tag {
@@ -66,6 +66,30 @@ sub get_tags {
 
     my $result = $q->fetchall_arrayref({});
     return $result;
+}
+
+sub delete_tags {
+    my ( $self, $vlan_id ) = @_;
+
+    $self->{log}->debug("Calling delete_tags");
+
+    if (!defined $vlan_id) {
+        $self->{log}->error("No vlan_id specified");
+        return;
+    }
+
+    eval {
+        my $q = $self->{conn}->prepare(
+            "delete from tag where vlan_id=?"
+        );
+        $q->execute($vlan_id);
+    };
+    if ($@) {
+        $self->logger->error("$@");
+        return 0;
+    }
+
+    return 1;
 }
 
 return 1;
