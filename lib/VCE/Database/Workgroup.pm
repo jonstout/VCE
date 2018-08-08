@@ -6,7 +6,7 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_workgroup get_workgroup get_workgroups );
+our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces );
 
 
 =head2 add_workgroup
@@ -70,6 +70,30 @@ sub get_workgroups {
         "select * from workgroup"
     );
     $q->execute();
+
+    my $result = $q->fetchall_arrayref({});
+    return $result;
+}
+
+=head2 get_workgroup_interfaces
+
+get_workgroup_interfaces returns a list of all interfaces that
+C<workgroup_id> either owns or has access to. Interfaces may appear to
+be duplicated if more than one vlan range has been made available to
+C<workgroup_id>, although the high and low fields will be different.
+
+=cut
+sub get_workgroup_interfaces {
+    my ( $self, $workgroup_id ) = @_;
+
+    my $q = $self->{conn}->prepare(
+        "select interface.*, switch.name as switch_name, acl.low, acl.high from workgroup
+         join interface on workgroup.id=interface.workgroup_id
+         join switch on interface.switch_id=switch.id
+         join acl on interface.id=acl.interface_id
+         where workgroup.id=? OR acl.workgroup_id=?"
+    );
+    $q->execute($workgroup_id, $workgroup_id);
 
     my $result = $q->fetchall_arrayref({});
     return $result;

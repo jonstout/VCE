@@ -244,50 +244,27 @@ sub workgroup_has_access_to_port{
         return 0;
     }
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}) {
-        $self->logger->error("workgroup_has_access_to_port: No switch in configuration called " . $params{'switch'});
-        return 0;
-    }
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}) {
-        $self->logger->error("workgroup_has_access_to_port: No port on switch " . $params{'switch'} . " named " . $params{'port'} . " found in configuration");
-        return 0;
-    }
-
-    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{'workgroup'} ? 1 : 0;
-    if ($is_admin) {
-        return 1;
-    }
-
-    # Port owners have total control over any ports they own.
-    if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}) {
-        $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
-        return 1;
-    }
-
-    if (!defined $params{'vlan'}) {
-        # Logging is disabled here due to too many generated messages.
-        foreach my $tag (keys %{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}}) {
-            if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$tag} eq $params{'workgroup'}) {
-                # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
-                return 1;
-            }
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
+            next;
         }
-        # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});
-        return 0;
+
+        if ($acl->{workgroup_id} eq $workgroup->{id}) {
+            return 1;
+        }
+
+        if (!defined $params{vlan}) {
+            return 1;
+        }
+
+        if ($acl->{high} >= $params{vlan} && $acl->{low} <= $params{vlan}) {
+            return 1;
+        }
     }
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}}) {
-        $self->logger->error("workgroup_has_access_to_port: No port on switch " . $params{'switch'} . " named " . $params{'port'} . " with VLAN " . $params{'vlan'} . " found in configuration.");
-        return 0;
-    }
-
-    if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}} eq $params{'workgroup'}) {
-        $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'} . ":" . $params{'vlan'});
-        return 1;
-    }
-
-    $self->logger->error("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'} . ":" . $params{'vlan'});
     return 0;
 }
 
