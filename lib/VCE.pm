@@ -47,6 +47,7 @@ use JSON::XS;
 use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
+has db => (is => 'rwp', default => '/var/lib/vce/database.sqlite');
 has network_model_file => (is => 'rwp', default => "/var/lib/vce/network_model.sqlite");
 
 has config => (is => 'rwp');
@@ -86,6 +87,8 @@ and interact with the VCE database.
 
 =item config_file
 
+=item db
+
 =item device_client
 
 =item logger
@@ -110,7 +113,8 @@ sub BUILD{
     
     $self->_process_config();
 
-    $self->_set_access( VCE::Access->new( config => $self->config ));
+    # $self->_set_access( VCE::Access->new( config => $self->config ));
+    $self->_set_access( VCE::Access->new( config => $self->db ));
 
     $self->_set_network_model( VCE::NetworkDB->new( path => $self->network_model_file ));
 

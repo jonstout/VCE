@@ -32,13 +32,17 @@ use Moo;
 use VCE;
 use GRNOC::Log;
 use Data::Dumper;
+use VCE::Database::Connection;
 
+has db => (is => 'rwp');
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 
 =head2 BUILD
 
 =over 4
+
+=item db
 
 =item config
 
@@ -53,6 +57,7 @@ sub BUILD{
     
     my $logger = GRNOC::Log->get_logger("VCE::Access");
     $self->_set_logger($logger);    
+    $self->_set_db(VCE::Database::Connection->new($self->config));
 
     return $self;
 }
@@ -177,29 +182,30 @@ sub user_in_workgroup{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'username'})){
-	$self->logger->error("user_in_workgroup: username not specified");
-	return 0;
-    }
-    
-    if(!defined($params{'workgroup'})){
-	$self->logger->error("user_in_workgroup: workgroup not specified");
-	return 0;
+    if (!defined $params{username}) {
+        $self->logger->error("user_in_workgroup: username not specified");
+        return 0;
     }
 
-    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-	foreach my $user (keys(%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}})){
-	    if($params{'username'} eq $user){
-		$self->logger->debug("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
-		return 1;
-	    }
-	}
-    }else{
-	$self->logger->error("No workgroup " . $params{'workgroup'} . " in configuration");
-	return 0;
+    if (!defined $params{workgroup}) {
+        $self->logger->error("user_in_workgroup: workgroup not specified");
+        return 0;
     }
 
-    $self->logger->error("user_in_workgroup: user " . $params{'username'} . " is not workgroup " . $params{'workgroup'});
+    my $user = $self->db->get_user_by_name($params{username});
+    if (!defined $user) {
+        $self->logger->error("User $params{username} does not exist");
+        return 0;
+    }
+
+    foreach my $workgroup (@{$user->{workgroups}}) {
+        if ($workgroup->{name} eq $params{'workgroup'}) {
+            $self->logger->debug("$params{'username'} is in workgroup $params{'workgroup'}");
+            return 1;
+        }
+    }
+
+    $self->logger->debug("$params{'username'} is not in workgroup $params{'workgroup'}");
     return 0;
 }
 
