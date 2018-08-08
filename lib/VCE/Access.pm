@@ -300,30 +300,28 @@ sub get_tags_on_port{
         return;
     }
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}) {
-        return [];
-    }
-    my $switch = $self->config->{'switches'}->{$params{'switch'}};
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
 
-    if (!defined $switch->{'ports'}->{$params{'port'}}) {
-        return [];
-    }
-    my $port = $switch->{'ports'}->{$params{'port'}};
-
-    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
-
+    # TODO
+    # Account for admin workgroup
+    # my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
     my $available_tags = [];
 
-    if ($is_admin) {
-        for (my $i = 2; $i < 4095; $i++) {
-            push(@{$available_tags}, $i);
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
+            next;
         }
-        return $available_tags;
-    }
 
-    foreach my $vlan (keys %{$port->{'tags'}}) {
-        if ($port->{'tags'}->{$vlan} eq $params{'workgroup'}) {
-            push(@{$available_tags}, $vlan);
+        if ($acl->{workgroup_id} eq $workgroup->{id}) {
+            for (my $i = 2; $i < 4095; $i++) {
+                push(@{$available_tags}, $i);
+            }
+            return $available_tags;
+        }
+
+        for (my $i = $acl->{low}; $i <= $acl->{high}; $i++) {
+            push(@{$available_tags}, $i);
         }
     }
 
