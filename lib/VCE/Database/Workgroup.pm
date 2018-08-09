@@ -62,14 +62,26 @@ sub get_workgroup {
 
 =cut
 sub get_workgroups {
-    my ( $self ) = @_;
+    my $self = shift;
+    my %params = @_;
 
     $self->{log}->debug("get_workgroups()");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from workgroup"
+        "select * from workgroup $where"
     );
-    $q->execute();
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;

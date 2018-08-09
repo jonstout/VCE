@@ -11,8 +11,10 @@ use GRNOC::Log;
 use Data::Dumper;
 use Data::UUID;
 use DBI;
+use VCE::Database::Connection;
 
 has db     => (is => 'rwp');
+has db2    => (is => 'rwp');
 has logger => (is => 'rwp');
 has path   => (is => 'rwp', default => '/var/lib/vce/network_model.sqlite' );
 has uuid   => (is => 'rwp');
@@ -24,6 +26,8 @@ creates a new NetworkModel object
 =over 4
 
 =item db
+
+=item db2
 
 =item logger
 
@@ -49,6 +53,7 @@ sub BUILD{
         RaiseError => 1,
         sqlite_see_if_its_a_number => 1
     }));
+    $self->_set_db2(VCE::Database::Connection->new($path));
 
     my $query = undef;
     $query = $self->db->prepare(
@@ -470,40 +475,25 @@ sub get_vlans{
     my $reqs = [];
     my $where = '';
 
-    # TODO - Cleanup this garbage for optional filters
-    if (defined $params{workgroup} || defined $params{switch}) {
-        $where .= 'WHERE ';
-        if (defined $params{workgroup}) {
-            push(@{$reqs}, 'network.workgroup=?');
-            push(@{$args}, $params{workgroup});
-        }
-        if (defined $params{switch}) {
-            push(@{$reqs}, 'network.switch=?');
-            push(@{$args}, $params{switch});
-        }
-        $where .= join(' AND ', @{$reqs});
+    my $switch_id;
+    if (defined $params{switch}) {
+        $switch_id = $self->db2->get_switches(name => $params{switch})->[0]->{id};
+        return [] if (!defined $switch_id);
+    }
+    my $workgroup_id;
+    if (defined $params{workgroup}) {
+        $workgroup_id = $self->db2->get_workgroups(name => $params{workgroup})->[0]->{id};
+        return [] if (!defined $workgroup_id);
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT network.number, network.uuid FROM network ' .
-             $where .
-            'GROUP BY network.id
-             ORDER BY network.number ASC'
-        );
-        $query->execute(@{$args});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return undef;
-    }
-    my $networks = $query->fetchall_arrayref({});
-    $self->logger->debug(Dumper($networks));
+    my $networks = $self->db2->get_vlans(
+        switch_id => $switch_id,
+        workgroup_id => $workgroup_id
+    );
 
     my $result = [];
     foreach my $network (@{$networks}) {
-        push(@{$result}, $network->{uuid});
+        push(@{$result}, $network->{id});
     }
 
     return $result;

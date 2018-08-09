@@ -53,18 +53,33 @@ sub get_vlans {
 
     $self->{log}->debug("get_vlans()");
 
-    my $q = undef;
+    my $keys = [];
+    my $args = [];
+
     if (defined $params{switch_id}) {
-        $q = $self->{conn}->prepare(
-            "select * from vlan where switch_id=?"
-        );
-        $q->execute($params{switch_id});
-    } else {
-        $q = $self->{conn}->prepare(
-            "select * from vlan"
-        );
-        $q->execute();
+        push @$keys, 'vlan.switch_id=?';
+        push @$args, $params{switch_id};
     }
+    if (defined $params{workgroup_id}) {
+        # does not concern itself with who has access to a vlan rather
+        # only who owns the vlan
+
+        #push @$keys, '(vlan.workgroup_id=? OR interface.workgroup_id=?)';
+        #push @$args, $params{workgroup_id};
+        push @$keys, '(vlan.workgroup_id=?)';
+        push @$args, $params{workgroup_id};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
+    my $q = $self->{conn}->prepare(
+        "select * from vlan
+         $where
+         group by vlan.id
+         order by vlan.number asc"
+    );
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;

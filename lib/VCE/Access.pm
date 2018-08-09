@@ -392,21 +392,18 @@ sub get_workgroup_switches{
         $self->logger->error("get_workgroup_switches: workgroup not specified");
         return;
     }
-    
-    my %switches;
+    my $result = [];
 
-    foreach my $switch (keys (%{$self->config->{'switches'}})){
-        foreach my $port (keys (%{$self->config->{'switches'}->{$switch}->{'ports'}})){
-            if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                    switch => $switch,
-                                                    port => $port)){
-                $switches{$switch} = 1;
-                
-            }
-        }
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    if (!defined $workgroup) {
+        return $result;
     }
-    my @switches = keys %switches;
-    return \@switches;
+    my $switches = $self->db->get_switches(workgroup_id => $workgroup->{id});
+
+    foreach my $switch (@$switches) {
+        push @$result, $switch->{name};
+    }
+    return $result;
 }
 
 =head2 get_workgroup_users

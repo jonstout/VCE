@@ -17,7 +17,6 @@ our @EXPORT = qw( add_switch get_switch get_switches );
 
 =head2 add_switch
 
-
 =cut
 sub add_switch {
     my ( $self, $name, $description, $ipv4, $ssh, $netconf,
@@ -37,7 +36,6 @@ sub add_switch {
 }
 
 =head2 get_switch
-
 
 =cut
 sub get_switch {
@@ -78,14 +76,34 @@ get_switches returns an array of switch hashs.
 
 =cut
 sub get_switches {
-    my ( $self ) = @_;
+    my $self = shift;
+    my %params = @_;
 
     $self->{log}->debug("get_switches()");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'interface.workgroup_id=? OR acl.workgroup_id=?';
+        push @$args, $params{workgroup_id};
+        push @$args, $params{workgroup_id};
+    }
+    if (defined $params{name}) {
+        push @$keys, 'switch.name=?';
+        push @$args, $params{name};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from switch"
+        "select switch.* from switch
+         join interface on interface.switch_id=switch.id
+         join acl on acl.interface_id=interface.id
+         $where group by switch.id"
     );
-    $q->execute();
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;
