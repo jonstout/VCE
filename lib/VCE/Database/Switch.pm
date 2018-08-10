@@ -81,23 +81,6 @@ sub modify_switch {
     my $keys = [];
     my $args = [];
 
-
-    # id          => $params->{input_params}{id}{value},
-    # name        => $params->{input_params}{name}{value},
-    # description => $params->{input_params}{description}{value},
-    # ip          => $params->{input_params}{ip}{value},
-    # ssh         => $params->{input_params}{ssh}{value},
-    # netconf     => $params->{input_params}{netconf}{value},
-    # vendor      => $params->{input_params}{vendor}{value},
-    # model       => $params->{input_params}{model}{value},
-    # version     => $params->{input_params}{version}{value}
-
-    # TODO: Check if the user is admin.
-    # if (defined $params{admin_up}) {
-    #     push @$keys, 'admin_up=?';
-    #     push @$args, $params{admin_up};
-    # }
-
     if (defined $params{name}) {
         push @$keys, 'name=?';
         push @$args, $params{name};
@@ -151,15 +134,6 @@ sub delete_switch {
 
     my $keys = [];
     my $args = [];
-
-
-    # id => $params->{input_params}{id}{value},
-
-    # TODO: Check if the user is admin.
-    # if (defined $params{admin_up}) {
-    #     push @$keys, 'admin_up=?';
-    #     push @$args, $params{admin_up};
-    # }
 
     push @$args, $params{id};
 
