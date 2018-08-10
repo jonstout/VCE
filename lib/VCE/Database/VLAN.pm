@@ -6,10 +6,11 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_vlan get_vlans delete_vlan );
+our @EXPORT = qw( add_vlan get_vlan get_vlans delete_vlan );
 
 
 =head2 add_vlan
+
 =cut
 sub add_vlan {
     my $self = shift;
@@ -43,6 +44,25 @@ sub add_vlan {
         return;
     }
     return $self->{conn}->last_insert_id("", "", "vlan", "");
+}
+
+=head2 get_vlan
+
+=cut
+sub get_vlan {
+    my ( $self, $vlan_id ) = @_;
+
+    $self->{log}->debug("get_vlan($vlan_id)");
+
+    my $q = $self->{conn}->prepare(
+        "select * from vlan
+         where id=?"
+    );
+    $q->execute($vlan_id);
+
+    my $result = $q->fetchall_arrayref({});
+
+    return $result->[0];
 }
 
 =head2 get_vlans

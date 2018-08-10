@@ -603,45 +603,34 @@ sub get_vlan_details{
         return;
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT * FROM network
-             LEFT JOIN vlan on network.id=vlan.network_id
-             WHERE network.uuid=?
-             ORDER BY network.number ASC'
-        );
-        $query->execute($params{vlan_id});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return undef;
+    my $vlan = $self->db2->get_vlan($params{vlan_id});
+    if (!defined $vlan) {
+        $self->logger->error("No VLAN found");
+        return;
     }
 
-    my $endpoints = $query->fetchall_arrayref({});
-    if (@{$endpoints} == 0) {
-        $self->logger->error("Couldn't find VLAN " . $params{vlan_id});
-        return undef;
-    }
+    my $workgroup = $self->db2->get_workgroup(id => $vlan->{workgroup_id});
+    my $user = $self->db2->get_user($vlan->{created_by});
+    my $switch = $self->db2->get_switch($vlan->{switch_id});
+    my $endpoints = $self->db2->get_tags(vlan_id => $vlan->{id});
 
     my $result = {
-        create_time => $endpoints->[0]->{created},
-        description => $endpoints->[0]->{description},
+        create_time => $vlan->{created_on},
+        description => $vlan->{description},
         endpoints   => [],
         status      => 'Active',
-        switch      => $endpoints->[0]->{switch},
-        username    => $endpoints->[0]->{username},
-        vlan        => $endpoints->[0]->{number},
-        vlan_id     => $endpoints->[0]->{uuid},
-        workgroup   => $endpoints->[0]->{workgroup}
-
+        switch      => $switch->{name},
+        username    => $user->{name},
+        vlan        => $vlan->{number},
+        vlan_id     => $vlan->{id},
+        workgroup   => $workgroup->{name}
     };
     foreach my $endpoint (@{$endpoints}) {
-        if (!defined $endpoint->{interface}) {
+        if (!defined $endpoint->{name}) {
             next;
         }
         my $info = {
-            port => $endpoint->{interface}
+            port => $endpoint->{name}
         };
         push(@{$result->{endpoints}}, $info);
     }

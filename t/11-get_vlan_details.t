@@ -9,16 +9,18 @@ use Test::Deep;
 use VCE;
 use GRNOC::Log;
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',
+                    db => "t/etc/nm1.sqlite",
                     network_model_file => './t/etc/nm1.sqlite'  );
 
 ok(defined($vce), "VCE object created");
 
-my $details = $vce->network_model->get_vlan_details( vlan_id => '979f9708-7102-4762-8a6a-8e30ed80b88c');
+# my $details = $vce->network_model->get_vlan_details( vlan_id => '979f9708-7102-4762-8a6a-8e30ed80b88c');
+my $details = $vce->network_model->get_vlan_details( vlan_id => 3);
 
 ok(defined($details), "returned circuit");
 ok($details->{'workgroup'} eq 'ajco', "proper workgroup");
@@ -28,15 +30,18 @@ ok($details->{'endpoints'}->[0]->{'port'} eq 'eth0/1', "proper endpoint 1 port")
 ok($details->{'endpoints'}->[1]->{'port'} eq 'eth0/2', "proper endpoint 2 port");
 ok($details->{'create_time'} eq '1479158369', "proper create time specified");
 
-$details = $vce->network_model->get_vlan_details( vlan_id => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2');
+#$details = $vce->network_model->get_vlan_details( vlan_id => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2');
+$details = $vce->network_model->get_vlan_details( vlan_id => 2);
 
 ok(defined($details), "returned circuit");
 
-$details = $vce->network_model->get_vlan_details( vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f');
+#$details = $vce->network_model->get_vlan_details( vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f');
+$details = $vce->network_model->get_vlan_details( vlan_id => 2);
 
 ok(defined($details), "returned circuit");
 
-$details = $vce->network_model->get_vlan_details( vlan_id => '2806baa4-173c-4bdd-b552-c063a82e2323');
+#$details = $vce->network_model->get_vlan_details( vlan_id => '2806baa4-173c-4bdd-b552-c063a82e2323');
+$details = $vce->network_model->get_vlan_details( vlan_id => 4);
 
 ok(!defined($details), "no result when non-existing vlan queried");
 
