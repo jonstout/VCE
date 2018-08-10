@@ -19,9 +19,9 @@ use Template;
 
 has vce => (is => 'rwp');
 has logger => (is => 'rwp');
-has rabbit_client => (is => 'rwp');
+# has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
-has rabbit_mq => (is => 'rwp');
+# has rabbit_mq => (is => 'rwp');
 has template => (is => 'rwp');
 
 =head2 BUILD
@@ -57,16 +57,16 @@ sub BUILD{
     # warn Dumper(keys %{$self->{vce}});
     # $self->_set_access( VCE::Access->new( config => $self->config ));
 
-    my $client = GRNOC::RabbitMQ::Client->new(
-        user     => $self->rabbit_mq->{'user'},
-        pass     => $self->rabbit_mq->{'pass'},
-        host     => $self->rabbit_mq->{'host'},
-        timeout  => 30,
-        port     => $self->rabbit_mq->{'port'},
-        exchange => 'VCE',
-        topic    => 'VCE.Switch.'
-    );
-    $self->_set_rabbit_client($client);
+    # my $client = GRNOC::RabbitMQ::Client->new(
+    #     user     => $self->rabbit_mq->{'user'},
+    #     pass     => $self->rabbit_mq->{'pass'},
+    #     host     => $self->rabbit_mq->{'host'},
+    #     timeout  => 30,
+    #     port     => $self->rabbit_mq->{'port'},
+    #     exchange => 'VCE',
+    #     topic    => 'VCE.Switch.'
+    # );
+    # $self->_set_rabbit_client($client);
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
@@ -282,7 +282,7 @@ sub _add_switch {
         # undef $db; #Release the connection
         if (defined $err) {
             warn Dumper("Error: $err");
-            # $method->set_error($err);
+            $method_ref->set_error($err);
             return;
         }
 
@@ -320,7 +320,12 @@ sub _modify_switch {
             version     => $params->{version}{value},
         );
         warn Dumper("MODIFY RESULT: $result");
+        if ($result eq "0E0") {
 
+            $method_ref->set_error($result);
+            $result = "Could not find Switch: $params->{name}{value}, ID: $params->{id}{value}"
+            return;
+        }
         return { results => [ { value => $result } ] }
     }else{
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
@@ -360,8 +365,12 @@ sub _delete_switch {
         #     # $method->set_error($err);
         #     return;
         # }
+        if ($result eq "0E0") {
+            $method_ref->set_error($result);
+            $result = "Could not find Switch: $params->{id}{value}"
+            return;
+        }
 
-        
         return { results => [ { value => $result } ] }
     }else{
         return {results => [], error => { msg => "User $user not in specified workgroup $workgroup"}};
