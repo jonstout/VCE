@@ -19,9 +19,7 @@ use Template;
 
 has vce => (is => 'rwp');
 has logger => (is => 'rwp');
-# has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
-# has rabbit_mq => (is => 'rwp');
 has template => (is => 'rwp');
 
 =head2 BUILD
@@ -54,19 +52,6 @@ sub BUILD{
 
 
     $self->_set_vce( VCE->new() );
-    # warn Dumper(keys %{$self->{vce}});
-    # $self->_set_access( VCE::Access->new( config => $self->config ));
-
-    # my $client = GRNOC::RabbitMQ::Client->new(
-    #     user     => $self->rabbit_mq->{'user'},
-    #     pass     => $self->rabbit_mq->{'pass'},
-    #     host     => $self->rabbit_mq->{'host'},
-    #     timeout  => 30,
-    #     port     => $self->rabbit_mq->{'port'},
-    #     exchange => 'VCE',
-    #     topic    => 'VCE.Switch.'
-    # );
-    # $self->_set_rabbit_client($client);
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
 
@@ -82,14 +67,6 @@ sub BUILD{
 sub _register_switch_functions {
     my $self = shift;
     my $d = shift;
-    # name="mlxel-2.sdn-test.grnoc.iu.edu"
-    # ip="156.56.6.221"
-    # description="na"
-    # ssh_port="22"
-    # vendor="Brocade"
-    # model="MLXe"
-    # version="5.8.0"
-    # netconf=380
 
     #--- Registering modify switch method
     my $method = GRNOC::WebService::Method->new( name => "add_switch",
@@ -266,31 +243,29 @@ sub _add_switch {
 
     my $workgroup = $params->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
+    if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
-        my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-        my ($id, $err) = $db->add_switch( $params->{'name'}{'value'},
-            $params->{'description'}{'value'},
-            $params->{'ip'}{'value'},
-            $params->{'ssh'}{'value'},
-            $params->{'netconf'}{'value'},
-            $params->{'vendor'}{'value'},
-            $params->{'model'}{'value'},
-            $params->{'version'}{'value'},
-        );
-        warn Dumper("ID: $id");
-        # undef $db; #Release the connection
-        if (defined $err) {
-            warn Dumper("Error: $err");
-            $method_ref->set_error($err);
-            return;
-        }
-
-        return { results => [ { id => $id } ] }
-
-    }else{
-        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
     }
+    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
+    my ($id, $err) = $db->add_switch( $params->{'name'}{'value'},
+        $params->{'description'}{'value'},
+        $params->{'ip'}{'value'},
+        $params->{'ssh'}{'value'},
+        $params->{'netconf'}{'value'},
+        $params->{'vendor'}{'value'},
+        $params->{'model'}{'value'},
+        $params->{'version'}{'value'},
+    );
+    warn Dumper("ID: $id");
+    if (defined $err) {
+        warn Dumper("Error: $err");
+        $method_ref->set_error($err);
+        return;
+    }
+
+    return { results => [ { id => $id } ] }
 
 }
 
@@ -304,32 +279,32 @@ sub _modify_switch {
 
     my $workgroup = $params->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
+    if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
-
-        my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-        my $result = $db->modify_switch(
-            id          => $params->{id}{value},
-            name        => $params->{name}{value},
-            description => $params->{description}{value},
-            ip          => $params->{ip}{value},
-            ssh         => $params->{ssh}{value},
-            netconf     => $params->{netconf}{value},
-            vendor      => $params->{vendor}{value},
-            model       => $params->{model}{value},
-            version     => $params->{version}{value},
-        );
-        warn Dumper("MODIFY RESULT: $result");
-        if ($result eq "0E0") {
-
-            $method_ref->set_error($result);
-            $result = "Could not find Switch: $params->{name}{value}, ID: $params->{id}{value}"
-            return;
-        }
-        return { results => [ { value => $result } ] }
-    }else{
-        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
     }
+
+    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
+    my $result = $db->modify_switch(
+        id          => $params->{id}{value},
+        name        => $params->{name}{value},
+        description => $params->{description}{value},
+        ip          => $params->{ip}{value},
+        ssh         => $params->{ssh}{value},
+        netconf     => $params->{netconf}{value},
+        vendor      => $params->{vendor}{value},
+        model       => $params->{model}{value},
+        version     => $params->{version}{value},
+    );
+    warn Dumper("MODIFY RESULT: $result");
+    if ($result eq "0E0") {
+
+        $result = "Could not find Switch: $params->{name}{value}, ID: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+    return { results => [ { value => $result } ] }
 }
 
 sub _delete_switch {
@@ -342,38 +317,33 @@ sub _delete_switch {
 
     my $workgroup = $params->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
+    if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
-        my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-        my $result = $db->delete_switch (
-            id          => $params->{id}{value},
-            name        => $params->{name}{value},
-            description => $params->{description}{value},
-            ip          => $params->{ip}{value},
-            ssh         => $params->{ssh}{value},
-            netconf     => $params->{netconf}{value},
-            vendor      => $params->{vendor}{value},
-            model       => $params->{model}{value},
-            version     => $params->{version}{value},
-        );
-        warn Dumper("DELETE RESULT: $result");
-
-        #TODO: Check if there is need to release the connection
-        # undef $db;
-        # if (defined $err) {
-        #     warn Dumper("Error: $err");
-        #     # $method->set_error($err);
-        #     return;
-        # }
-        if ($result eq "0E0") {
-            $method_ref->set_error($result);
-            $result = "Could not find Switch: $params->{id}{value}"
-            return;
-        }
-
-        return { results => [ { value => $result } ] }
-    }else{
-        return {results => [], error => { msg => "User $user not in specified workgroup $workgroup"}};
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
     }
+
+    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
+    my $result = $db->delete_switch (
+        id          => $params->{id}{value},
+        name        => $params->{name}{value},
+        description => $params->{description}{value},
+        ip          => $params->{ip}{value},
+        ssh         => $params->{ssh}{value},
+        netconf     => $params->{netconf}{value},
+        vendor      => $params->{vendor}{value},
+        model       => $params->{model}{value},
+        version     => $params->{version}{value},
+    );
+    warn Dumper("DELETE RESULT: $result");
+
+    if ($result eq "0E0") {
+
+        $result = "Could not find Switch: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+
+    return { results => [ { value => $result } ] }
 }
 1;
