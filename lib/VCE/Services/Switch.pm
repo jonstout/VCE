@@ -54,6 +54,8 @@ sub BUILD{
 
 
     $self->_set_vce( VCE->new() );
+    # warn Dumper(keys %{$self->{vce}});
+    # $self->_set_access( VCE::Access->new( config => $self->config ));
 
     my $client = GRNOC::RabbitMQ::Client->new(
         user     => $self->rabbit_mq->{'user'},
@@ -87,6 +89,9 @@ sub _register_switch_functions {
     # vendor="Brocade"
     # model="MLXe"
     # version="5.8.0"
+    # netconf=380
+
+    #--- Registering modify switch method
     my $method = GRNOC::WebService::Method->new( name => "add_switch",
         description => "Method for adding a switch",
         callback => sub {
@@ -116,6 +121,10 @@ sub _register_switch_functions {
         pattern => $GRNOC::WebService::Regex::INTEGER,
         description => "ssh port for the switch" );
 
+    $method->add_input_parameter( required => 1,
+        name => 'netconf',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
 
     $method->add_input_parameter( required => 1,
         name => "vendor",
@@ -133,26 +142,100 @@ sub _register_switch_functions {
         pattern => $GRNOC::WebService::Regex::TEXT,
         description => "switch version" );
 
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to." );
+
     eval {
         $d->register_method($method);
     };
     undef $method;
 
+    #--- Registering modify switch method
     $method = GRNOC::WebService::Method->new( name => "modify_switch",
         description => "Method for modifying a switch",
         callback => sub {
             return $self->_modify_switch(@_)
         });
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Name of the switch to be added" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'name',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "Name of the switch to be added" );
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'ip',
+        pattern => $GRNOC::WebService::Regex::IP_ADDRESS,
+        description => "IP address of switch" );
+
+
+    $method->add_input_parameter( required => 0,
+        name => "description",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch description");
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'ssh',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'netconf',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
+
+    $method->add_input_parameter( required => 1,
+        name => "vendor",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Switch vendor");
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'model',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch model" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'version',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch version" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to." );
+
     eval {
         $d->register_method($method);
     };
     undef $method;
 
+    #--- Registering delete switch method
     $method = GRNOC::WebService::Method->new( name => "delete_switch",
         description => "Method for deleting a switch",
         callback => sub {
             return $self->_delete_switch(@_)
         });
+
+    $method->add_input_parameter( required => 1,
+        name => 'id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Name of the switch to be added" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to." );
+
     eval {
         $d->register_method($method);
     };
@@ -174,40 +257,114 @@ sub handle_request{
 
 sub _add_switch {
 
-    my $result;
-    my $result1;
-    warn Dumper("IN ADD SWITCH");
+    warn Dumper("--- IN ADD SWITCH ---");
     my $self = shift;
+    my $method_ref = shift;
     my $params = shift;
-    # warn Dumper($self);
-    # warn Dumper($params->{'input_params'});
-    # warn Dumper($params);
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    $result = $db->add_switch( $params->{'input_params'}{'name'}{'value'},
-        $params->{'input_params'}{'description'}{'value'},
-        $params->{'input_params'}{'ip'}{'value'},
-        $params->{'input_params'}{'ssh_port'}{'value'},
-        # $params->{'input_params'}{''}{'value'}, #netconf
-        830, # change
-        $params->{'input_params'}{'vendor'}{'value'},
-        $params->{'input_params'}{'model'}{'value'},
-        $params->{'input_params'}{'version'}{'value'},
-    );
-    warn Dumper($result);
-    return $result1;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if($self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
+        my ($id, $err) = $db->add_switch( $params->{'name'}{'value'},
+            $params->{'description'}{'value'},
+            $params->{'ip'}{'value'},
+            $params->{'ssh'}{'value'},
+            $params->{'netconf'}{'value'},
+            $params->{'vendor'}{'value'},
+            $params->{'model'}{'value'},
+            $params->{'version'}{'value'},
+        );
+        warn Dumper("ID: $id");
+        # undef $db; #Release the connection
+        if (defined $err) {
+            warn Dumper("Error: $err");
+            # $method->set_error($err);
+            return;
+        }
+
+        return { results => [ { id => $id } ] }
+
+    }else{
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+
 }
 
 
 sub _modify_switch {
-    my $result;
     warn Dumper("IN MODIFY SWITCH");
-    return $result;
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if($self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+
+        my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
+        my $result = $db->modify_switch(
+            id          => $params->{id}{value},
+            name        => $params->{name}{value},
+            description => $params->{description}{value},
+            ip          => $params->{ip}{value},
+            ssh         => $params->{ssh}{value},
+            netconf     => $params->{netconf}{value},
+            vendor      => $params->{vendor}{value},
+            model       => $params->{model}{value},
+            version     => $params->{version}{value},
+        );
+        warn Dumper("MODIFY RESULT: $result");
+
+        return { results => [ { value => $result } ] }
+    }else{
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
 }
 
 sub _delete_switch {
-    my $result;
     warn Dumper("IN DELETE SWITCH");
-    return $result;
-}
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
 
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if($self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
+        my $result = $db->delete_switch (
+            id          => $params->{id}{value},
+            name        => $params->{name}{value},
+            description => $params->{description}{value},
+            ip          => $params->{ip}{value},
+            ssh         => $params->{ssh}{value},
+            netconf     => $params->{netconf}{value},
+            vendor      => $params->{vendor}{value},
+            model       => $params->{model}{value},
+            version     => $params->{version}{value},
+        );
+        warn Dumper("DELETE RESULT: $result");
+
+        #TODO: Check if there is need to release the connection
+        # undef $db;
+        # if (defined $err) {
+        #     warn Dumper("Error: $err");
+        #     # $method->set_error($err);
+        #     return;
+        # }
+
+        
+        return { results => [ { value => $result } ] }
+    }else{
+        return {results => [], error => { msg => "User $user not in specified workgroup $workgroup"}};
+    }
+}
 1;
