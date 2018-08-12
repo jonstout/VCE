@@ -10,8 +10,8 @@ use DBI;
 # my $path2 = '/var/lib/vce/database.sqlite';
 # my $access_policy = '/etc/vce/access_policy.xml';
 my $path = 't/etc/nm1.sqlite.orig';
-my $path2 = 't/etc/nm1.sqlite.orig2';
-my $access_policy = 't/etc/test_config.xml';
+my $path2 = 't/etc/nm5.sqlite.orig2';
+my $access_policy = 't/etc/tag_config.xml';
 
 sub main {
     my $db = DBI->connect("dbi:SQLite:dbname=$path", undef, undef, {

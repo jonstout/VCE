@@ -2,7 +2,7 @@ package VCE::Database::VLAN;
 
 use strict;
 use warnings;
-
+use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
@@ -40,6 +40,7 @@ sub add_vlan {
         );
     };
     if ($@) {
+warn "$@";
         $self->{log}->error("$@");
         return;
     }
@@ -80,6 +81,10 @@ sub get_vlans {
         push @$keys, 'vlan.switch_id=?';
         push @$args, $params{switch_id};
     }
+    if (defined $params{number}) {
+        push @$keys, 'vlan.number=?';
+        push @$args, $params{number};
+    }
     if (defined $params{workgroup_id}) {
         # does not concern itself with who has access to a vlan rather
         # only who owns the vlan
@@ -117,14 +122,19 @@ sub delete_vlan {
         return;
     }
 
+    my $delete_check;
     eval {
         my $q = $self->{conn}->prepare(
             "delete from vlan where id=?"
         );
-        $q->execute($vlan_id);
+        $delete_check = $q->execute($vlan_id);
     };
     if ($@) {
         $self->{log}->error("$@");
+        return 0;
+    }
+    if ($delete_check eq '0E0') {
+        # We consider not deleting an object to be an error
         return 0;
     }
     return 1;

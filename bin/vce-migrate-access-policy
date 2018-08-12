@@ -5,6 +5,7 @@ use warnings;
 
 use GRNOC::Config;
 use Data::Dumper;
+use DBI;
 use VCE::Database::Connection;
 use VCE::NetworkDB;
 
@@ -118,7 +119,6 @@ sub load_workgroups {
     my $db = shift;
 
     my $workgroups = $conf->{workgroups};
-
     foreach my $key (keys %$workgroups) {
         my $wg = $workgroups->{$key};
         my $r = $db->add_workgroup($wg->{name}, $wg->{description});
@@ -130,6 +130,7 @@ sub load_workgroups {
     foreach my $wg (@$db_workgroups) {
         $wg2id->{$wg->{name}} = $wg->{id};
     }
+
     return $wg2id;
 }
 
@@ -182,7 +183,7 @@ sub load_switches {
 
         $sw2id->{$sw->{name}} = $sw_id;
 
-        foreach my $pname (keys %$sw->{ports}) {
+        foreach my $pname (keys %{$sw->{ports}}) {
             my $p = $sw->{ports}->{$pname};
             my $w = $db->get_workgroup(name => $p->{owner});
 
@@ -276,7 +277,10 @@ sub load_existing_interfaces {
     my $sw2id = shift;
     my $intf2id = shift;
 
-    my $old_intfs = $old_db->get_interfaces();
+    my $query = $old_db->prepare('select * from interface');
+    $query->execute();
+    my $old_intfs = $query->fetchall_arrayref({});
+
     foreach my $ointf (@{$old_intfs}) {
         my $id = $intf2id->{$ointf->{switch}}->{$ointf->{name}};
         if (defined $id) {
@@ -315,7 +319,47 @@ sub load_existing_vlans {
     my $intf2id = shift;
     my $sw2id = shift;
 
-    my $old_vlans = $old_db->get_vlans_state();
+    my $old_vlans = [];
+
+    my $query = $old_db->prepare(
+        "select * from network
+         left join vlan on network.id=vlan.network_id
+         order by network.number asc"
+    );
+    $query->execute();
+    my $endpoints = $query->fetchall_arrayref({});
+
+    my $vlan  = {};
+
+    foreach my $endpoint (@{$endpoints}) {
+        if ($endpoint->{uuid} ne $vlan->{vlan_id}) {
+            if (%{$vlan}) {
+                push(@{$old_vlans}, $vlan);
+            }
+            $vlan = {
+                create_time => $endpoint->{created},
+                description => $endpoint->{description},
+                endpoints   => [],
+                status      => 'Active',
+                switch      => $endpoint->{switch},
+                username    => $endpoint->{username},
+                vlan        => $endpoint->{number},
+                vlan_id     => $endpoint->{uuid},
+                workgroup   => $endpoint->{workgroup}
+            };
+        }
+        if (!defined $endpoint->{interface}) {
+            next;
+        }
+        my $info = {
+            port => $endpoint->{interface}
+        };
+        push(@{$vlan->{endpoints}}, $info);
+    }
+    if (%{$vlan}) {
+        push(@{$old_vlans}, $vlan);
+    }
+
     foreach my $old_vlan (@{$old_vlans}) {
         my $sw = $old_vlan->{switch};
         my $tag = $old_vlan->{vlan};
@@ -343,7 +387,11 @@ sub main {
 
     `sqlite3 $new_db < /etc/vce/schema.sqlite`;
 
-    my $db1 = VCE::NetworkDB->new(path => $old_db);
+    my $db1 = DBI->connect("dbi:SQLite:dbname=$old_db", undef, undef, {
+        AutoCommit => 1,
+        RaiseError => 1,
+        sqlite_see_if_its_a_number => 1
+    });
     my $db2 = VCE::Database::Connection->new($new_db);
 
     my $config = GRNOC::Config->new(

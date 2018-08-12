@@ -61,7 +61,8 @@ CREATE TABLE IF NOT EXISTS vlan(
     workgroup_id INTEGER,
     FOREIGN KEY(created_by) REFERENCES user(id),
     FOREIGN KEY(switch_id) REFERENCES switch(id),
-    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id)
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id),
+    CONSTRAINT number_switch_id UNIQUE (number, switch_id)
 );
 
 CREATE TABLE IF NOT EXISTS tag(

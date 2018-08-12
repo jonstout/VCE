@@ -129,22 +129,23 @@ sub workgroup_owns_port{
         return 0;
     }
 
-    if(defined($self->config->{'switches'}->{$params{'switch'}})){
-
-        if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}})){
-
-            if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}){
-                $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is owned by " . $params{'workgroup'});
-                return 1;
-            }
-            $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
-            return 0;
-        }
-        $self->logger->error("switch " . $params{'switch'} . " does not have port: " . $params{'port'});
+    my $workgroup = $self->db->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
         return 0;
     }
-    $self->logger->error("no switch called " . $params{'switch'} . " in configuration");
-    return 0;
+    my $switch = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return 0;
+    }
+    my $intf = $self->db->get_interfaces(
+        workgroup_id => $workgroup->{id},
+        switch_id => $switch->{id},
+        name => $params{port}
+    );
+    if (!$intf || @$intf == 0) {
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -162,17 +163,18 @@ sub workgroups_owned_ports{
 
     my @owned_ints;
 
-    foreach my $switch (keys %{$self->config->{'switches'}}){
-        foreach my $port (keys %{$self->config->{'switches'}{$switch}{'ports'}}){
-            if($self->config->{'switches'}{$switch}{'ports'}{$port}{'owner'} eq $params{'workgroup'}){
-                push(@owned_ints,{ switch => $switch, port => $port});
-            }
-        }
+    my $workgroup = $self->db->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
+        return [];
+    }
+
+    my $interfaces = $self->db->get_interfaces(workgroup_id => $workgroup->{id});
+    foreach my $intf (@$interfaces) {
+        my $switch = $self->db->get_switch($intf->{switch_id});
+        push @owned_ints, { switch => $switch->{name}, port => $intf->{name} };
     }
 
     return \@owned_ints;
-    
-
 }
 
 =head2 user_in_workgroup
@@ -306,7 +308,7 @@ sub get_tags_on_port{
     # TODO
     # Account for admin workgroup
     # my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
-    my $available_tags = [];
+    my $result = {};
 
     foreach my $acl (@$acls) {
         if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
@@ -315,17 +317,19 @@ sub get_tags_on_port{
 
         if ($acl->{workgroup_id} eq $workgroup->{id}) {
             for (my $i = 2; $i < 4095; $i++) {
-                push(@{$available_tags}, $i);
+                $result->{$i} = 1;
             }
-            return $available_tags;
+            my @r = keys $result;
+            return \@r;
         }
 
         for (my $i = $acl->{low}; $i <= $acl->{high}; $i++) {
-            push(@{$available_tags}, $i);
+            $result->{$i} = 1;
         }
     }
 
-    return $available_tags;
+    my @r = keys $result;
+    return \@r;
 }
 
 

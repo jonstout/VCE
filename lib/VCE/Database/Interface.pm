@@ -133,6 +133,14 @@ sub get_interfaces {
         push @$keys, 'switch_id=?';
         push @$args, $params{switch_id};
     }
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'workgroup_id=?';
+        push @$args, $params{workgroup_id};
+    }
 
     my $values = join(' AND ', @$keys);
     my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";

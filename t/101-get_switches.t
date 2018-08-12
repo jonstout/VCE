@@ -9,7 +9,7 @@ use GRNOC::WebService::Client;
 use Data::Dumper;
 use Test::Deep;
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
@@ -19,7 +19,7 @@ my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/s
                                              timeout => 60 );
 
 my $switches = $client->get_switches( workgroup => 'ajco' );
-
+warn Dumper($switches);
 ok(defined($switches), "switches result was defined for AJ");
 
 cmp_deeply($switches->{'results'}->[0],  {
