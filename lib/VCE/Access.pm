@@ -613,17 +613,22 @@ sub is_port_owner {
     my $switch    = shift;
     my $port      = shift;
 
-    if (!defined $self->config->{switches}->{$switch}) {
+    my $wg = $self->db->get_workgroups(name => $workgroup)->[0];
+    if (!defined $wg) {
+        return (0, "Couldn't find a workgroup named $workgroup.");
+    }
+
+    my $sw = $self->db->get_switches(name => $switch)->[0];
+    if (!defined $sw) {
         return (0, "Couldn't find a switch named $switch.");
     }
 
-    if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
-        return (0, "Couldn't find a port named $port on $switch.");
-    }
-
-    my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
-
-    if ($port_config->{'owner'} ne $workgroup) {
+    my $interface = $self->db->get_interfaces(
+        workgroup_id => $wg->{id},
+        switch_id => $sw->{id},
+        name => $port
+    )->[0];
+    if (!defined $interface) {
         return (0, "Workgroup $workgroup doesn't own $port on $switch.");
     }
 
@@ -712,22 +717,28 @@ sub get_visible_vlans {
     my $workgroup = $params{workgroup};
     my $switch    = $params{switch};
 
-    if (!defined $self->config->{switches}->{$switch}) {
-        return (0, "Couldn't find a switch named $switch.");
-    }
-
-    my $is_admin = $self->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
-    if ($is_admin) {
-        return (1, undef);
-    }
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
 
     my $result = {};
-    my $ports = $self->config->{switches}->{$switch}->{ports};
-    foreach my $port (keys %{$ports}) {
-        foreach my $vlan (keys %{$ports->{$port}->{tags}}) {
-            if ($ports->{$port}->{tags}->{$vlan} eq $workgroup || $is_admin) {
-                $result->{$vlan} = 1;
-            }
+
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
+    if ($is_admin) {
+        for (my $i = 1; $i < 4095; $i++) {
+            $result->{$i} = 1;
+        }
+        my @r = keys $result;
+        return \@r;
+
+    }
+
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
+            next;
+        }
+
+        for (my $i = $acl->{low}; $i <= $acl->{high}; $i++) {
+            $result->{$i} = 1;
         }
     }
 
