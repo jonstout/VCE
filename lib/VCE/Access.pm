@@ -54,9 +54,11 @@ has logger => (is => 'rwp');
 
 sub BUILD{
     my ($self) = @_;
-    
+
     my $logger = GRNOC::Log->get_logger("VCE::Access");
-    $self->_set_logger($logger);    
+    $self->_set_logger($logger);
+
+    $self->logger->info('Loading database: ' . $self->config);
     $self->_set_db(VCE::Database::Connection->new($self->config));
 
     return $self;
@@ -464,6 +466,14 @@ sub get_switch_description{
         return;
     }
 
+    my $switch = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return;
+    }
+
+    return $switch->{description};
+
+
     if(defined($self->config->{'switches'}->{$params{'switch'}})){
         return $self->config->{'switches'}->{$params{'switch'}}->{'description'};
     }
@@ -531,23 +541,33 @@ sub get_switch_ports{
         return;
     }
 
-
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_workgroup_switches: workgroup not specified");
         return;
     }
 
-    my @ports;
-    foreach my $port (keys %{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}}){
-        if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                switch => $params{'switch'},
-                                                port => $port)){
-            push(@ports, $port);
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
+
+    my $ports = {};
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch}) {
+            next;
+        }
+
+        if ($acl->{workgroup_id} eq $workgroup->{id}) {
+            $ports->{$acl->{name}} = 1;
+            next;
+        }
+
+        if ($acl->{high} >= $params{vlan} && $acl->{low} <= $params{vlan}) {
+            $ports->{$acl->{name}} = 1;
+            next;
         }
     }
 
-    return \@ports;
-    
+    my @result = keys %$ports;
+    return \@result;
 }
 
 =head2 get_switches
@@ -571,14 +591,8 @@ sub get_switches{
 sub get_admin_workgroup {
     my $self = shift;
 
-    foreach my $wgroup (keys %{$self->config->{'workgroups'}}) {
-        my $is_admin = $self->config->{'workgroups'}->{$wgroup}->{'admin'};
-        if (defined $is_admin && $is_admin == 1) {
-            return $self->config->{'workgroups'}->{$wgroup};
-        }
-    }
-
-    return undef;
+    my $workgroup = $self->db->get_workgroups(name => 'admin')->[0];
+    return $workgroup;
 }
 
 =head2 is_port_owner

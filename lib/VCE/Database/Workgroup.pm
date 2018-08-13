@@ -106,11 +106,11 @@ sub get_workgroup_interfaces {
     my ( $self, $workgroup_id ) = @_;
 
     my $q = $self->{conn}->prepare(
-        "select interface.*, switch.name as switch_name, acl.low, acl.high from workgroup
+        "select interface.*, switch.name as switch_name, acl.workgroup_id, acl.low, acl.high from workgroup
          join interface on workgroup.id=interface.workgroup_id
          join switch on interface.switch_id=switch.id
          join acl on interface.id=acl.interface_id
-         where workgroup.id=? OR acl.workgroup_id=?"
+         where interface.workgroup_id=? OR acl.workgroup_id=?"
     );
     $q->execute($workgroup_id, $workgroup_id);
 

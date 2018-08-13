@@ -48,6 +48,8 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::Services::Switch");
     $self->_set_logger($logger);
 
+    $self->logger->info('Using network model: ' . $self->network_model_file);
+
     $self->_set_vce( VCE->new( config_file => $self->config_file,
                                network_model_file => $self->network_model_file  ) );
 
@@ -632,7 +634,6 @@ sub get_ports{
 =head2 get_tags_on_ports
 
 =cut
-
 sub get_tags_on_ports{
     my $self = shift;
     my $m_ref = shift;
@@ -643,21 +644,20 @@ sub get_tags_on_ports{
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
     my $ports = $p_ref->{'port'}{'value'};
-    
+
     #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-					      workgroup => $workgroup )){
-	
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+
 	my @results;
 	foreach my $port (@$ports){
 	    my $tags = $self->vce->get_tags_on_port( workgroup => $workgroup, switch => $switch, port => $port);
 	    #push(@results, {port => $port, tags => $tags});
-            push(@results, {port => $port, tags => $self->vce->access->friendly_display_vlans($tags)});
+        push(@results, {port => $port, tags => $self->vce->access->friendly_display_vlans($tags)});
 	}
+
 	return {results => [{ports => \@results}]};
-    }else{
-	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
-    }
 }
 
 
@@ -704,8 +704,6 @@ sub is_tag_available{
 =head2 get_switches
 
 =cut
-
-
 sub get_switches{
     my $self = shift;
 
@@ -716,15 +714,12 @@ sub get_switches{
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-
-        my $switches = $self->vce->get_switches( workgroup => $workgroup);
-
-        return {results => [{switch => $switches}]};
-    }else{
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    my $switches = $self->vce->get_switches(workgroup => $workgroup);
+    return {results => [{switch => $switches}]};
 }
 
 =head2 get_vlans

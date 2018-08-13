@@ -111,11 +111,12 @@ sub BUILD{
 
     my $logger = GRNOC::Log->get_logger("VCE");
     $self->_set_logger($logger);
-    
+
+    $self->logger->info('Using network model: ' . $self->network_model_file);
     $self->_process_config();
 
-    # $self->_set_access( VCE::Access->new( config => $self->config ));
-    $self->_set_access( VCE::Access->new( config => $self->db ));
+
+    $self->_set_access( VCE::Access->new( config => $self->network_model_file ));
 
     $self->_set_network_model( VCE::NetworkDB->new( path => $self->network_model_file ));
 
@@ -266,6 +267,7 @@ sub _process_command_config{
 sub get_workgroups{
     my $self = shift;
     my %params = @_;
+        $self->logger->error($self->network_model_file);
 
     my $workgroups = $self->database->get_workgroups(username => $params{username});
     my $result = [];
@@ -336,12 +338,12 @@ sub get_available_ports{
 sub get_tags_on_port{
     my $self = shift;
     my %params = @_;
-    
+
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_tags_on_port: Workgroup not specified");
         return;
     }
-    
+
     if(!defined($params{'switch'})){
         $self->logger->error("get_tags_on_port: Switch not specified");
         return;
@@ -359,7 +361,6 @@ sub get_tags_on_port{
                                                          switch => $params{'switch'},
                                                          port => $params{'port'});
     }
-
 }
 
 =head2 get_switches
@@ -376,11 +377,10 @@ sub get_switches{
     }
 
     my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
-    my $switches = $self->access->get_workgroup_switches( workgroup => $params{'workgroup'});
+    my $switches = $self->access->get_workgroup_switches(workgroup => $params{'workgroup'});
 
     my @res;
     foreach my $switch (@$switches){
-
         my $vlans = [];
         if ($is_admin) {
             $vlans = $self->network_model->get_vlans(switch => $switch);
@@ -390,8 +390,11 @@ sub get_switches{
 
         my $ports = $self->access->get_switch_ports( workgroup => $params{'workgroup'},
                                                      switch => $switch);
+
+        my $description = $self->access->get_switch_description(switch => $switch);
+
         push(@res,{ name => $switch,
-                    description => $self->access->get_switch_description( switch => $switch),
+                    description => $description,
                     vlans => $vlans,
                     ports => $ports});
     }
