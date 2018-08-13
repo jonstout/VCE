@@ -653,7 +653,10 @@ sub get_tags_on_ports{
 	my @results;
 	foreach my $port (@$ports){
 	    my $tags = $self->vce->get_tags_on_port( workgroup => $workgroup, switch => $switch, port => $port);
-	    #push(@results, {port => $port, tags => $tags});
+        if (!defined $tags) {
+            next;
+        }
+
         push(@results, {port => $port, tags => $self->vce->access->friendly_display_vlans($tags)});
 	}
 

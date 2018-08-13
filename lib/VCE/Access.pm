@@ -311,19 +311,22 @@ sub get_tags_on_port{
     # Account for admin workgroup
     # my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
     my $result = {};
-
     foreach my $acl (@$acls) {
         if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
             next;
         }
 
-        if ($acl->{workgroup_id} eq $workgroup->{id}) {
-            for (my $i = 2; $i < 4095; $i++) {
-                $result->{$i} = 1;
-            }
-            my @r = keys $result;
-            return \@r;
+        if ($acl->{workgroup_id} != $workgroup->{id}) {
+            # Filters out acls results based on port owners
+            next;
         }
+        # if ($acl->{workgroup_id} eq $workgroup->{id}) {
+        #     for (my $i = 1; $i < 4095; $i++) {
+        #         $result->{$i} = 1;
+        #     }
+        #     my @r = keys $result;
+        #     return \@r;
+        # }
 
         for (my $i = $acl->{low}; $i <= $acl->{high}; $i++) {
             $result->{$i} = 1;
