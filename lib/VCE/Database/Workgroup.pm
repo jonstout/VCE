@@ -74,12 +74,19 @@ sub get_workgroups {
         push @$keys, 'name=?';
         push @$args, $params{name};
     }
+    if (defined $params{username}) {
+        push @$keys, 'user.username=?';
+        push @$args, $params{username};
+    }
 
     my $values = join(' AND ', @$keys);
     my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
 
     my $q = $self->{conn}->prepare(
-        "select * from workgroup $where"
+        "select workgroup.* from workgroup
+         join user_workgroup on user_workgroup.workgroup_id=workgroup.id
+         join user on user.id=user_workgroup.user_id
+         $where"
     );
     $q->execute(@$args);
 

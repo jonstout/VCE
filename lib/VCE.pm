@@ -48,6 +48,7 @@ use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
 has db => (is => 'rwp', default => '/var/lib/vce/database.sqlite');
+has database => (is => 'rwp', default => undef);
 has network_model_file => (is => 'rwp', default => "/var/lib/vce/network_model.sqlite");
 
 has config => (is => 'rwp');
@@ -117,6 +118,8 @@ sub BUILD{
     $self->_set_access( VCE::Access->new( config => $self->db ));
 
     $self->_set_network_model( VCE::NetworkDB->new( path => $self->network_model_file ));
+
+    $self->_set_database(VCE::Database::Connection->new($self->network_model_file));
 
     $self->_set_device_client(GRNOC::RabbitMQ::Client->new(
         host     => $self->rabbit_mq->{'host'},
@@ -262,19 +265,15 @@ sub _process_command_config{
 =cut
 sub get_workgroups{
     my $self = shift;
-
     my %params = @_;
 
-    if(!defined($params{'username'})){
-	my @wgps = (keys %{$self->config->{'workgroups'}});
-	return \@wgps;
+    my $workgroups = $self->database->get_workgroups(username => $params{username});
+    my $result = [];
+    foreach my $wg (@$workgroups) {
+        push @$result, $wg->{name};
     }
 
-    if(defined($self->config->{'users'}->{$params{'username'}})){
-	return $self->config->{'users'}->{$params{'username'}};
-    }
-
-    return [];
+    return $result;
 }
 
 

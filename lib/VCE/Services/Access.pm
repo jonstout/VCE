@@ -573,8 +573,8 @@ sub get_workgroups{
     my $self = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-    
     $self->logger->debug("Fetching workgroups for user: " . $user);
+
     return {results => [{workgroups => $self->vce->get_workgroups( username => $user )}]};
 }
 
