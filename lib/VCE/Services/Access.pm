@@ -674,7 +674,7 @@ sub is_tag_available{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-    
+
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
     my $port = $p_ref->{'port'}{'value'};
@@ -683,25 +683,24 @@ sub is_tag_available{
     warn "Is tag available\n";
 
     #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-        warn "USer is in workgroup\n";
-	
-        #first verify user has access to switch/port/tag
-        if($self->vce->access->workgroup_has_access_to_port( workgroup => $workgroup,
-                                                             switch => $switch, 
-                                                             port => $port,
-                                                             vlan => $tag)){
-            
-            warn "workgroup has access to port and vlan\n";
-            my $tag_avail = $self->vce->is_tag_available( switch => $switch, port => $port, tag => $tag);
-            return {results => [{ available => $tag_avail}]};
-        }else{
-            return {results => [{ available => 0}], error => {msg => "Workgroup $workgroup is not allowed tag $tag on $switch:$port"}};
-        }
-    }else{
-	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    #first verify user has access to switch/port/tag
+    my $has_access = $self->vce->access->workgroup_has_access_to_port(
+        workgroup => $workgroup,
+        switch => $switch,
+        port => $port,
+        vlan => $tag
+    );
+    if (!$has_access) {
+        return {results => [{ available => 0}], error => {msg => "Workgroup $workgroup is not allowed tag $tag on $switch:$port"}};
+    };
+
+    warn "workgroup has access to vlan $tag on port $port";
+    my $tag_avail = $self->vce->is_tag_available( switch => $switch, port => $port, tag => $tag);
+    return {results => [{ available => $tag_avail}]};
 }
 
 =head2 get_switches

@@ -86,7 +86,8 @@ sub get_workgroups {
         "select workgroup.* from workgroup
          join user_workgroup on user_workgroup.workgroup_id=workgroup.id
          join user on user.id=user_workgroup.user_id
-         $where"
+         $where
+         group by workgroup.name"
     );
     $q->execute(@$args);
 

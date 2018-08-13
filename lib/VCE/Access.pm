@@ -250,14 +250,9 @@ sub workgroup_has_access_to_port{
 
     my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
     my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
-
     foreach my $acl (@$acls) {
         if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
             next;
-        }
-
-        if ($acl->{workgroup_id} eq $workgroup->{id}) {
-            return 1;
         }
 
         if (!defined $params{vlan}) {

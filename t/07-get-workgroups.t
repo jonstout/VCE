@@ -22,7 +22,8 @@ ok(defined($vce), "Created VCE Object");
 
 my $workgroups = $vce->get_workgroups();
 
-cmp_deeply($workgroups, ['admin','edco','ajco']);
+#cmp_deeply($workgroups, ['admin','edco','ajco']);
+cmp_deeply($workgroups, ['admin','ajco','edco']);
 
 $workgroups = $vce->get_workgroups( username => 'aragusa' );
 
@@ -30,7 +31,7 @@ cmp_deeply($workgroups, ['ajco']);
 
 $workgroups = $vce->get_workgroups( username => 'ebalas' );
 
-cmp_deeply($workgroups, ['edco','admin']);
+cmp_deeply($workgroups, ['admin','edco']);
 
 $workgroups = $vce->get_workgroups( username => 'foo' );
 

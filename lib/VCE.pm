@@ -90,6 +90,8 @@ and interact with the VCE database.
 
 =item db
 
+=item database
+
 =item device_client
 
 =item logger
@@ -264,10 +266,10 @@ sub _process_command_config{
 =head2 get_workgroups
 
 =cut
+
 sub get_workgroups{
     my $self = shift;
     my %params = @_;
-        $self->logger->error($self->network_model_file);
 
     my $workgroups = $self->database->get_workgroups(username => $params{username});
     my $result = [];
@@ -290,6 +292,7 @@ get_available_ports returns a list of all ports C<workgroup> has
 access to based on the configuration.
 
 =cut
+
 sub get_available_ports{
     my $self = shift;
     my %params = @_;
@@ -405,6 +408,7 @@ sub get_switches{
 =head2 get_interfaces_operational_state
 
 =cut
+
 sub get_interfaces_operational_state {
     my $self = shift;
     my %params = @_;
