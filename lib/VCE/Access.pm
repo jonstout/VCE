@@ -422,14 +422,17 @@ sub get_workgroup_users{
         return;
     }
 
-    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-        my @users = keys (%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}});
-        return \@users;
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    if (!defined $workgroup) {
+        return [];
     }
 
-    return;
-
-
+    my $users = $self->db->get_users_by_workgroup_id($workgroup->{id});
+    my $result = [];
+    foreach my $user (@$users) {
+        push @$result, $user->{username};
+    }
+    return $result;
 }
 
 =head2 get_workgroup_description
@@ -444,11 +447,12 @@ sub get_workgroup_description{
         return;
     }
 
-    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-        return $self->config->{'workgroups'}->{$params{'workgroup'}}->{'description'};
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    if (!defined $workgroup) {
+        return;
     }
 
-    return;
+    return $workgroup->{description};
 }
 
 

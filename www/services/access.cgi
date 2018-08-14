@@ -19,7 +19,7 @@ if($ENV{'TESTING'}){
     }
 }else{
     $access_services = VCE::Services::Access->new( config_file => '/etc/vce/access_policy.xml',
-                                                   network_model_file => '/var/lib/vce/network_model.sqlite' );
+                                                   network_model_file => '/var/lib/vce/database.sqlite' );
 }
 
 $access_services->handle_request();

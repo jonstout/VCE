@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_user add_user_to_workgroup get_user get_users get_user_by_name );
+our @EXPORT = qw( add_user add_user_to_workgroup get_user get_users get_user_by_name get_users_by_workgroup_id );
 
 
 =head2 add_user
@@ -114,6 +114,24 @@ sub get_users {
 
     my $result = $q->fetchall_arrayref({});
     return $result;
+}
+
+=head2 get_users_by_workgroup_id
+=cut
+sub get_users_by_workgroup_id {
+    my ( $self, $workgroup_id ) = @_;
+
+    $self->{log}->debug("get_users_by_workgroup_id($workgroup_id)");
+
+    my $w = $self->{conn}->prepare(
+        "select user.username from user
+         join user_workgroup on user_workgroup.user_id=user.id
+         join workgroup on workgroup.id=user_workgroup.workgroup_id
+         where workgroup.id=?"
+    );
+    $w->execute($workgroup_id);
+
+    return $w->fetchall_arrayref({});
 }
 
 return 1;
