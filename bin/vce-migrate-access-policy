@@ -7,7 +7,6 @@ use GRNOC::Config;
 use Data::Dumper;
 use DBI;
 use VCE::Database::Connection;
-use VCE::NetworkDB;
 
 
 sub _process_config {

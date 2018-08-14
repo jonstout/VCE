@@ -84,8 +84,8 @@ sub get_workgroups {
 
     my $q = $self->{conn}->prepare(
         "select workgroup.* from workgroup
-         join user_workgroup on user_workgroup.workgroup_id=workgroup.id
-         join user on user.id=user_workgroup.user_id
+         left join user_workgroup on user_workgroup.workgroup_id=workgroup.id
+         left join user on user.id=user_workgroup.user_id
          $where
          group by workgroup.name"
     );

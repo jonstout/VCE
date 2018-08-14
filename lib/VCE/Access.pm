@@ -663,21 +663,13 @@ sub is_vlan_permittee {
     }
 
     foreach my $port (@{$ports}) {
-        if (!defined $self->config->{switches}->{$switch}) {
-            return (0, "Couldn't find a switch named $switch.");
-        }
-
-        if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
-            return (0, "Couldn't find a port named $port on $switch.");
-        }
-
-        my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
-
-        if (!defined $port_config->{tags}->{$vlan}) {
-            return (0, "No port on switch $switch named $port with VLAN $vlan found in configuration.");
-        }
-
-        if ($port_config->{'tags'}->{$vlan} ne $workgroup) {
+        my $ok = $self->workgroup_has_access_to_port(
+            workgroup => $workgroup,
+            switch => $switch,
+            port => $port,
+            vlan => $vlan
+        );
+        if (!$ok) {
             return (0, "Workgroup $workgroup does not have access to VLAN $vlan on port $port on $switch.");
         }
     }

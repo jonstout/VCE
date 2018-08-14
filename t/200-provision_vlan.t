@@ -15,7 +15,7 @@ use JSON::XS;
 use Data::Dumper;
 
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 sub make_request{
     my $params = shift;
@@ -77,8 +77,9 @@ my $ua = AnyEvent::HTTP::LWP::UserAgent->new;
 my $vlans = $client->get_vlans( workgroup => 'ajco' );
 
 ok(defined($vlans), "Got a response");
+warn Dumper($vlans);
 ok($#{$vlans->{'results'}->[0]->{'vlans'}} == 2, "Expected circuits found!");
-
+# exit 1;
 my $vlan;
 my $req = make_request({ method => 'add_vlan',
                          description => 'Automated test suite!',
@@ -91,6 +92,8 @@ my $response = $ua->simple_request_async($req)->recv;
 if($response->is_success){
     my $content = $response->content;
     $vlan = decode_json($content);
+} else {
+    warn Dumper($response);
 }
 
 ok(defined($vlan), "got a response");
@@ -133,6 +136,7 @@ cmp_deeply($vlan_details,{
         ]
            });
 
+$vlan = undef;
 $req = make_request({ method => 'add_vlan',
                       description => 'Automated test suite!',
                       switch => 'foobar',
@@ -145,10 +149,11 @@ if($response->is_success){
     my $content = $response->content;
     $vlan = decode_json($content);
 }
-
+warn Dumper($vlan);
 ok(defined($vlan), "Results was returned even though provisioning failed");
 ok($vlan->{'results'}->[0]->{'success'} == 0, "Unable to provision because tags already in use!");
 warn Dumper($vlan->{'error'}->{'msg'});
+# exit 1;
 ok($vlan->{'error'}->{'msg'} eq "Unable to add VLAN to the database. Please verify the VLAN does't already exist.", "Returned an error message saying why we couldn't provision");
 
 
