@@ -33,7 +33,7 @@ ok(defined $tags, "got tags from get_tags_on_port");
 my $expected_vlans = {};
 my $ok = 1;
 
-for (my $i = 2; $i <= 4094; $i++) {
+for (my $i = 301; $i <= 400; $i++) {
     $expected_vlans->{$i} = 1;
 }
 
