@@ -341,6 +341,34 @@ sub get_vlans {
 
 =head2 get_interfaces
 
+get_interfaces combines the result of C<get_interfaces_state> and
+C<_get_interface> into a hash of interfaces by interface name.
+
+    'ethernet 11/1' => {
+        'input' => {
+            'bytes' => '0',
+            'CRC_errors' => '0',
+            'errors' => '0',
+            'packets' => '0',
+            'ignored' => '0',
+            'error_frames' => '0'
+        },
+        'status' => 0,
+        'mac_addr' => 'cc4e.240c.09e0',
+        'hardware_type' => '100GigabitEthernet',
+        'name' => 'ethernet 11/1',
+        'description' => '',
+        'output' => {
+            'bytes' => '0',
+            'errors' => '0',
+            'collisions' => '0',
+            'packets' => '0'
+        },
+        'speed' => 'unknown',
+        'admin_status' => 1,
+        'mtu' => '9216'
+    }
+
 =cut
 sub get_interfaces {
     my $self = shift;

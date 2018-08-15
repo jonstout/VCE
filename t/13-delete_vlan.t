@@ -13,9 +13,10 @@ use GRNOC::Log;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
-`cp t/etc/nm3.sqlite.orig t/etc/nm3.sqlite`;
+`cp t/etc/nm3.sqlite.orig2 t/etc/nm3.sqlite`;
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',
+                    db =>'./t/etc/nm3.sqlite',
                     network_model_file => './t/etc/nm3.sqlite'  );
 
 ok(defined($vce), "VCE object created");

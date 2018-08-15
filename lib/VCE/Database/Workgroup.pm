@@ -6,9 +6,13 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_workgroup get_workgroup get_workgroups );
+our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces );
 
 
+=head2 add_workgroup
+
+
+=cut
 sub add_workgroup {
     my ( $self, $name, $description ) = @_;
 
@@ -22,6 +26,10 @@ sub add_workgroup {
     return $self->{conn}->last_insert_id("", "", "workgroup", "");
 }
 
+=head2 get_workgroup
+
+
+=cut
 sub get_workgroup {
     my $self = shift;
     my %params = @_;
@@ -49,15 +57,63 @@ sub get_workgroup {
     return $result;
 }
 
+=head2 get_workgroups
+
+
+=cut
 sub get_workgroups {
-    my ( $self ) = @_;
+    my $self = shift;
+    my %params = @_;
 
     $self->{log}->debug("get_workgroups()");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{username}) {
+        push @$keys, 'user.username=?';
+        push @$args, $params{username};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from workgroup"
+        "select workgroup.* from workgroup
+         left join user_workgroup on user_workgroup.workgroup_id=workgroup.id
+         left join user on user.id=user_workgroup.user_id
+         $where
+         group by workgroup.name"
     );
-    $q->execute();
+    $q->execute(@$args);
+
+    my $result = $q->fetchall_arrayref({});
+    return $result;
+}
+
+=head2 get_workgroup_interfaces
+
+get_workgroup_interfaces returns a list of all interfaces that
+C<workgroup_id> either owns or has access to. Interfaces may appear to
+be duplicated if more than one vlan range has been made available to
+C<workgroup_id>, although the high and low fields will be different.
+
+=cut
+sub get_workgroup_interfaces {
+    my ( $self, $workgroup_id ) = @_;
+
+    my $q = $self->{conn}->prepare(
+        "select interface.*, switch.name as switch_name, acl.workgroup_id, acl.low, acl.high from workgroup
+         join interface on workgroup.id=interface.workgroup_id
+         join switch on interface.switch_id=switch.id
+         join acl on interface.id=acl.interface_id
+         where interface.workgroup_id=? OR acl.workgroup_id=?"
+    );
+    $q->execute($workgroup_id, $workgroup_id);
 
     my $result = $q->fetchall_arrayref({});
     return $result;

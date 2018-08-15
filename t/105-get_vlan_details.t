@@ -8,7 +8,7 @@ use Test::Deep;
 use GRNOC::WebService::Client;
 use Data::Dumper;
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
@@ -17,8 +17,7 @@ my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/s
                                              debug => 0,
                                              timeout => 60 );
 
-my $vlan = $client->get_vlan_details( workgroup => 'ajco',
-                                       vlan_id => '979f9708-7102-4762-8a6a-8e30ed80b88c');
+my $vlan = $client->get_vlan_details(workgroup => 'ajco', vlan_id => 3);
 
 ok(defined($vlan), "vlan result was defined for AJ");
 
@@ -39,12 +38,11 @@ cmp_deeply($vlan->{results}->[0], {
             }
         ],
         'username' => 'aragusa',
-        'vlan_id' => '979f9708-7102-4762-8a6a-8e30ed80b88c'
+        'vlan_id' => 3
     }
 });
 
-$vlan = $client->get_vlan_details( workgroup => 'ajco',
-                                   vlan_id => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2');
+$vlan = $client->get_vlan_details(workgroup => 'ajco', vlan_id => 2);
 
 ok(defined($vlan), "vlan result was defined for AJ");
 
@@ -67,7 +65,7 @@ cmp_deeply($vlan, {
                     }
                     ],
                 'username' => 'aragusa',
-                'vlan_id' => 'b0c0103e-b2dc-47cd-a687-c73dd9100fd2'
+                'vlan_id' => 2
             }
         }
         ]
@@ -75,8 +73,7 @@ cmp_deeply($vlan, {
     );
 
 
-$vlan = $client->get_vlan_details( workgroup => 'ajco',
-                                   vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f');
+$vlan = $client->get_vlan_details(workgroup => 'ajco', vlan_id => 1);
 
 ok(defined($vlan), "vlan result was defined for AJ");
 ok($vlan->{results}->[0]->{circuit}->{workgroup} eq 'edco', 'Got VLAN because of workgroup owned port.');
@@ -88,8 +85,7 @@ my $client2 = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/
                                               debug => 0,
                                               timeout => 60 );
 
-$vlan = $client2->get_vlan_details( workgroup => 'edco',
-                                    vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f' );
+$vlan = $client2->get_vlan_details(workgroup => 'edco', vlan_id => 1 );
 
 ok(defined($vlan), "vlan result was defined for Ed");
 
@@ -101,7 +97,7 @@ cmp_deeply($vlan, {
                 'status' => 'Active',
                 'create_time' => 1479158359,
                 'description' => 'test',
-                'vlan_id' => '2806baa4-173c-4bdd-b552-c063a82e232f',
+                'vlan_id' => 1,
                 'vlan' => 10,
                 'switch' => 'foobar',
                 'username' => 'aragusa',
@@ -119,8 +115,7 @@ cmp_deeply($vlan, {
            });
 
 
-$vlan = $client->get_vlan_details( workgroup => 'edco',
-                                   vlan_id => '2806baa4-173c-4bdd-b552-c063a82e232f');
+$vlan = $client->get_vlan_details(workgroup => 'edco', vlan_id => 1);
 
 ok(defined($vlan), "Got a proper response");
 

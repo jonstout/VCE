@@ -10,12 +10,13 @@ use VCE;
 use GRNOC::Log;
 
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm5.sqlite.orig2 t/etc/nm1.sqlite`;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 my $vce = VCE->new(
     config_file => './t/etc/tag_config.xml',
+    db => "t/etc/nm1.sqlite",
     network_model_file => "t/etc/nm1.sqlite"
 );
 ok(defined $vce, "created vce object");
@@ -46,4 +47,5 @@ foreach my $tag (@$tags) {
 }
 
 ok($ok, "all retrieved tags were expected");
+warn Dumper(keys %$expected_vlans);
 ok(!%$expected_vlans, "all expected vlans were retrieved");

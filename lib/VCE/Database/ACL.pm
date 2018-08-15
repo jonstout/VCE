@@ -9,6 +9,8 @@ our @ISA = qw( Exporter );
 our @EXPORT = qw( add_acl get_acls );
 
 
+=head2 add_acl
+=cut
 sub add_acl {
     my ( $self, $workgroup_id, $interface_id, $low, $high ) = @_;
 
@@ -24,6 +26,8 @@ sub add_acl {
     return $self->{conn}->last_insert_id("", "", "interface_workgroup_acl", "");
 }
 
+=head2 get_acls
+=cut
 sub get_acls {
     my ( $self, $workgroup_id, $interface_id ) = @_;
 

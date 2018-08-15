@@ -21,6 +21,7 @@ has vce => (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has template => (is => 'rwp');
+has db => (is => 'rwp');
 
 =head2 BUILD
 
@@ -37,6 +38,8 @@ has template => (is => 'rwp');
 =item rabbit_mq
 
 =item template
+
+=item db
 
 =item vce
 
@@ -60,6 +63,8 @@ sub BUILD{
     $self->_register_switch_functions($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
+
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     return $self;
 }

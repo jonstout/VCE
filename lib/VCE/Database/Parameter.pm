@@ -8,6 +8,10 @@ use Exporter;
 our @ISA = qw( Exporter );
 our @EXPORT = qw( add_parameter get_parameters );
 
+=head2 add_parameter
+
+
+=cut
 sub add_parameter {
     my ( $self, $command_id, $name, $description, $regex, $type ) = @_;
 
@@ -23,6 +27,10 @@ sub add_parameter {
     return $self->{conn}->last_insert_id("", "", "parameter", "");
 }
 
+=head2 get_parameters
+
+
+=cut
 sub get_parameters {
     my ( $self ) = @_;
 

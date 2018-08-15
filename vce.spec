@@ -119,6 +119,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/config.xsd %{buildroot}%{_sysconfdir}/vce/config.xsd
 %{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
+%{__install} etc/schema.sqlite %{buildroot}%{_sysconfdir}/vce/schema.sqlite
 
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
 %{__install} etc/database.sqlite %{buildroot}%{_sharedstatedir}/vce/database.sqlite
@@ -174,6 +175,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %attr(600,vce,vce) %{_sysconfdir}/vce/password.json
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
+%{_sysconfdir}/vce/schema.sqlite
 
 %dir               %attr(775,vce,vce) %{_sharedstatedir}/vce
 %config(noreplace) %attr(664,vce,vce) %{_sharedstatedir}/vce/network_model.sqlite

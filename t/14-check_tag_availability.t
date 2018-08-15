@@ -14,9 +14,10 @@ use GRNOC::Log;
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 #remove our temprorary nm file
-`cp t/etc/nm4.sqlite.orig t/etc/nm4.sqlite`;
+`cp t/etc/nm4.sqlite.orig2 t/etc/nm4.sqlite`;
 
 my $vce = VCE->new( config_file => './t/etc/test_config.xml',
+                    db => './t/etc/nm4.sqlite',
                     network_model_file => './t/etc/nm4.sqlite'  );
 
 ok(defined($vce), "VCE object created");
