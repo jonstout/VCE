@@ -277,33 +277,20 @@ sub get_interfaces {
     my $self = shift;
     my %params = @_;
 
-    my $args = [];
-    my $reqs = [];
-    my $where = '';
-
-    # TODO - Cleanup this garbage for optional filters
-    if (defined $params{workgroup} || defined $params{switch}) {
-        $where .= 'WHERE ';
-        if (defined $params{switch}) {
-            push(@{$reqs}, 'interface.switch=?');
-            push(@{$args}, $params{switch});
-        }
-        $where .= join(' AND ', @{$reqs});
+    my $sw = $self->db2->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return;
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT * FROM interface ' .
-            $where
-        );
-        $query->execute(@{$args});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return undef;
+    my $wg = $self->db2->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $wg) {
+        return;
     }
-    my $interfaces = $query->fetchall_arrayref({});
+
+    my $interfaces = $self->db2->get_interfaces(
+        workgroup_id => $wg->{id},
+        switch_id => $sw->{id}
+    );
     return $interfaces;
 }
 

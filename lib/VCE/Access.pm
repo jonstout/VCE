@@ -474,14 +474,6 @@ sub get_switch_description{
     }
 
     return $switch->{description};
-
-
-    if(defined($self->config->{'switches'}->{$params{'switch'}})){
-        return $self->config->{'switches'}->{$params{'switch'}}->{'description'};
-    }
-
-    return;
-
 }
 
 =head2 get_switch_commands
@@ -496,8 +488,13 @@ sub get_switch_commands{
         return;
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}{'system'};
+    my $sw = $self->db->get_switches(name => $params{switch})->[0];
+warn Dumper($sw);
+    if (!defined $sw) {
+        return [];
+    }
 
+    return $self->db->get_commands(switch_id => $sw->{id}, type => 'switch');
 }
 
 =head2 get_port_commands
@@ -508,12 +505,12 @@ sub get_port_commands{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'switch'})){
-        $self->logger->error("get_port_commands: switch not specified");
-        return;
+    my $sw = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return [];
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'port'};
+    return $self->db->get_commands(switch_id => $sw->{id}, type => 'interface');
 }
 
 =head2 get_vlan_commands
@@ -528,7 +525,12 @@ sub get_vlan_commands{
         return;
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'vlan'};
+    my $sw = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return [];
+    }
+
+    return $self->db->get_commands(switch_id => $sw->{id}, type => 'vlan');
 }
 
 =head2 get_switch_ports
@@ -578,13 +580,7 @@ sub get_switch_ports{
 sub get_switches{
     my $self = shift;
 
-    my @switches;
-    foreach my $s (keys %{$self->config->{'switches'}}){
-        push(@switches, $self->config->{'switches'}->{$s});
-    }
-
-    return \@switches;
-
+    return $self->db->get_switches();
 }
 
 =head2 get_admin_workgroup

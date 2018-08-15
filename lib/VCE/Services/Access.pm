@@ -319,21 +319,23 @@ sub get_switch_commands{
     }
 
     my $switch_commands = $self->vce->access->get_switch_commands( switch => $switch );
+    warn Dumper($switch);
+    warn Dumper($switch_commands);
     my @results;
     foreach my $cmd (@$switch_commands){
         my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
         my $is_owner = 0;
 
         my $authorized = 0;
-        if ($cmd->{user_type} eq 'user') {
+        if ($cmd->{role} eq 'user') {
             $authorized = 1;
         }
 
-        if ($cmd->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+        if ($cmd->{role} eq 'owner' && ($is_admin || $is_owner)) {
             $authorized = 1;
         }
 
-        if ($cmd->{user_type} eq 'admin' && $is_admin) {
+        if ($cmd->{role} eq 'admin' && $is_admin) {
             $authorized = 1;
         }
 
@@ -342,7 +344,7 @@ sub get_switch_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'method_name'};
+        $obj->{'method_name'} = $cmd->{'description'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
@@ -356,19 +358,19 @@ sub get_switch_commands{
                                         description => "switch to run the command on",
                                         required => 1 });
 
-        foreach my $param (keys (%{$cmd->{'params'}})){
-            my $p = {};
+        # foreach my $param (keys (%{$cmd->{'params'}})){
+        #     my $p = {};
 
-            if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
-                @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-            }
+        #     if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
+        #         @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
+        #     }
 
-            $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-            $p->{'name'} = $param;
-            $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-            $p->{'required'} = 1;
-            push(@{$obj->{'parameters'}}, $p);
-        }
+        #     $p->{'type'} = $cmd->{'params'}{$param}{'type'};
+        #     $p->{'name'} = $param;
+        #     $p->{'description'} = $cmd->{'params'}{$param}{'description'};
+        #     $p->{'required'} = 1;
+        #     push(@{$obj->{'parameters'}}, $p);
+        # }
 
         push(@results, $obj);
     }

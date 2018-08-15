@@ -21,6 +21,7 @@ has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
 has template => (is => 'rwp');
+has db => (is => 'rwp');
 
 =head2 BUILD
 
@@ -37,6 +38,8 @@ has template => (is => 'rwp');
 =item rabbit_mq
 
 =item template
+
+=item db
 
 =item vce
 
@@ -72,6 +75,8 @@ sub BUILD{
 
     $self->_set_dispatcher($dispatcher);
 
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
+
     return $self;
 }
 
@@ -83,64 +88,68 @@ sub _register_commands{
 
     my $switches = $self->vce->get_all_switches();
 
-    foreach my $switch (@$switches){
-        my $commands = $switch->{'commands'};
-        foreach my $type (keys (%{$commands})){
-            foreach my $command (@{$commands->{$type}}){
-                $command->{'cli_type'} = $command->{'type'};
-                $command->{'type'}     = $type;
+    foreach my $switch (@$switches) {
 
-                my $method = GRNOC::WebService::Method->new( name => $command->{'method_name'},
-                                                             description => $command->{'description'},
-                                                             callback => sub {
-                                                                 return $self->_execute_command($command, @_)
-                                                             });
+        my $commands = $self->db->get_commands(switch_id => $switch->{id});
+        warn Dumper($commands);
 
-                $method->add_input_parameter( required => 1,
-                                              name => 'workgroup',
-                                              pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                              description => "workgroup to run the command as" );
+        # my $commands = $switch->{'commands'};
+        # foreach my $type (keys (%{$commands})){
+        #     foreach my $command (@{$commands->{$type}}){
+        #         $command->{'cli_type'} = $command->{'type'};
+        #         $command->{'type'}     = $type;
 
-                if($type eq 'system' || $type eq 'port' || $type eq 'vlan'){
-                    warn "Adding required param switch!\n";
-                    $method->add_input_parameter( required => 1,
-                                                  name => 'switch',
-                                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                                  description => "Switch to run the command on" );
-                }
+        #         my $method = GRNOC::WebService::Method->new( name => $command->{'method_name'},
+        #                                                      description => $command->{'description'},
+        #                                                      callback => sub {
+        #                                                          return $self->_execute_command($command, @_)
+        #                                                      });
 
-                if($type eq 'port'){
-                    $method->add_input_parameter( required => 1,
-                                                  name => "port",
-                                                  pattern => "(.*)",
-                                                  description => "the port to run the command on");
-                }
+        #         $method->add_input_parameter( required => 1,
+        #                                       name => 'workgroup',
+        #                                       pattern => $GRNOC::WebService::Regex::NAME_ID,
+        #                                       description => "workgroup to run the command as" );
 
-                if($type eq 'vlan'){
-                    $method->add_input_parameter( required => 1,
-                                                  name => 'vlan_id',
-                                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                                  description => "the vlan to run the command for" );
-                }
+        #         if($type eq 'system' || $type eq 'port' || $type eq 'vlan'){
+        #             warn "Adding required param switch!\n";
+        #             $method->add_input_parameter( required => 1,
+        #                                           name => 'switch',
+        #                                           pattern => $GRNOC::WebService::Regex::NAME_ID,
+        #                                           description => "Switch to run the command on" );
+        #         }
 
-                foreach my $param (keys %{$command->{'params'}}){
-                    $method->add_input_parameter( required => 1,
-                                                  name => $param,
-                                                  pattern => $command->{'params'}{$param}->{'pattern'},
-                                                  description => $command->{'params'}{$param}->{'description'} );
-                }
+        #         if($type eq 'port'){
+        #             $method->add_input_parameter( required => 1,
+        #                                           name => "port",
+        #                                           pattern => "(.*)",
+        #                                           description => "the port to run the command on");
+        #         }
 
-                eval {
-                    $d->register_method($method);
-                };
-                if ($@) {
-                    # Because it's possible (likely) that multiple
-                    # switches have the same command definition, we
-                    # attempt to register the same command multiple
-                    # times. Ignore when this happens and continue on.
-                }
-            }
-        }
+        #         if($type eq 'vlan'){
+        #             $method->add_input_parameter( required => 1,
+        #                                           name => 'vlan_id',
+        #                                           pattern => $GRNOC::WebService::Regex::NAME_ID,
+        #                                           description => "the vlan to run the command for" );
+        #         }
+
+        #         foreach my $param (keys %{$command->{'params'}}){
+        #             $method->add_input_parameter( required => 1,
+        #                                           name => $param,
+        #                                           pattern => $command->{'params'}{$param}->{'pattern'},
+        #                                           description => $command->{'params'}{$param}->{'description'} );
+        #         }
+
+        #         eval {
+        #             $d->register_method($method);
+        #         };
+        #         if ($@) {
+        #             # Because it's possible (likely) that multiple
+        #             # switches have the same command definition, we
+        #             # attempt to register the same command multiple
+        #             # times. Ignore when this happens and continue on.
+        #         }
+        #     }
+        # }
     }
 }
 

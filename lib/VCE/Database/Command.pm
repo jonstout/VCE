@@ -2,7 +2,7 @@ package VCE::Database::Command;
 
 use strict;
 use warnings;
-
+use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
@@ -28,14 +28,32 @@ sub add_command {
 =head2 get_commands
 =cut
 sub get_commands {
-    my ( $self ) = @_;
+    my $self = shift;
+    my %params = @_;
 
     $self->{log}->debug("get_commands()");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{switch_id}) {
+        push @$keys, 'switch_command.switch_id=?';
+        push @$args, $params{switch_id};
+    }
+    if (defined $params{type}) {
+        push @$keys, 'command.type=?';
+        push @$args, $params{type};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from command"
+        "select * from command
+         left join switch_command on switch_command.command_id=command.id
+         $where"
     );
-    $q->execute();
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;
