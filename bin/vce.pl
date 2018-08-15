@@ -17,7 +17,8 @@ use Parallel::ForkManager;
 use Proc::Daemon;
 
 use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
-use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
+# use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
+use constant DEFAULT_MODEL_FILE => '/var/lib/vce/database.sqlite';
 use constant DEFAULT_PASSWORD_FILE => '/etc/vce/password.json';
 
 use Data::Dumper;

@@ -107,8 +107,8 @@ sub get_switches {
 
     my $q = $self->{conn}->prepare(
         "select switch.* from switch
-         join interface on interface.switch_id=switch.id
-         join acl on acl.interface_id=interface.id
+         left join interface on interface.switch_id=switch.id
+         left join acl on acl.interface_id=interface.id
          $where group by switch.id"
     );
     $q->execute(@$args);
