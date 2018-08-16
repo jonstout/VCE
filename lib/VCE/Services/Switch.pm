@@ -253,8 +253,7 @@ sub _add_switch {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    my ($id, $err) = $db->add_switch( $params->{'name'}{'value'},
+    my ($id, $err) = $self->db->add_switch( $params->{'name'}{'value'},
         $params->{'description'}{'value'},
         $params->{'ip'}{'value'},
         $params->{'ssh'}{'value'},
@@ -290,8 +289,7 @@ sub _modify_switch {
         return;
     }
 
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    my $result = $db->modify_switch(
+    my $result = $self->db->modify_switch(
         id          => $params->{id}{value},
         name        => $params->{name}{value},
         description => $params->{description}{value},
@@ -328,8 +326,7 @@ sub _delete_switch {
         return;
     }
 
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    my $result = $db->delete_switch (
+    my $result = $self->db->delete_switch (
         id          => $params->{id}{value},
         name        => $params->{name}{value},
         description => $params->{description}{value},

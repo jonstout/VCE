@@ -35,7 +35,7 @@ sub add_switch {
             $vendor, $model, $version);
     };
 
-    if ( $@) {
+    if ($@) {
         return (undef,"$@")
     }
 

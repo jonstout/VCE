@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_interface get_interface get_interfaces update_interface );
+our @EXPORT = qw( add_interface get_interface get_interfaces update_interface delete_interface);
 
 
 =head2 add_interface
@@ -28,7 +28,7 @@ our @EXPORT = qw( add_interface get_interface get_interfaces update_interface );
 sub add_interface {
     my $self   = shift;
     my %params = @_;
-
+    # warn Dumper(%params);
     return if (!defined $params{description});
     return if (!defined $params{name});
     return if (!defined $params{switch_id});
@@ -58,9 +58,11 @@ sub add_interface {
     };
     if ($@) {
         $self->{log}->error("$@");
+        return (undef,"$@")
     }
 
-    return $self->{conn}->last_insert_id("", "", "interface", "");
+    my $id = $self->{conn}->last_insert_id("", "", "interface", "");
+    return ($id, undef);
 }
 
 =head2 delete_interface
@@ -79,13 +81,14 @@ sub delete_interface {
     }
 
     eval {
-        my $query = $self->db->prepare(
+        my $query = $self->{conn}->prepare(
             'DELETE FROM interface WHERE id=?'
         );
         $query->execute($interface_id);
     };
     if ($@) {
-        $self->logger->error("$@");
+        warn Dumper($@);
+        $self->{log}->error("$@");
         return 0;
     }
 
@@ -174,7 +177,6 @@ sub get_interfaces {
 sub update_interface {
     my $self   = shift;
     my %params = @_;
-
     return if (!defined $params{id});
 
     $self->{log}->debug("update_interface($params{id}, ...)");
@@ -221,17 +223,19 @@ sub update_interface {
 
     my $values = join(', ', @$keys);
     push @$args, $params{id};
-
+    my $result;
     eval {
         my $q = $self->{conn}->prepare(
             "UPDATE interface SET $values WHERE id=?"
         );
-        return $q->execute(@$args);
+
+        $result = $q->execute(@$args);
     };
     if ($@) {
         $self->{log}->error("$@");
-        return;
+        return 0;
     }
+    return $result;
 }
 
 return 1;
