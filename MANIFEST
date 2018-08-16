@@ -32,6 +32,7 @@ lib/VCE/Device/Brocade/MLXe/5_8_0.pm
 lib/VCE/NetworkDB.pm
 lib/VCE/Services/Access.pm
 lib/VCE/Services/Command.pm
+lib/VCE/Services/Interface.pm
 lib/VCE/Services/Operational.pm
 lib/VCE/Services/Provisioning.pm
 lib/VCE/Services/Switch.pm
@@ -143,6 +144,7 @@ www/frontend/vce.bsdesign
 www/index.html
 www/services/access.cgi
 www/services/command.cgi
+www/services/interface.cgi
 www/services/index.html
 www/services/operational.cgi
 www/services/provisioning.cgi

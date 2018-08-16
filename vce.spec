@@ -75,6 +75,7 @@ rm -rf $RPM_BUILDR_ROOT
 
 %{__install} lib/VCE/Services/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Access.pm
 %{__install} lib/VCE/Services/Command.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Command.pm
+%{__install} lib/VCE/Services/Interface.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Interface.pm
 %{__install} lib/VCE/Services/Operational.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Operational.pm
 %{__install} lib/VCE/Services/Provisioning.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{__install} lib/VCE/Services/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Switch.pm
@@ -86,10 +87,11 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/frontend
 
 %{__install} www/services/access.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/command.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/interface.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/operational.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/provisioning.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/switch.cgi %{buildroot}%{_datadir}/vce/www/api
-%{__install} www/services/command.cgi %{buildroot}%{_datadir}/vce/www/api
 
 cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
@@ -148,16 +150,18 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Database/Workgroup.pm
 %{perl_vendorlib}/VCE/Services/Access.pm
 %{perl_vendorlib}/VCE/Services/Command.pm
+%{perl_vendorlib}/VCE/Services/Interface.pm
 %{perl_vendorlib}/VCE/Services/Operational.pm
 %{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{perl_vendorlib}/VCE/Services/Switch.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
 %{_datadir}/vce/www/api/access.cgi
+%{_datadir}/vce/www/api/command.cgi
+%{_datadir}/vce/www/api/interface.cgi
 %{_datadir}/vce/www/api/operational.cgi
 %{_datadir}/vce/www/api/provisioning.cgi
 %{_datadir}/vce/www/api/switch.cgi
-%{_datadir}/vce/www/api/command.cgi
 %{_datadir}/vce/www/frontend/
 
 %{_bindir}/vce
