@@ -495,7 +495,7 @@ sub get_switch_commands{
 
     my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'switch');
     foreach my $cmd (@$commands) {
-        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{id});
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{command_id});
     }
     return $commands;
 }
@@ -514,8 +514,8 @@ sub get_port_commands{
 
     my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'interface');
     foreach my $cmd (@$commands) {
-        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{id});
-    }
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{command_id});
+   }
     return $commands;
 }
 
@@ -538,7 +538,7 @@ sub get_vlan_commands{
 
     my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'vlan');
     foreach my $cmd (@$commands) {
-        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{id});
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{command_id});
     }
     return $commands;
 }

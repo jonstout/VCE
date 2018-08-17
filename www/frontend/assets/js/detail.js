@@ -61,9 +61,12 @@ function loadPorts() {
     var name = cookie.switch;
     
     $('#port_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
+        var form = document.getElementById(e.target.value);
+
+        for (var i = 0; i < form.parentNode.childNodes.length; i++) {
+            form.parentNode.childNodes[i].setAttribute('style', 'display: none;');
+        }
+        form.setAttribute('style', 'display: block;');
 
         document.getElementById('port_form_container').setAttribute('style', 'display: block;');
     });
@@ -281,9 +284,12 @@ function getVlanCommands() {
     var cookie = Cookies.getJSON('vce');
     
     $('#vlan_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
+        var form = document.getElementById(e.target.value);
+
+        for (var i = 0; i < form.parentNode.childNodes.length; i++) {
+            form.parentNode.childNodes[i].setAttribute('style', 'display: none;');
+        }
+        form.setAttribute('style', 'display: block;');
 
         document.getElementById('vlan_form_container').setAttribute('style', 'display: block;');
     });
@@ -335,9 +341,12 @@ function loadSwitchCommands() {
     var cookie = Cookies.getJSON('vce');
     
     $('#switch_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
+        var form = document.getElementById(e.target.value);
+
+        for (var i = 0; i < form.parentNode.childNodes.length; i++) {
+            form.parentNode.childNodes[i].setAttribute('style', 'display: none;');
+        }
+        form.setAttribute('style', 'display: block;');
     });
     
     var url = baseUrl + 'access.cgi?method=get_switch_commands';

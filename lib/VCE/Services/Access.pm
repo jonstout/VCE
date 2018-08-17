@@ -344,7 +344,7 @@ sub get_switch_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'description'};
+        $obj->{'method_name'} = $cmd->{'name'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
@@ -489,6 +489,7 @@ warn Dumper($commands);
                 # }
 
                 $command->{parameters} = $params;
+                $command->{method_name} = $command->{name};
                 delete $command->{params};
                 delete $command->{interaction};
                 delete $command->{description};
@@ -556,7 +557,7 @@ sub get_vlan_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'method_name'};
+        $obj->{'method_name'} = $cmd->{'name'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
