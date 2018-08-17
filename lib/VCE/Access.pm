@@ -489,19 +489,21 @@ sub get_switch_commands{
     }
 
     my $sw = $self->db->get_switches(name => $params{switch})->[0];
-warn Dumper($sw);
     if (!defined $sw) {
         return [];
     }
 
-    return $self->db->get_commands(switch_id => $sw->{id}, type => 'switch');
+    my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'switch');
+    foreach my $cmd (@$commands) {
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{id});
+    }
+    return $commands;
 }
 
 =head2 get_port_commands
 
 =cut
 sub get_port_commands{
-
     my $self = shift;
     my %params = @_;
 
@@ -510,7 +512,11 @@ sub get_port_commands{
         return [];
     }
 
-    return $self->db->get_commands(switch_id => $sw->{id}, type => 'interface');
+    my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'interface');
+    foreach my $cmd (@$commands) {
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{id});
+    }
+    return $commands;
 }
 
 =head2 get_vlan_commands
@@ -530,7 +536,11 @@ sub get_vlan_commands{
         return [];
     }
 
-    return $self->db->get_commands(switch_id => $sw->{id}, type => 'vlan');
+    my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'vlan');
+    foreach my $cmd (@$commands) {
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{id});
+    }
+    return $commands;
 }
 
 =head2 get_switch_ports

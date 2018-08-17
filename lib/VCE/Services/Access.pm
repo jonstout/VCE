@@ -358,6 +358,20 @@ sub get_switch_commands{
                                         description => "switch to run the command on",
                                         required => 1 });
 
+        foreach my $param (@{$cmd->{params}}) {
+            my $p = {};
+
+            if ($param->{type} eq 'option') {
+                        my @t = split('\|', $param->{regex});
+                        $p->{options} = \@t;
+            }
+
+            $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
+            $p->{name}        = $param->{name};
+            $p->{description} = $param->{description};
+            $p->{required}    = 1; #TODO
+            push @{$obj->{parameters}}, $p;
+        }
         # foreach my $param (keys (%{$cmd->{'params'}})){
         #     my $p = {};
 
@@ -407,17 +421,17 @@ sub get_port_commands{
 
             my $commands = $self->vce->access->get_port_commands(switch => $switch, port => $port);
             my $authorized_commands = [];
-
+warn Dumper($commands);
             foreach my $command (@{$commands}) {
-                if ($command->{user_type} eq 'user') {
+                if ($command->{role} eq 'user') {
                     push(@{$authorized_commands}, $command);
                 }
 
-                if ($command->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+                if ($command->{role} eq 'owner' && ($is_admin || $is_owner)) {
                     push(@{$authorized_commands}, $command);
                 }
 
-                if ($command->{user_type} eq 'admin' && $is_admin) {
+                if ($command->{role} eq 'admin' && $is_admin) {
                     push(@{$authorized_commands}, $command);
                 }
             }
@@ -446,19 +460,33 @@ sub get_port_commands{
                     }
                 ];
 
-                foreach my $param (keys %{$command->{'params'}}) {
+                foreach my $param (@{$command->{params}}) {
                     my $p = {};
 
-                    if($command->{'params'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$command->{'params'}{$param}{'options'});
+                    if ($param->{type} eq 'option') {
+                        my @t = split('\|', $param->{regex});
+                        $p->{options} = \@t;
                     }
 
-                    $p->{'type'} = $command->{'params'}{$param}{'type'};
-                    $p->{'name'} = $param;
-                    $p->{'description'} = $command->{'params'}{$param}{'description'};
-                    $p->{'required'} = 1;
-                    push(@{$params}, $p);
+                    $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
+                    $p->{name}        = $param->{name};
+                    $p->{description} = $param->{description};
+                    $p->{required}    = 1; #TODO
+                    push @$params, $p;
                 }
+                # foreach my $param (keys %{$command->{'params'}}) {
+                #     my $p = {};
+
+                #     if($command->{'params'}{$param}{'type'} eq 'select'){
+                #         @{$p->{'options'}} = split(',',$command->{'params'}{$param}{'options'});
+                #     }
+
+                #     $p->{'type'} = $command->{'params'}{$param}{'type'};
+                #     $p->{'name'} = $param;
+                #     $p->{'description'} = $command->{'params'}{$param}{'description'};
+                #     $p->{'required'} = 1;
+                #     push(@{$params}, $p);
+                # }
 
                 $command->{parameters} = $params;
                 delete $command->{params};
@@ -549,20 +577,35 @@ sub get_vlan_commands{
                                         description => "vlan_id of the vlan to run the command on",
                                         required => 1 });
 
-        foreach my $param (keys (%{$cmd->{'params'}})){
-            my $p = {};
+                foreach my $param (@{$cmd->{params}}) {
+                    my $p = {};
 
-            if($cmd->{'params'}{$param}{'type'} eq 'select'){
-                @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-            }
+                    if ($param->{type} eq 'option') {
+                        my @t = split('\|', $param->{regex});
+                        $p->{options} = \@t;
+                    }
 
-            $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-            $p->{'name'} = $param;
-            $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-            $p->{'required'} = 1;
+                    $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
+                    $p->{name}        = $param->{name};
+                    $p->{description} = $param->{description};
+                    $p->{required}    = 1; #TODO
+                    push @{$obj->{parameters}}, $p;
+                }
 
-            push(@{$obj->{'parameters'}}, $p);
-        }
+        # foreach my $param (keys (%{$cmd->{'params'}})){
+        #     my $p = {};
+
+        #     if($cmd->{'params'}{$param}{'type'} eq 'select'){
+        #         @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
+        #     }
+
+        #     $p->{'type'} = $cmd->{'params'}{$param}{'type'};
+        #     $p->{'name'} = $param;
+        #     $p->{'description'} = $cmd->{'params'}{$param}{'description'};
+        #     $p->{'required'} = 1;
+
+        #     push(@{$obj->{'parameters'}}, $p);
+        # }
         push(@results, $obj);
     }
 
