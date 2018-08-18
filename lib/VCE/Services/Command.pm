@@ -14,9 +14,11 @@ use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
 
 use VCE::Access;
+use VCE::Database::Connection;
 use Template;
 
 has vce => (is => 'rwp');
+has db => (is => 'rwp');
 has logger => (is => 'rwp');
 has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
@@ -28,6 +30,8 @@ has template => (is => 'rwp');
 =over 4
 
 =item access
+
+=item db
 
 =item dispatcher
 
@@ -66,6 +70,7 @@ sub BUILD{
     $self->_set_rabbit_client($client);
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     $self->_set_template(Template->new());
 
