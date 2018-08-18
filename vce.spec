@@ -53,6 +53,7 @@ rm -rf $RPM_BUILDR_ROOT
 
 # Perl
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Services
+%{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Database
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe
 
 %{__install} lib/VCE.pm %{buildroot}%{perl_vendorlib}/VCE.pm
@@ -60,10 +61,25 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Device.pm %{buildroot}%{perl_vendorlib}/VCE/Device.pm
 %{__install} lib/VCE/NetworkDB.pm %{buildroot}%{perl_vendorlib}/VCE/NetworkDB.pm
 %{__install} lib/VCE/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Switch.pm
+
+%{__install} lib/VCE/Database/ACL.pm %{buildroot}%{perl_vendorlib}/VCE/Database/ACL.pm
+%{__install} lib/VCE/Database/Command.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Command.pm
+%{__install} lib/VCE/Database/Connection.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Connection.pm
+%{__install} lib/VCE/Database/Interface.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Interface.pm
+%{__install} lib/VCE/Database/Parameter.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Parameter.pm
+%{__install} lib/VCE/Database/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Switch.pm
+%{__install} lib/VCE/Database/Tag.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Tag.pm
+%{__install} lib/VCE/Database/User.pm %{buildroot}%{perl_vendorlib}/VCE/Database/User.pm
+%{__install} lib/VCE/Database/VLAN.pm %{buildroot}%{perl_vendorlib}/VCE/Database/VLAN.pm
+%{__install} lib/VCE/Database/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Workgroup.pm
+
 %{__install} lib/VCE/Services/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Access.pm
+%{__install} lib/VCE/Services/Command.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Command.pm
+%{__install} lib/VCE/Services/Interface.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Interface.pm
 %{__install} lib/VCE/Services/Operational.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Operational.pm
 %{__install} lib/VCE/Services/Provisioning.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{__install} lib/VCE/Services/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Switch.pm
+
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
 # Web
@@ -71,6 +87,8 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/frontend
 
 %{__install} www/services/access.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/command.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/interface.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/operational.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/provisioning.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/switch.cgi %{buildroot}%{_datadir}/vce/www/api
@@ -120,13 +138,27 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Device.pm
 %{perl_vendorlib}/VCE/NetworkDB.pm
 %{perl_vendorlib}/VCE/Switch.pm
+%{perl_vendorlib}/VCE/Database/ACL.pm
+%{perl_vendorlib}/VCE/Database/Command.pm
+%{perl_vendorlib}/VCE/Database/Connection.pm
+%{perl_vendorlib}/VCE/Database/Interface.pm
+%{perl_vendorlib}/VCE/Database/Parameter.pm
+%{perl_vendorlib}/VCE/Database/Switch.pm
+%{perl_vendorlib}/VCE/Database/Tag.pm
+%{perl_vendorlib}/VCE/Database/User.pm
+%{perl_vendorlib}/VCE/Database/VLAN.pm
+%{perl_vendorlib}/VCE/Database/Workgroup.pm
 %{perl_vendorlib}/VCE/Services/Access.pm
+%{perl_vendorlib}/VCE/Services/Command.pm
+%{perl_vendorlib}/VCE/Services/Interface.pm
 %{perl_vendorlib}/VCE/Services/Operational.pm
 %{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{perl_vendorlib}/VCE/Services/Switch.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
 %{_datadir}/vce/www/api/access.cgi
+%{_datadir}/vce/www/api/command.cgi
+%{_datadir}/vce/www/api/interface.cgi
 %{_datadir}/vce/www/api/operational.cgi
 %{_datadir}/vce/www/api/provisioning.cgi
 %{_datadir}/vce/www/api/switch.cgi

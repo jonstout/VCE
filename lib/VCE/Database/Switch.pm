@@ -2,11 +2,11 @@ package VCE::Database::Switch;
 
 use strict;
 use warnings;
-
+use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_switch get_switch get_switches );
+our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch);
 
 
 =head1 Package VCE::Database::Switch
@@ -20,19 +20,27 @@ our @EXPORT = qw( add_switch get_switch get_switches );
 =cut
 sub add_switch {
     my ( $self, $name, $description, $ipv4, $ssh, $netconf,
-         $vendor, $model, $version ) = @_;
+        $vendor, $model, $version ) = @_;
 
     $self->{log}->debug("add_switch($name, $description, $ipv4, $ssh, $netconf, $vendor, $model, $version)");
 
-    my $q = $self->{conn}->prepare(
-        "insert into switch
-         (name, description, ipv4, ssh, netconf, vendor, model, version)
-         values (?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-    $q->execute($name, $description, $ipv4, $ssh, $netconf,
-                $vendor, $model, $version);
 
-    return $self->{conn}->last_insert_id("", "", "switch", "");
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into switch
+            (name, description, ipv4, ssh, netconf, vendor, model, version)
+            values (?, ?, ?, ?, ?, ?, ?, ?)"
+        );
+        $q->execute($name, $description, $ipv4, $ssh, $netconf,
+            $vendor, $model, $version);
+    };
+
+    if ($@) {
+        return (undef,"$@")
+    }
+
+    my $id = $self->{conn}->last_insert_id("", "", "switch", "");
+    return ($id, undef);
 }
 
 =head2 get_switch
@@ -45,7 +53,7 @@ sub get_switch {
 
     my $q = $self->{conn}->prepare(
         "select * from switch as s
-         where s.id=?"
+        where s.id=?"
     );
     $q->execute($switch_id);
 
@@ -99,8 +107,8 @@ sub get_switches {
 
     my $q = $self->{conn}->prepare(
         "select switch.* from switch
-         join interface on interface.switch_id=switch.id
-         join acl on acl.interface_id=interface.id
+         left join interface on interface.switch_id=switch.id
+         left join acl on acl.interface_id=interface.id
          $where group by switch.id"
     );
     $q->execute(@$args);
@@ -109,4 +117,78 @@ sub get_switches {
     return $result;
 }
 
+
+sub modify_switch {
+    my $self   = shift;
+    my %params = @_;
+    warn Dumper($params{name});
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("modify_switch($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{description}) {
+        push @$keys, 'description=?';
+        push @$args, $params{description};
+    }
+
+    if (defined $params{ip}) {
+        push @$keys, 'ipv4=?';
+        push @$args, $params{ip};
+    }
+    if (defined $params{ssh}) {
+        push @$keys, 'ssh=?';
+        push @$args, $params{ssh};
+    }
+    if (defined $params{netconf}) {
+        push @$keys, 'netconf=?';
+        push @$args, $params{netconf};
+    }
+    if (defined $params{vendor}) {
+        push @$keys, 'vendor=?';
+        push @$args, $params{vendor};
+    }
+    if (defined $params{model}) {
+        push @$keys, 'model=?';
+        push @$args, $params{model};
+    }
+    if (defined $params{version}) {
+        push @$keys, 'version=?';
+        push @$args, $params{version};
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "UPDATE switch  SET $values WHERE id=?"
+    );
+    return $q->execute(@$args);
+}
+
+sub delete_switch {
+    my $self   = shift;
+    my %params = @_;
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("delete_switch($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "DELETE FROM switch WHERE id=?"
+    );
+    return $q->execute(@$args);
+}
 return 1;
