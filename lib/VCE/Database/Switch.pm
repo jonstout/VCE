@@ -117,7 +117,9 @@ sub get_switches {
     return $result;
 }
 
+=head2 modify_switch
 
+=cut
 sub modify_switch {
     my $self   = shift;
     my %params = @_;
@@ -173,6 +175,9 @@ sub modify_switch {
     return $q->execute(@$args);
 }
 
+=head2 delete_switch
+
+=cut
 sub delete_switch {
     my $self   = shift;
     my %params = @_;
@@ -191,4 +196,5 @@ sub delete_switch {
     );
     return $q->execute(@$args);
 }
-return 1;
+
+1;
