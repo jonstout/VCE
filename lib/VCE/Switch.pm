@@ -779,15 +779,16 @@ sub execute_command{
     my $success = $m_ref->{'success_callback'};
     my $error   = $m_ref->{'error_callback'};
 
-    $self->logger->info("Calling execute_command");
     $self->logger->error(Dumper(keys %{$p_ref}));
 
     if (!$self->device->connected) {
         return &$success({success => 0, error => 1, error_msg => 'Device is currently disconnected.'});
     }
 
-    # OK. We are now ready to send our command and get the results!
-    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, '#');
+    # We are now ready to send our command and get the results! The
+    # regex prompt matches on the end of a line followed by text that
+    # ends with a hash.
+    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, /\n.*\#$/);
     if (defined $err) {
         return &$success({success => 0, error => 1, error_msg => $err});
     }

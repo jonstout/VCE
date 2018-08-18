@@ -998,9 +998,7 @@ sub issue_command{
     $self->_set_context('');
     $self->_set_in_configure(0);
 
-    $result =~ s/\A\s+//gm; # Strip leading whitespace
-    $result =~ s/^.*\Z//gm; # Strip last line (prompt)
-
+    $result =~ s/\A\s+//gm; # Strip any leading whitespace
     return ($result, undef);
 }
 
