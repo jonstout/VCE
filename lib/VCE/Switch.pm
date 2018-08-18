@@ -85,7 +85,7 @@ sub BUILD {
 
     $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
-    $self->logger->debug("Creating Dispatcher");
+    $self->logger->info("Creating Dispatcher for " . $self->name);
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new(
         host     => $self->rabbit_mq->{'host'},
         port     => $self->rabbit_mq->{'port'},
@@ -780,7 +780,7 @@ sub execute_command{
     my $error   = $m_ref->{'error_callback'};
 
     $self->logger->info("Calling execute_command");
-    $self->logger->debug(Dumper($p_ref));
+    $self->logger->error(Dumper($p_ref));
 
     if (!$self->device->connected) {
         return &$success({success => 0, error => 1, error_msg => 'Device is currently disconnected.'});

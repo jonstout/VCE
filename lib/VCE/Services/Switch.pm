@@ -13,6 +13,7 @@ use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
 
 use VCE::Access;
+use VCE::Database::Connection;
 use Template;
 
 has vce => (is => 'rwp');
@@ -68,14 +69,13 @@ sub BUILD{
     $self->_set_rabbit_client($client);
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     $self->_set_template(Template->new());
 
     $self->_register_commands($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
-
-    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     return $self;
 }
@@ -91,65 +91,68 @@ sub _register_commands{
     foreach my $switch (@$switches) {
 
         my $commands = $self->db->get_commands(switch_id => $switch->{id});
-        warn Dumper($commands);
+        foreach my $command (@$commands) {
+            $command->{'cli_type'} = 'action';
+            my $type = $command->{type};
+            my $name = $command->{name};
+            $name =~ tr/ //ds;
 
-        # my $commands = $switch->{'commands'};
-        # foreach my $type (keys (%{$commands})){
-        #     foreach my $command (@{$commands->{$type}}){
-        #         $command->{'cli_type'} = $command->{'type'};
-        #         $command->{'type'}     = $type;
+            my $method = GRNOC::WebService::Method->new(
+                name => $name,
+                description => $command->{'description'},
+                callback => sub { return $self->_execute_command($command, @_) }
+            );
+            $method->add_input_parameter(
+                required => 1,
+                name => 'workgroup',
+                pattern => $GRNOC::WebService::Regex::NAME_ID,
+                description => "workgroup to run the command as"
+            );
+            $method->add_input_parameter(
+                required => 1,
+                name => 'switch',
+                pattern => $GRNOC::WebService::Regex::NAME_ID,
+                description => "Switch to run the command on"
+            );
 
-        #         my $method = GRNOC::WebService::Method->new( name => $command->{'method_name'},
-        #                                                      description => $command->{'description'},
-        #                                                      callback => sub {
-        #                                                          return $self->_execute_command($command, @_)
-        #                                                      });
+            if($type eq 'interface'){
+                $method->add_input_parameter(
+                    required => 1,
+                    name => "port",
+                    pattern => "(.*)",
+                    description => "the port to run the command on"
+                );
+            }
 
-        #         $method->add_input_parameter( required => 1,
-        #                                       name => 'workgroup',
-        #                                       pattern => $GRNOC::WebService::Regex::NAME_ID,
-        #                                       description => "workgroup to run the command as" );
+            if($type eq 'vlan'){
+                $method->add_input_parameter(
+                    required => 1,
+                    name => 'vlan_id',
+                    pattern => $GRNOC::WebService::Regex::NAME_ID,
+                    description => "the vlan to run the command for"
+                );
+            }
 
-        #         if($type eq 'system' || $type eq 'port' || $type eq 'vlan'){
-        #             warn "Adding required param switch!\n";
-        #             $method->add_input_parameter( required => 1,
-        #                                           name => 'switch',
-        #                                           pattern => $GRNOC::WebService::Regex::NAME_ID,
-        #                                           description => "Switch to run the command on" );
-        #         }
+            my $params = $self->db->get_parameters(command_id => $command->{command_id});
+            foreach my $param (@$params) {
+                $method->add_input_parameter(
+                    required => 1,
+                    name => $param->{name},
+                    pattern => $param->{regex},
+                    description => $param->{description}
+                );
+            }
 
-        #         if($type eq 'port'){
-        #             $method->add_input_parameter( required => 1,
-        #                                           name => "port",
-        #                                           pattern => "(.*)",
-        #                                           description => "the port to run the command on");
-        #         }
-
-        #         if($type eq 'vlan'){
-        #             $method->add_input_parameter( required => 1,
-        #                                           name => 'vlan_id',
-        #                                           pattern => $GRNOC::WebService::Regex::NAME_ID,
-        #                                           description => "the vlan to run the command for" );
-        #         }
-
-        #         foreach my $param (keys %{$command->{'params'}}){
-        #             $method->add_input_parameter( required => 1,
-        #                                           name => $param,
-        #                                           pattern => $command->{'params'}{$param}->{'pattern'},
-        #                                           description => $command->{'params'}{$param}->{'description'} );
-        #         }
-
-        #         eval {
-        #             $d->register_method($method);
-        #         };
-        #         if ($@) {
-        #             # Because it's possible (likely) that multiple
-        #             # switches have the same command definition, we
-        #             # attempt to register the same command multiple
-        #             # times. Ignore when this happens and continue on.
-        #         }
-        #     }
-        # }
+            eval {
+                $d->register_method($method);
+            };
+            if ($@) {
+                # Because it's possible (likely) that multiple
+                # switches have the same command definition, we
+                # attempt to register the same command multiple
+                # times. Ignore when this happens and continue on.
+            }
+        }
     }
 }
 
@@ -178,7 +181,7 @@ sub _execute_command{
         $self->logger->error($err);
         return {results => [], error => {msg => $err}};
     }
-
+warn "authorized";
     my $cmd_string;
     my $context_string;
     my $vars = {};
@@ -192,7 +195,7 @@ sub _execute_command{
             $vars->{'vlan_id'} = $vlan->{'vlan'};
         }
     }
-
+warn 'checked for vlan_id';
     if(defined($command->{'context'})){
         #some commands might not have context
         my $text = $command->{'context'};
@@ -200,12 +203,12 @@ sub _execute_command{
         $self->logger->debug("Context String: " . $context_string);
     }
 
-    my $text = $command->{'actual_command'};
+    my $text = $command->{'template'};
 
     # Old template->process failure handler
     # or warn "Error creating template string: " . Dumper($self->template->error());
     $self->template->process(\$text, $vars, \$cmd_string) or $self->logger->error("Error creating command template: " . Dumper($self->template->error()));
-
+warn "made template $cmd_string";
     if(!defined($cmd_string)){
         return {results => [], error => {msg => "Error processing command"}};
     }
@@ -218,21 +221,24 @@ sub _execute_command{
 
     $self->logger->debug("Running $cmd_string with params: " . Dumper($vars));
     $self->rabbit_client->{topic} = 'VCE.Switch.' . $p_ref->{switch}{value};
-
+warn 'sending command to switch';
+warn 'VCE.Switch.' . $p_ref->{switch}{value};
     my $res;
     if (defined $context_string) {
         $self->logger->debug("Running $cmd_string in context $context_string: " . Dumper($command));
         $res = $self->rabbit_client->execute_command( context => $context_string,
                                                       command => $cmd_string,
-                                                      config => $command->{'configure'},
-                                                      cli_type => $command->{'cli_type'} );
+                                                      # config => $command->{'configure'},
+                                                      config => 0,
+                                                      cli_type => $command->{'role'} );
     } else {
         $self->logger->debug("Running $cmd_string with no context: " . Dumper($command));
         $res = $self->rabbit_client->execute_command( command => $cmd_string,
-                                                      config => $command->{'configure'},
-                                                      cli_type => $command->{'cli_type'} );
+                                                      # config => $command->{'configure'},
+                                                      config => 0,
+                                                      cli_type => $command->{'role'} );
     }
-
+warn Dumper($res);
     if ($res->{'results'}->{'error'}) {
         return {success => 0, error => {msg => $res->{'results'}->{'error_message'}}};
     } else {
@@ -245,10 +251,11 @@ sub _authorize_command{
     my %params = @_;
 
     warn "IN AUTHORIZE COMMAND\n";
-    warn Dumper(%params);
+return 1;
 
     if($params{'command'}->{'type'} eq 'system'){
         my $ports = $self->vce->get_available_ports( workgroup => $params{'workgroup'}{'value'}, switch => $params{'switch'}{'value'});
+
         if(scalar @{$ports} >= 0){
             $self->logger->debug("Ports detected.");
             return 1;
@@ -257,6 +264,7 @@ sub _authorize_command{
             return 0;
         }
     }elsif($params{'command'}->{'type'} eq 'port'){
+
         if($self->vce->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'}{'value'},
                                                         switch => $params{'switch'}{'value'},
                                                         port => $params{'port'}{'value'})){

@@ -25,7 +25,7 @@ function NewCommandForm(details, reponseFunc) {
 
     for (var i = 0; i < details.parameters.length; i++) {
         var param = details.parameters[i];
-        
+
         var group = document.createElement("div");
         group.setAttribute("class", "form-group");
         
@@ -35,7 +35,6 @@ function NewCommandForm(details, reponseFunc) {
         if (param.type == "select") {
             input = document.createElement("select");
             
-            console.log(param);
             for (var j = 0; j < param.options.length; j++) {
                 var opt = document.createElement("option");
                 opt.innerHTML = param.options[j];
@@ -81,9 +80,10 @@ function NewCommandForm(details, reponseFunc) {
     
     // Setup onsubmit callback    
     input.addEventListener("click", function(e) {
+        console.log(e.target);
         var cookie = Cookies.getJSON('vce');
         
-        var url = baseUrl + 'switch.cgi?method=' + details.method_name;
+        var url = baseUrl + 'switch.cgi?method=' + details.method_name.replace(/ /g,'');
         for (var i = 0; i < e.target.form.length; i++) {
             var name  = e.target.form[i].name;
             var value = e.target.form[i].value;
