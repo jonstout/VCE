@@ -362,8 +362,8 @@ sub get_switch_commands{
             my $p = {};
 
             if ($param->{type} eq 'option') {
-                        my @t = split('\|', $param->{regex});
-                        $p->{options} = \@t;
+                my @t = split(/\(|\||\)/, $param->{regex});
+                $p->{options} = \@t;
             }
 
             $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
@@ -464,7 +464,7 @@ warn Dumper($commands);
                     my $p = {};
 
                     if ($param->{type} eq 'option') {
-                        my @t = split('\|', $param->{regex});
+                        my @t = split(/\(|\||\)/, $param->{regex});
                         $p->{options} = \@t;
                     }
 
@@ -582,7 +582,7 @@ sub get_vlan_commands{
                     my $p = {};
 
                     if ($param->{type} eq 'option') {
-                        my @t = split('\|', $param->{regex});
+                        my @t = split(/\(|\||\)/, $param->{regex});
                         $p->{options} = \@t;
                     }
 

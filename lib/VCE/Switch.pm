@@ -780,59 +780,16 @@ sub execute_command{
     my $error   = $m_ref->{'error_callback'};
 
     $self->logger->info("Calling execute_command");
-    $self->logger->error(Dumper($p_ref));
+    $self->logger->error(Dumper(keys %{$p_ref}));
 
     if (!$self->device->connected) {
         return &$success({success => 0, error => 1, error_msg => 'Device is currently disconnected.'});
     }
 
-    my $in_configure = 0;
-    my $in_context   = 0;
-    my $prompt       = undef;
-
-    if ($p_ref->{'config'}{'value'}) {
-        $self->logger->debug('Trying to enter configure mode.');
-
-        my $ok = $self->device->configure();
-        if (!$ok) {
-            my $err = "Couldn't enter configure mode.";
-            $self->logger->error($err);
-            return &$success({success => 0, error => 1, error_msg => $err});
-        }
-
-        $in_configure = 1;
-    }
-
-    if (defined $p_ref->{'context'}{'value'}) {
-        $self->logger->debug('Trying to enter context ' . $p_ref->{'context'}{'value'});
-
-        my $ok = $self->device->set_context($p_ref->{'context'}{'value'});
-        if (!$ok) {
-            if ($in_configure) {
-                $self->device->exit_configure();
-            }
-
-            my $err = "Couldn't enter desired context.";
-            $self->logger->error($err);
-            return &$success({success => 0, error => 1, error_msg => $err});
-        }
-
-        $prompt = "#";
-        $in_context = 1;
-    }
-
     # OK. We are now ready to send our command and get the results!
-    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, $prompt);
+    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, '#');
     if (defined $err) {
         return &$success({success => 0, error => 1, error_msg => $err});
-    }
-
-    if($in_context){
-        $self->device->exit_context();
-    }
-
-    if($in_configure){
-        $self->device->exit_configure();
     }
 
     # TODO _gather_operational_status takes a while to complete which
@@ -846,11 +803,7 @@ sub execute_command{
         $self->_gather_operational_status();
     }
 
-    if (defined $prompt) {
-        return &$success({success => 1, raw => "ok"});
-    } else {
-        return &$success({success => 1, raw => $result});
-    }
+    return &$success({success => 1, raw => $result});
 }
 
 1;
