@@ -432,9 +432,17 @@ sub get_interfaces_operational_state {
         return;
     }
 
+    my $sw = $self->database->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return;
+    }
+
     my $result = {};
     eval {
-        my $interfaces = $self->network_model->get_interfaces(switch => $params{switch});
+        my $interfaces = $self->database->get_interfaces(
+            switch_id => $sw->{id}
+        );
+
         foreach my $intf (@{$interfaces}) {
             $result->{$intf->{name}} = $intf;
         }
