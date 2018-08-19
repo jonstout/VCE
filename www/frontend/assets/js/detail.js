@@ -166,7 +166,7 @@ function getPortCommands() {
 
                 var opt = document.createElement('option');
                 opt.innerHTML = cmds[i].name;
-                opt.setAttribute('value', cmds[i].method_name);
+                opt.setAttribute('value', `form-${cmds[i].command_id}`);
 
                 if (cmds[i].type == "show") {
                     document.getElementById("port_show_commands").appendChild(opt);

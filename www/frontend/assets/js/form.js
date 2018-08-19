@@ -20,7 +20,7 @@ function NewCommandForm(details, reponseFunc) {
 
     // Create form and its input fields
     var form = document.createElement("form");
-    form.setAttribute("id", details.method_name);
+    form.setAttribute("id", `form-${details.command_id}`);
     form.style.display = "none";
 
     for (var i = 0; i < details.parameters.length; i++) {
@@ -69,7 +69,7 @@ function NewCommandForm(details, reponseFunc) {
     var input = document.createElement("input");
     input.setAttribute("type", "button");
     input.setAttribute("value", "Submit");
-    input.setAttribute("name", "submit" + details.method_name);
+    input.setAttribute("name", `submit-${details.command_id}`);
     input.setAttribute("class", "form-control");
     
     group.appendChild(input);
