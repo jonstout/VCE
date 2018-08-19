@@ -91,21 +91,21 @@ function loadPorts() {
 
                 var name = row.insertCell(0);
                 name.innerHTML = ports[i].name;
-                
+
                 var desc = row.insertCell(1);
                 desc.innerHTML = ports[i].description;
-                
+
                 var vlan = row.insertCell(2);
                 vlan.innerHTML = ports[i].tags.toString();
-                
+
                 var status = row.insertCell(3);
-                if (ports[i].status === 1) {
+                if (ports[i].link_up === 1) {
                     status.innerHTML = 'Up';
                 } else {
                     status.innerHTML = 'Down';
                 }
 
-                if (ports[i].admin_status === 0) {
+                if (ports[i].admin_up === 0) {
                     status.innerHTML = 'Disabled';
                 }
             }
