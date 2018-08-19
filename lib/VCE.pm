@@ -316,7 +316,6 @@ sub get_available_ports{
         return 0;
     }
     my $interfaces = $self->database->get_interfaces(
-        workgroup_id => $workgroup->{id},
         switch_id => $switch->{id}
     );
 
