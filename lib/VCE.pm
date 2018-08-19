@@ -307,15 +307,26 @@ sub get_available_ports{
         return;
     }
 
-    my @ports;
+    my $workgroup = $self->database->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
+        return 0;
+    }
+    my $switch = $self->database->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return 0;
+    }
+    my $interfaces = $self->database->get_interfaces(
+        workgroup_id => $workgroup->{id},
+        switch_id => $switch->{id}
+    );
 
-    my $switch = $self->config->{'switches'}->{$params{'switch'}};
-    foreach my $port (keys %{$switch->{'ports'}}){
+    my @ports;
+    foreach my $intf (@$interfaces) {
         my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
         my $has_access = $self->access->workgroup_has_access_to_port(
             workgroup => $params{'workgroup'},
             switch => $params{'switch'},
-            port => $port
+            port => $intf->{name}
         );
 
         if (!$is_admin && !$has_access) {
@@ -325,12 +336,11 @@ sub get_available_ports{
         my $tags = $self->access->get_tags_on_port(
             workgroup => $params{'workgroup'},
             switch => $params{'switch'},
-            port => $port
+            port => $intf->{name}
         );
 
-        push(@ports, {port => $port, tags => $tags});
+        push(@ports, {port => $intf->{name}, tags => $tags});
     }
-
     return \@ports;
 }
 
