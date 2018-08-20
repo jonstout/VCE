@@ -711,7 +711,7 @@ sub get_visible_vlans {
     my $self      = shift;
     my %params = @_;
 
-    my $workgroup = $params{workgroup};
+    #  my $workgroup = $params{workgroup};
     my $switch    = $params{switch};
 
     my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
