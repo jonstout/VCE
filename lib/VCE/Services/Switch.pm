@@ -21,6 +21,7 @@ has vce => (is => 'rwp');
 has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has template => (is => 'rwp');
+has db => (is => 'rwp');
 
 =head2 BUILD
 
@@ -38,6 +39,8 @@ has template => (is => 'rwp');
 
 =item template
 
+=item db
+
 =item vce
 
 =back
@@ -54,6 +57,7 @@ sub BUILD{
     $self->_set_vce( VCE->new() );
 
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     $self->_set_template(Template->new());
 
@@ -217,7 +221,6 @@ sub _register_switch_functions {
         $d->register_method($method);
     };
     undef $method;
-
 }
 
 
@@ -248,8 +251,7 @@ sub _add_switch {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    my ($id, $err) = $db->add_switch( $params->{'name'}{'value'},
+    my ($id, $err) = $self->db->add_switch( $params->{'name'}{'value'},
         $params->{'description'}{'value'},
         $params->{'ip'}{'value'},
         $params->{'ssh'}{'value'},
@@ -265,10 +267,9 @@ sub _add_switch {
         return;
     }
 
-    return { results => [ { id => $id } ] }
+    return { results => [ { id => $id } ] };
 
 }
-
 
 sub _modify_switch {
     warn Dumper("IN MODIFY SWITCH");
@@ -285,8 +286,7 @@ sub _modify_switch {
         return;
     }
 
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    my $result = $db->modify_switch(
+    my $result = $self->db->modify_switch(
         id          => $params->{id}{value},
         name        => $params->{name}{value},
         description => $params->{description}{value},
@@ -304,7 +304,7 @@ sub _modify_switch {
         $method_ref->set_error($result);
         return;
     }
-    return { results => [ { value => $result } ] }
+    return { results => [ { value => $result } ] };
 }
 
 sub _delete_switch {
@@ -323,8 +323,7 @@ sub _delete_switch {
         return;
     }
 
-    my $db = VCE::Database::Connection->new("/var/lib/vce/database.sqlite");
-    my $result = $db->delete_switch (
+    my $result = $self->db->delete_switch (
         id          => $params->{id}{value},
         name        => $params->{name}{value},
         description => $params->{description}{value},
@@ -344,6 +343,6 @@ sub _delete_switch {
         return;
     }
 
-    return { results => [ { value => $result } ] }
+    return { results => [ { value => $result } ] };
 }
 1;

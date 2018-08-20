@@ -47,6 +47,8 @@ use JSON::XS;
 use Data::Dumper;
 
 has config_file => (is => 'rwp', default => "/etc/vce/access_policy.xml");
+has db => (is => 'rwp', default => '/var/lib/vce/database.sqlite');
+has database => (is => 'rwp', default => undef);
 has network_model_file => (is => 'rwp', default => "/var/lib/vce/network_model.sqlite");
 
 has config => (is => 'rwp');
@@ -86,6 +88,10 @@ and interact with the VCE database.
 
 =item config_file
 
+=item db
+
+=item database
+
 =item device_client
 
 =item logger
@@ -107,12 +113,16 @@ sub BUILD{
 
     my $logger = GRNOC::Log->get_logger("VCE");
     $self->_set_logger($logger);
-    
+
+    $self->logger->info('Using network model: ' . $self->network_model_file);
     $self->_process_config();
 
-    $self->_set_access( VCE::Access->new( config => $self->config ));
+
+    $self->_set_access( VCE::Access->new( config => $self->network_model_file ));
 
     $self->_set_network_model( VCE::NetworkDB->new( path => $self->network_model_file ));
+
+    $self->_set_database(VCE::Database::Connection->new($self->network_model_file));
 
     $self->_set_device_client(GRNOC::RabbitMQ::Client->new(
         host     => $self->rabbit_mq->{'host'},
@@ -256,21 +266,18 @@ sub _process_command_config{
 =head2 get_workgroups
 
 =cut
+
 sub get_workgroups{
     my $self = shift;
-
     my %params = @_;
 
-    if(!defined($params{'username'})){
-	my @wgps = (keys %{$self->config->{'workgroups'}});
-	return \@wgps;
+    my $workgroups = $self->database->get_workgroups(username => $params{username});
+    my $result = [];
+    foreach my $wg (@$workgroups) {
+        push @$result, $wg->{name};
     }
 
-    if(defined($self->config->{'users'}->{$params{'username'}})){
-	return $self->config->{'users'}->{$params{'username'}};
-    }
-
-    return [];
+    return $result;
 }
 
 
@@ -285,6 +292,7 @@ get_available_ports returns a list of all ports C<workgroup> has
 access to based on the configuration.
 
 =cut
+
 sub get_available_ports{
     my $self = shift;
     my %params = @_;
@@ -299,15 +307,25 @@ sub get_available_ports{
         return;
     }
 
-    my @ports;
+    my $workgroup = $self->database->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
+        return 0;
+    }
+    my $switch = $self->database->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return 0;
+    }
+    my $interfaces = $self->database->get_interfaces(
+        switch_id => $switch->{id}
+    );
 
-    my $switch = $self->config->{'switches'}->{$params{'switch'}};
-    foreach my $port (keys %{$switch->{'ports'}}){
+    my @ports;
+    foreach my $intf (@$interfaces) {
         my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
         my $has_access = $self->access->workgroup_has_access_to_port(
             workgroup => $params{'workgroup'},
             switch => $params{'switch'},
-            port => $port
+            port => $intf->{name}
         );
 
         if (!$is_admin && !$has_access) {
@@ -317,12 +335,11 @@ sub get_available_ports{
         my $tags = $self->access->get_tags_on_port(
             workgroup => $params{'workgroup'},
             switch => $params{'switch'},
-            port => $port
+            port => $intf->{name}
         );
 
-        push(@ports, {port => $port, tags => $tags});
+        push(@ports, {port => $intf->{name}, tags => $tags});
     }
-
     return \@ports;
 }
 
@@ -333,12 +350,12 @@ sub get_available_ports{
 sub get_tags_on_port{
     my $self = shift;
     my %params = @_;
-    
+
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_tags_on_port: Workgroup not specified");
         return;
     }
-    
+
     if(!defined($params{'switch'})){
         $self->logger->error("get_tags_on_port: Switch not specified");
         return;
@@ -356,7 +373,6 @@ sub get_tags_on_port{
                                                          switch => $params{'switch'},
                                                          port => $params{'port'});
     }
-
 }
 
 =head2 get_switches
@@ -373,11 +389,10 @@ sub get_switches{
     }
 
     my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
-    my $switches = $self->access->get_workgroup_switches( workgroup => $params{'workgroup'});
+    my $switches = $self->access->get_workgroup_switches(workgroup => $params{'workgroup'});
 
     my @res;
     foreach my $switch (@$switches){
-
         my $vlans = [];
         if ($is_admin) {
             $vlans = $self->network_model->get_vlans(switch => $switch);
@@ -387,8 +402,11 @@ sub get_switches{
 
         my $ports = $self->access->get_switch_ports( workgroup => $params{'workgroup'},
                                                      switch => $switch);
+
+        my $description = $self->access->get_switch_description(switch => $switch);
+
         push(@res,{ name => $switch,
-                    description => $self->access->get_switch_description( switch => $switch),
+                    description => $description,
                     vlans => $vlans,
                     ports => $ports});
     }
@@ -399,6 +417,7 @@ sub get_switches{
 =head2 get_interfaces_operational_state
 
 =cut
+
 sub get_interfaces_operational_state {
     my $self = shift;
     my %params = @_;
@@ -413,9 +432,17 @@ sub get_interfaces_operational_state {
         return;
     }
 
+    my $sw = $self->database->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return;
+    }
+
     my $result = {};
     eval {
-        my $interfaces = $self->network_model->get_interfaces(switch => $params{switch});
+        my $interfaces = $self->database->get_interfaces(
+            switch_id => $sw->{id}
+        );
+
         foreach my $intf (@{$interfaces}) {
             $result->{$intf->{name}} = $intf;
         }

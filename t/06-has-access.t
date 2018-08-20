@@ -9,11 +9,15 @@ use Test::Deep;
 use VCE;
 use GRNOC::Log;
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 my $logger = GRNOC::Log->new( level => 'DEBUG');
 
-my $vce = VCE->new( config_file => './t/etc/test_config.xml', network_model_file => "t/etc/nm1.sqlite");
+my $vce = VCE->new(
+    config_file => './t/etc/test_config.xml',
+    db => "t/etc/nm1.sqlite",
+    network_model_file => "t/etc/nm1.sqlite"
+);
 
 ok(defined($vce), "Created VCE Object");
 

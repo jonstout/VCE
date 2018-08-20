@@ -10,12 +10,13 @@ use VCE;
 use GRNOC::Log;
 
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm5.sqlite.orig2 t/etc/nm1.sqlite`;
 
 my $logger = GRNOC::Log->new( level => 'ERROR');
 
 my $vce = VCE->new(
     config_file => './t/etc/tag_config.xml',
+    db => "t/etc/nm1.sqlite",
     network_model_file => "t/etc/nm1.sqlite"
 );
 ok(defined $vce, "created vce object");
@@ -32,7 +33,7 @@ ok(defined $tags, "got tags from get_tags_on_port");
 my $expected_vlans = {};
 my $ok = 1;
 
-for (my $i = 2; $i <= 4094; $i++) {
+for (my $i = 301; $i <= 400; $i++) {
     $expected_vlans->{$i} = 1;
 }
 

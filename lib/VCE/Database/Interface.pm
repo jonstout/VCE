@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_interface get_interface get_interfaces update_interface );
+our @EXPORT = qw( add_interface get_interface get_interfaces update_interface delete_interface);
 
 
 =head2 add_interface
@@ -28,35 +28,77 @@ our @EXPORT = qw( add_interface get_interface get_interfaces update_interface );
 sub add_interface {
     my $self   = shift;
     my %params = @_;
-
+    # warn Dumper(%params);
     return if (!defined $params{description});
     return if (!defined $params{name});
     return if (!defined $params{switch_id});
 
-    $self->{log}->debug("add_switch($params{name}, $params{description}, $params{switch_id})");
+    $self->{log}->debug("add_interface($params{name}, $params{description}, $params{switch_id})");
 
-    my $q = $self->{conn}->prepare(
-        "insert into interface (
-           admin_up, description, hardware_type, link_up,
-           mac_addr, mtu, name, workgroup_id, speed, switch_id
-         ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-    $q->execute(
-        $params{admin_up} || 0,
-        $params{description} || '',
-        $params{hardware_type},
-        $params{link_up} || 0,
-        $params{mac_addr},
-        $params{mtu},
-        $params{name},
-        $params{workgroup_id} || 1,
-        $params{speed} || 'unknown',
-        $params{switch_id}
-    );
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into interface (
+               admin_up, description, hardware_type, link_up,
+               mac_addr, mtu, name, workgroup_id, speed, switch_id
+             ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        );
 
-    return $self->{conn}->last_insert_id("", "", "interface", "");
+        $q->execute(
+            $params{admin_up} || 0,
+            $params{description} || '',
+            $params{hardware_type},
+            $params{link_up} || 0,
+            $params{mac_addr},
+            $params{mtu},
+            $params{name},
+            $params{workgroup_id} || 1,
+            $params{speed} || 'unknown',
+            $params{switch_id}
+        );
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return (undef,"$@")
+    }
+
+    my $id = $self->{conn}->last_insert_id("", "", "interface", "");
+    return ($id, undef);
 }
 
+=head2 delete_interface
+
+
+=cut
+sub delete_interface {
+    my $self = shift;
+    my $interface_id = shift;
+
+    $self->{log}->debug("Calling delete_interface");
+
+    if (!defined $interface_id) {
+        $self->{log}->error("No interface id specified");
+        return;
+    }
+
+    eval {
+        my $query = $self->{conn}->prepare(
+            'DELETE FROM interface WHERE id=?'
+        );
+        $query->execute($interface_id);
+    };
+    if ($@) {
+        warn Dumper($@);
+        $self->{log}->error("$@");
+        return 0;
+    }
+
+    return 1;
+}
+
+=head2 get_interface
+
+
+=cut
 sub get_interface {
     my ( $self, $interface_id ) = @_;
 
@@ -77,15 +119,39 @@ sub get_interface {
     return $interface;
 }
 
+=head2 get_interfaces
+
+
+=cut
 sub get_interfaces {
-    my ( $self ) = @_;
+    my $self = shift;
+    my %params = @_;
 
     $self->{log}->debug("get_interfaces( )");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{switch_id}) {
+        push @$keys, 'switch_id=?';
+        push @$args, $params{switch_id};
+    }
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'workgroup_id=?';
+        push @$args, $params{workgroup_id};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from interface"
+        "SELECT * FROM interface $where"
     );
-    $q->execute();
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;
@@ -111,7 +177,6 @@ sub get_interfaces {
 sub update_interface {
     my $self   = shift;
     my %params = @_;
-
     return if (!defined $params{id});
 
     $self->{log}->debug("update_interface($params{id}, ...)");
@@ -158,11 +223,19 @@ sub update_interface {
 
     my $values = join(', ', @$keys);
     push @$args, $params{id};
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "UPDATE interface SET $values WHERE id=?"
+        );
 
-    my $q = $self->{conn}->prepare(
-        "UPDATE interface SET $values WHERE id=?"
-    );
-    return $q->execute(@$args);
+        $result = $q->execute(@$args);
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+    return $result;
 }
 
 return 1;

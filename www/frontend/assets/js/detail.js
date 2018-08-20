@@ -61,9 +61,12 @@ function loadPorts() {
     var name = cookie.switch;
     
     $('#port_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
+        var form = document.getElementById(e.target.value);
+
+        for (var i = 0; i < form.parentNode.childNodes.length; i++) {
+            form.parentNode.childNodes[i].setAttribute('style', 'display: none;');
+        }
+        form.setAttribute('style', 'display: block;');
 
         document.getElementById('port_form_container').setAttribute('style', 'display: block;');
     });
@@ -88,21 +91,21 @@ function loadPorts() {
 
                 var name = row.insertCell(0);
                 name.innerHTML = ports[i].name;
-                
+
                 var desc = row.insertCell(1);
                 desc.innerHTML = ports[i].description;
-                
+
                 var vlan = row.insertCell(2);
                 vlan.innerHTML = ports[i].tags.toString();
-                
+
                 var status = row.insertCell(3);
-                if (ports[i].status === 1) {
+                if (ports[i].link_up === 1) {
                     status.innerHTML = 'Up';
                 } else {
                     status.innerHTML = 'Down';
                 }
 
-                if (ports[i].admin_status === 0) {
+                if (ports[i].admin_up === 0) {
                     status.innerHTML = 'Disabled';
                 }
             }
@@ -163,7 +166,7 @@ function getPortCommands() {
 
                 var opt = document.createElement('option');
                 opt.innerHTML = cmds[i].name;
-                opt.setAttribute('value', cmds[i].method_name);
+                opt.setAttribute('value', `form-${cmds[i].command_id}`);
 
                 if (cmds[i].type == "show") {
                     document.getElementById("port_show_commands").appendChild(opt);
@@ -281,9 +284,12 @@ function getVlanCommands() {
     var cookie = Cookies.getJSON('vce');
     
     $('#vlan_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
+        var form = document.getElementById(e.target.value);
+
+        for (var i = 0; i < form.parentNode.childNodes.length; i++) {
+            form.parentNode.childNodes[i].setAttribute('style', 'display: none;');
+        }
+        form.setAttribute('style', 'display: block;');
 
         document.getElementById('vlan_form_container').setAttribute('style', 'display: block;');
     });
@@ -319,7 +325,7 @@ function getVlanCommands() {
                 
                 var opt = document.createElement('option');
                 opt.innerHTML = cmds[i].name;
-                opt.setAttribute('value', cmds[i].method_name);
+                opt.setAttribute('value', `form-${cmds[i].command_id}`);
                 
                 if (cmds[i].type == "show") {
                     document.getElementById("vlan_show_commands").appendChild(opt);
@@ -335,9 +341,12 @@ function loadSwitchCommands() {
     var cookie = Cookies.getJSON('vce');
     
     $('#switch_select').change(function(e) {
-        var form = $('#' + e.target.value);
-        form.css("display", "block");
-        form.siblings().css("display", "none");
+        var form = document.getElementById(e.target.value);
+
+        for (var i = 0; i < form.parentNode.childNodes.length; i++) {
+            form.parentNode.childNodes[i].setAttribute('style', 'display: none;');
+        }
+        form.setAttribute('style', 'display: block;');
     });
     
     var url = baseUrl + 'access.cgi?method=get_switch_commands';
@@ -366,7 +375,7 @@ function loadSwitchCommands() {
                 
                 var opt = document.createElement('option');
                 opt.innerHTML = cmds[i].name;
-                opt.setAttribute('value', cmds[i].method_name);
+                opt.setAttribute('value', `form-${cmds[i].command_id}`);
                 
                 if (cmds[i].type == "show") {
                     document.getElementById("switch_show_commands").appendChild(opt);

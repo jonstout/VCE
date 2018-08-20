@@ -32,13 +32,17 @@ use Moo;
 use VCE;
 use GRNOC::Log;
 use Data::Dumper;
+use VCE::Database::Connection;
 
+has db => (is => 'rwp');
 has config => (is => 'rwp');
 has logger => (is => 'rwp');
 
 =head2 BUILD
 
 =over 4
+
+=item db
 
 =item config
 
@@ -50,9 +54,12 @@ has logger => (is => 'rwp');
 
 sub BUILD{
     my ($self) = @_;
-    
+
     my $logger = GRNOC::Log->get_logger("VCE::Access");
-    $self->_set_logger($logger);    
+    $self->_set_logger($logger);
+
+    $self->logger->info('Loading database: ' . $self->config);
+    $self->_set_db(VCE::Database::Connection->new($self->config));
 
     return $self;
 }
@@ -124,22 +131,23 @@ sub workgroup_owns_port{
         return 0;
     }
 
-    if(defined($self->config->{'switches'}->{$params{'switch'}})){
-
-        if(defined($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}})){
-
-            if($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}){
-                $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is owned by " . $params{'workgroup'});
-                return 1;
-            }
-            $self->logger->debug("switch:port " . $params{'switch'} . ":" . $params{'port'} . " is not owned by " . $params{'workgroup'});
-            return 0;
-        }
-        $self->logger->error("switch " . $params{'switch'} . " does not have port: " . $params{'port'});
+    my $workgroup = $self->db->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
         return 0;
     }
-    $self->logger->error("no switch called " . $params{'switch'} . " in configuration");
-    return 0;
+    my $switch = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return 0;
+    }
+    my $intf = $self->db->get_interfaces(
+        workgroup_id => $workgroup->{id},
+        switch_id => $switch->{id},
+        name => $params{port}
+    );
+    if (!$intf || @$intf == 0) {
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -157,17 +165,18 @@ sub workgroups_owned_ports{
 
     my @owned_ints;
 
-    foreach my $switch (keys %{$self->config->{'switches'}}){
-        foreach my $port (keys %{$self->config->{'switches'}{$switch}{'ports'}}){
-            if($self->config->{'switches'}{$switch}{'ports'}{$port}{'owner'} eq $params{'workgroup'}){
-                push(@owned_ints,{ switch => $switch, port => $port});
-            }
-        }
+    my $workgroup = $self->db->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
+        return [];
+    }
+
+    my $interfaces = $self->db->get_interfaces(workgroup_id => $workgroup->{id});
+    foreach my $intf (@$interfaces) {
+        my $switch = $self->db->get_switch($intf->{switch_id});
+        push @owned_ints, { switch => $switch->{name}, port => $intf->{name} };
     }
 
     return \@owned_ints;
-    
-
 }
 
 =head2 user_in_workgroup
@@ -177,29 +186,30 @@ sub user_in_workgroup{
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'username'})){
-	$self->logger->error("user_in_workgroup: username not specified");
-	return 0;
-    }
-    
-    if(!defined($params{'workgroup'})){
-	$self->logger->error("user_in_workgroup: workgroup not specified");
-	return 0;
+    if (!defined $params{username}) {
+        $self->logger->error("user_in_workgroup: username not specified");
+        return 0;
     }
 
-    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-	foreach my $user (keys(%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}})){
-	    if($params{'username'} eq $user){
-		$self->logger->debug("user_in_workgroup: user " . $params{'username'} . " is in workgroup " . $params{'workgroup'});
-		return 1;
-	    }
-	}
-    }else{
-	$self->logger->error("No workgroup " . $params{'workgroup'} . " in configuration");
-	return 0;
+    if (!defined $params{workgroup}) {
+        $self->logger->error("user_in_workgroup: workgroup not specified");
+        return 0;
     }
 
-    $self->logger->error("user_in_workgroup: user " . $params{'username'} . " is not workgroup " . $params{'workgroup'});
+    my $user = $self->db->get_user_by_name($params{username});
+    if (!defined $user) {
+        $self->logger->error("User $params{username} does not exist");
+        return 0;
+    }
+
+    foreach my $workgroup (@{$user->{workgroups}}) {
+        if ($workgroup->{name} eq $params{'workgroup'}) {
+            $self->logger->debug("$params{'username'} is in workgroup $params{'workgroup'}");
+            return 1;
+        }
+    }
+
+    $self->logger->debug("$params{'username'} is not in workgroup $params{'workgroup'}");
     return 0;
 }
 
@@ -238,50 +248,22 @@ sub workgroup_has_access_to_port{
         return 0;
     }
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}) {
-        $self->logger->error("workgroup_has_access_to_port: No switch in configuration called " . $params{'switch'});
-        return 0;
-    }
-
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}) {
-        $self->logger->error("workgroup_has_access_to_port: No port on switch " . $params{'switch'} . " named " . $params{'port'} . " found in configuration");
-        return 0;
-    }
-
-    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{'workgroup'} ? 1 : 0;
-    if ($is_admin) {
-        return 1;
-    }
-
-    # Port owners have total control over any ports they own.
-    if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'owner'} eq $params{'workgroup'}) {
-        $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
-        return 1;
-    }
-
-    if (!defined $params{'vlan'}) {
-        # Logging is disabled here due to too many generated messages.
-        foreach my $tag (keys %{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}}) {
-            if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$tag} eq $params{'workgroup'}) {
-                # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'});
-                return 1;
-            }
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
+            next;
         }
-        # $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'});
-        return 0;
+
+        if (!defined $params{vlan}) {
+            return 1;
+        }
+
+        if ($acl->{high} >= $params{vlan} && $acl->{low} <= $params{vlan}) {
+            return 1;
+        }
     }
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}}) {
-        $self->logger->error("workgroup_has_access_to_port: No port on switch " . $params{'switch'} . " named " . $params{'port'} . " with VLAN " . $params{'vlan'} . " found in configuration.");
-        return 0;
-    }
-
-    if ($self->config->{'switches'}->{$params{'switch'}}->{'ports'}->{$params{'port'}}->{'tags'}->{$params{'vlan'}} eq $params{'workgroup'}) {
-        $self->logger->debug("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " has access to " . $params{'switch'} . ":" . $params{'port'} . ":" . $params{'vlan'});
-        return 1;
-    }
-
-    $self->logger->error("workgroup_has_access_to_port: workgroup " . $params{'workgroup'} . " does not have access to " . $params{'switch'} . ":" . $params{'port'} . ":" . $params{'vlan'});
     return 0;
 }
 
@@ -317,34 +299,37 @@ sub get_tags_on_port{
         return;
     }
 
-    if (!defined $self->config->{'switches'}->{$params{'switch'}}) {
-        return [];
-    }
-    my $switch = $self->config->{'switches'}->{$params{'switch'}};
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
 
-    if (!defined $switch->{'ports'}->{$params{'port'}}) {
-        return [];
-    }
-    my $port = $switch->{'ports'}->{$params{'port'}};
-
-    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
-
-    my $available_tags = [];
-
-    if ($is_admin) {
-        for (my $i = 2; $i < 4095; $i++) {
-            push(@{$available_tags}, $i);
+    # TODO
+    # Account for admin workgroup
+    # my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
+    my $result = {};
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
+            next;
         }
-        return $available_tags;
-    }
 
-    foreach my $vlan (keys %{$port->{'tags'}}) {
-        if ($port->{'tags'}->{$vlan} eq $params{'workgroup'}) {
-            push(@{$available_tags}, $vlan);
+        if ($acl->{workgroup_id} != $workgroup->{id}) {
+            # Filters out acls results based on port owners
+            next;
+        }
+        # if ($acl->{workgroup_id} eq $workgroup->{id}) {
+        #     for (my $i = 1; $i < 4095; $i++) {
+        #         $result->{$i} = 1;
+        #     }
+        #     my @r = keys $result;
+        #     return \@r;
+        # }
+
+        for (my $i = $acl->{low}; $i <= $acl->{high}; $i++) {
+            $result->{$i} = 1;
         }
     }
 
-    return $available_tags;
+    my @r = keys $result;
+    return \@r;
 }
 
 
@@ -411,21 +396,18 @@ sub get_workgroup_switches{
         $self->logger->error("get_workgroup_switches: workgroup not specified");
         return;
     }
-    
-    my %switches;
+    my $result = [];
 
-    foreach my $switch (keys (%{$self->config->{'switches'}})){
-        foreach my $port (keys (%{$self->config->{'switches'}->{$switch}->{'ports'}})){
-            if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                    switch => $switch,
-                                                    port => $port)){
-                $switches{$switch} = 1;
-                
-            }
-        }
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    if (!defined $workgroup) {
+        return $result;
     }
-    my @switches = keys %switches;
-    return \@switches;
+    my $switches = $self->db->get_switches(workgroup_id => $workgroup->{id});
+
+    foreach my $switch (@$switches) {
+        push @$result, $switch->{name};
+    }
+    return $result;
 }
 
 =head2 get_workgroup_users
@@ -440,14 +422,17 @@ sub get_workgroup_users{
         return;
     }
 
-    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-        my @users = keys (%{$self->config->{'workgroups'}->{$params{'workgroup'}}->{'user'}});
-        return \@users;
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    if (!defined $workgroup) {
+        return [];
     }
 
-    return;
-
-
+    my $users = $self->db->get_users_by_workgroup_id($workgroup->{id});
+    my $result = [];
+    foreach my $user (@$users) {
+        push @$result, $user->{username};
+    }
+    return $result;
 }
 
 =head2 get_workgroup_description
@@ -462,11 +447,12 @@ sub get_workgroup_description{
         return;
     }
 
-    if(defined($self->config->{'workgroups'}->{$params{'workgroup'}})){
-        return $self->config->{'workgroups'}->{$params{'workgroup'}}->{'description'};
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    if (!defined $workgroup) {
+        return;
     }
 
-    return;
+    return $workgroup->{description};
 }
 
 
@@ -482,12 +468,12 @@ sub get_switch_description{
         return;
     }
 
-    if(defined($self->config->{'switches'}->{$params{'switch'}})){
-        return $self->config->{'switches'}->{$params{'switch'}}->{'description'};
+    my $switch = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return;
     }
 
-    return;
-
+    return $switch->{description};
 }
 
 =head2 get_switch_commands
@@ -502,24 +488,35 @@ sub get_switch_commands{
         return;
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}{'system'};
+    my $sw = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return [];
+    }
 
+    my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'switch');
+    foreach my $cmd (@$commands) {
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{command_id});
+    }
+    return $commands;
 }
 
 =head2 get_port_commands
 
 =cut
 sub get_port_commands{
-
     my $self = shift;
     my %params = @_;
 
-    if(!defined($params{'switch'})){
-        $self->logger->error("get_port_commands: switch not specified");
-        return;
+    my $sw = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return [];
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'port'};
+    my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'interface');
+    foreach my $cmd (@$commands) {
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{command_id});
+   }
+    return $commands;
 }
 
 =head2 get_vlan_commands
@@ -534,7 +531,16 @@ sub get_vlan_commands{
         return;
     }
 
-    return $self->config->{'switches'}{$params{'switch'}}->{'commands'}->{'vlan'};
+    my $sw = $self->db->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return [];
+    }
+
+    my $commands = $self->db->get_commands(switch_id => $sw->{id}, type => 'vlan');
+    foreach my $cmd (@$commands) {
+        $cmd->{params} = $self->db->get_parameters(command_id => $cmd->{command_id});
+    }
+    return $commands;
 }
 
 =head2 get_switch_ports
@@ -549,23 +555,33 @@ sub get_switch_ports{
         return;
     }
 
-
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_workgroup_switches: workgroup not specified");
         return;
     }
 
-    my @ports;
-    foreach my $port (keys %{$self->config->{'switches'}->{$params{'switch'}}->{'ports'}}){
-        if($self->workgroup_has_access_to_port( workgroup => $params{'workgroup'},
-                                                switch => $params{'switch'},
-                                                port => $port)){
-            push(@ports, $port);
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
+
+    my $ports = {};
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch}) {
+            next;
+        }
+
+        if ($acl->{workgroup_id} eq $workgroup->{id}) {
+            $ports->{$acl->{name}} = 1;
+            next;
+        }
+
+        if ($acl->{high} >= $params{vlan} && $acl->{low} <= $params{vlan}) {
+            $ports->{$acl->{name}} = 1;
+            next;
         }
     }
 
-    return \@ports;
-    
+    my @result = keys %$ports;
+    return \@result;
 }
 
 =head2 get_switches
@@ -574,13 +590,7 @@ sub get_switch_ports{
 sub get_switches{
     my $self = shift;
 
-    my @switches;
-    foreach my $s (keys %{$self->config->{'switches'}}){
-        push(@switches, $self->config->{'switches'}->{$s});
-    }
-
-    return \@switches;
-
+    return $self->db->get_switches();
 }
 
 =head2 get_admin_workgroup
@@ -589,14 +599,8 @@ sub get_switches{
 sub get_admin_workgroup {
     my $self = shift;
 
-    foreach my $wgroup (keys %{$self->config->{'workgroups'}}) {
-        my $is_admin = $self->config->{'workgroups'}->{$wgroup}->{'admin'};
-        if (defined $is_admin && $is_admin == 1) {
-            return $self->config->{'workgroups'}->{$wgroup};
-        }
-    }
-
-    return undef;
+    my $workgroup = $self->db->get_workgroups(name => 'admin')->[0];
+    return $workgroup;
 }
 
 =head2 is_port_owner
@@ -614,17 +618,22 @@ sub is_port_owner {
     my $switch    = shift;
     my $port      = shift;
 
-    if (!defined $self->config->{switches}->{$switch}) {
+    my $wg = $self->db->get_workgroups(name => $workgroup)->[0];
+    if (!defined $wg) {
+        return (0, "Couldn't find a workgroup named $workgroup.");
+    }
+
+    my $sw = $self->db->get_switches(name => $switch)->[0];
+    if (!defined $sw) {
         return (0, "Couldn't find a switch named $switch.");
     }
 
-    if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
-        return (0, "Couldn't find a port named $port on $switch.");
-    }
-
-    my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
-
-    if ($port_config->{'owner'} ne $workgroup) {
+    my $interface = $self->db->get_interfaces(
+        workgroup_id => $wg->{id},
+        switch_id => $sw->{id},
+        name => $port
+    )->[0];
+    if (!defined $interface) {
         return (0, "Workgroup $workgroup doesn't own $port on $switch.");
     }
 
@@ -664,21 +673,13 @@ sub is_vlan_permittee {
     }
 
     foreach my $port (@{$ports}) {
-        if (!defined $self->config->{switches}->{$switch}) {
-            return (0, "Couldn't find a switch named $switch.");
-        }
-
-        if (!defined $self->config->{switches}->{$switch}->{ports}->{$port}) {
-            return (0, "Couldn't find a port named $port on $switch.");
-        }
-
-        my $port_config = $self->config->{switches}->{$switch}->{ports}->{$port};
-
-        if (!defined $port_config->{tags}->{$vlan}) {
-            return (0, "No port on switch $switch named $port with VLAN $vlan found in configuration.");
-        }
-
-        if ($port_config->{'tags'}->{$vlan} ne $workgroup) {
+        my $ok = $self->workgroup_has_access_to_port(
+            workgroup => $workgroup,
+            switch => $switch,
+            port => $port,
+            vlan => $vlan
+        );
+        if (!$ok) {
             return (0, "Workgroup $workgroup does not have access to VLAN $vlan on port $port on $switch.");
         }
     }
@@ -713,22 +714,28 @@ sub get_visible_vlans {
     my $workgroup = $params{workgroup};
     my $switch    = $params{switch};
 
-    if (!defined $self->config->{switches}->{$switch}) {
-        return (0, "Couldn't find a switch named $switch.");
-    }
-
-    my $is_admin = $self->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
-    if ($is_admin) {
-        return (1, undef);
-    }
+    my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
+    my $acls = $self->db->get_workgroup_interfaces($workgroup->{id});
 
     my $result = {};
-    my $ports = $self->config->{switches}->{$switch}->{ports};
-    foreach my $port (keys %{$ports}) {
-        foreach my $vlan (keys %{$ports->{$port}->{tags}}) {
-            if ($ports->{$port}->{tags}->{$vlan} eq $workgroup || $is_admin) {
-                $result->{$vlan} = 1;
-            }
+
+    my $is_admin = $self->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
+    if ($is_admin) {
+        for (my $i = 1; $i < 4095; $i++) {
+            $result->{$i} = 1;
+        }
+        my @r = keys $result;
+        return \@r;
+
+    }
+
+    foreach my $acl (@$acls) {
+        if ($acl->{switch_name} ne $params{switch} || $acl->{name} ne $params{port}) {
+            next;
+        }
+
+        for (my $i = $acl->{low}; $i <= $acl->{high}; $i++) {
+            $result->{$i} = 1;
         }
     }
 

@@ -14,7 +14,7 @@ use GRNOC::RabbitMQ::Method;
 use JSON::XS;
 use Data::Dumper;
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 sub make_request{
     my $params = shift;

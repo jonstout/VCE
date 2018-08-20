@@ -8,6 +8,8 @@ use Test::More tests => 12;
 use GRNOC::WebService::Client;
 use Data::Dumper;
 
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
+
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
                                              realm => 'VCE',
                                              uid => 'aragusa',
