@@ -73,6 +73,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Database/VLAN.pm %{buildroot}%{perl_vendorlib}/VCE/Database/VLAN.pm
 %{__install} lib/VCE/Database/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Workgroup.pm
 
+%{__install} lib/VCE/Services/ACL.pm %{buildroot}%{perl_vendorlib}/VCE/Services/ACL.pm
 %{__install} lib/VCE/Services/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Access.pm
 %{__install} lib/VCE/Services/Command.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Command.pm
 %{__install} lib/VCE/Services/Interface.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Interface.pm
@@ -87,6 +88,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/api
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/frontend
 
+%{__install} www/services/acl.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/access.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/command.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/interface.cgi %{buildroot}%{_datadir}/vce/www/api
@@ -150,6 +152,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Database/User.pm
 %{perl_vendorlib}/VCE/Database/VLAN.pm
 %{perl_vendorlib}/VCE/Database/Workgroup.pm
+%{perl_vendorlib}/VCE/Services/ACL.pm
 %{perl_vendorlib}/VCE/Services/Access.pm
 %{perl_vendorlib}/VCE/Services/Command.pm
 %{perl_vendorlib}/VCE/Services/Interface.pm
@@ -159,6 +162,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Services/Workgroup.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
+%{_datadir}/vce/www/api/acl.cgi
 %{_datadir}/vce/www/api/access.cgi
 %{_datadir}/vce/www/api/command.cgi
 %{_datadir}/vce/www/api/interface.cgi
