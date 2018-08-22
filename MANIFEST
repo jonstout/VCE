@@ -36,6 +36,7 @@ lib/VCE/Services/Interface.pm
 lib/VCE/Services/Operational.pm
 lib/VCE/Services/Provisioning.pm
 lib/VCE/Services/Switch.pm
+lib/VCE/Services/Workgroup.pm
 lib/VCE/Switch.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -149,3 +150,4 @@ www/services/index.html
 www/services/operational.cgi
 www/services/provisioning.cgi
 www/services/switch.cgi
+www/services/workgroup.cgi
