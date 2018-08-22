@@ -79,6 +79,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Services/Operational.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Operational.pm
 %{__install} lib/VCE/Services/Provisioning.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{__install} lib/VCE/Services/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Switch.pm
+%{__install} lib/VCE/Services/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Workgroup.pm
 
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
@@ -92,6 +93,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} www/services/operational.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/provisioning.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/switch.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/workgroup.cgi %{buildroot}%{_datadir}/vce/www/api
 
 cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
@@ -154,6 +156,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Services/Operational.pm
 %{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{perl_vendorlib}/VCE/Services/Switch.pm
+%{perl_vendorlib}/VCE/Services/Workgroup.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
 %{_datadir}/vce/www/api/access.cgi
@@ -162,6 +165,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/vce/www/api/operational.cgi
 %{_datadir}/vce/www/api/provisioning.cgi
 %{_datadir}/vce/www/api/switch.cgi
+%{_datadir}/vce/www/api/workgroup.cgi
 %{_datadir}/vce/www/frontend/
 
 %{_bindir}/vce
