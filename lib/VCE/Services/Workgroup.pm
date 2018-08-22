@@ -167,8 +167,7 @@ sub handle_request{
     $self->dispatcher->handle_request();
 }
 
-
-
+# --- add workgroup
 sub _add_workgroup {
 
     warn Dumper("--- in add workgroup ---");
@@ -201,6 +200,7 @@ sub _add_workgroup {
 }
 
 
+# --- Update workgroup
 sub _update_workgroup {
     warn Dumper("--- in update workgroup ---");
     my $self = shift;
@@ -222,7 +222,7 @@ sub _update_workgroup {
         description     => $params->{description}{value},
     );
     warn Dumper("update result: $result");
-    if ($result eq 0) {
+    if ($result eq "0E0") {
 
         $method_ref->set_error("Update failed for workgroup: $params->{id}{value}");
         return;
@@ -230,6 +230,7 @@ sub _update_workgroup {
     return { results => [ { value => $result } ] }
 }
 
+# --- Delete workgroup
 sub _delete_workgroup {
     warn Dumper("--- in delete workgroup ---");
     my $self = shift;
@@ -247,11 +248,11 @@ sub _delete_workgroup {
     }
 
     my $result = $self->db->delete_workgroup (
-        $params->{id}{value}
+        id => $params->{id}{value}
     );
     warn Dumper("delete result: $result");
 
-    if ($result eq 0) {
+    if ($result eq "0E0") {
 
         $method_ref->set_error("Delete failed for workgroup: $params->{id}{value}");
         return;

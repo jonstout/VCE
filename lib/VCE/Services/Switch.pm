@@ -328,14 +328,6 @@ sub _delete_switch {
 
     my $result = $self->db->delete_switch (
         id          => $params->{id}{value},
-        name        => $params->{name}{value},
-        description => $params->{description}{value},
-        ip          => $params->{ip}{value},
-        ssh         => $params->{ssh}{value},
-        netconf     => $params->{netconf}{value},
-        vendor      => $params->{vendor}{value},
-        model       => $params->{model}{value},
-        version     => $params->{version}{value},
     );
     warn Dumper("DELETE RESULT: $result");
 
