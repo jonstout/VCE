@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup );
+our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup delete_workgroup );
 
 
 =head2 add_workgroup
@@ -126,7 +126,6 @@ sub get_workgroup_interfaces {
     return $result;
 }
 
-
 sub update_workgroup {
     my $self   = shift;
     my %params = @_;
@@ -153,6 +152,25 @@ sub update_workgroup {
 
     my $q = $self->{conn}->prepare(
         "UPDATE workgroup SET $values WHERE id=?"
+    );
+    return $q->execute(@$args);
+}
+
+sub delete_workgroup {
+    my $self   = shift;
+    my %params = @_;
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("delete_workgroup($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "DELETE FROM workgroup WHERE id=?"
     );
     return $q->execute(@$args);
 }
