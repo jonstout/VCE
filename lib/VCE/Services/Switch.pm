@@ -312,7 +312,12 @@ sub _get_switches {
 
     }
 
-    $switches = $self->db->get_switches(workgroup_id => $wg->{id});
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        $switches = $self->db->get_switches();
+    } else {
+        $switches = $self->db->get_switches(workgroup_id => $wg->{id});
+    }
     if (!defined $switches) {
         my $err = "Could not get switches from database.";
         warn Dumper("Error: $err");
