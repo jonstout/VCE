@@ -68,9 +68,10 @@
       <div class="grnoc-content">
         <h1 class="title">Create a new switch</h1>
 
-        <form name="add-switch" onsubmit="return addSwitch(this)">
-          <input class="input" type="hidden" name="method" value="add_switch" />
+        <form name="modify-switch" onsubmit="return modifySwitch(this)">
+          <input class="input" type="hidden" name="method" value="modify_switch" />
           <input class="input" type="hidden" name="workgroup" required />
+          <input class="input" type="hidden" name="id" required />
           <div class="field">
             <label class="label">Hostname</label>
             <div class="control">
@@ -134,7 +135,7 @@
 
           <div class="field">
             <div class="control">
-              <button type="submit" class="button is-link">Create Switch</button>
+              <button type="submit" class="button is-link">Modify Switch</button>
             </div>
           </div>
 
@@ -144,6 +145,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script src="../assets/js/aconst.js"></script>
-    <script type="text/javascript" src="../assets/js/admin/switches.js"></script>
+    <script type="text/javascript" src="../assets/js/admin/modify_switches.js"></script>
   </body>
 </html>

@@ -144,6 +144,12 @@ sub _register_switch_functions {
         pattern => $GRNOC::WebService::Regex::NAME_ID,
         description => "Name of workgroup"
     );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'switch_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Switch id to filter on"
+    );
     eval {
         $d->register_method($method);
     };
@@ -297,6 +303,7 @@ sub _get_switches {
     my $user = $ENV{'REMOTE_USER'};
 
     my $workgroup = $params->{workgroup}{value};
+    my $switch_id = $params->{switch_id}{value};
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
@@ -309,14 +316,13 @@ sub _get_switches {
         my $err = "Could not identify specified workgroup.";
         $method_ref->set_error($err);
         return;
-
     }
 
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if ($is_admin) {
-        $switches = $self->db->get_switches();
+        $switches = $self->db->get_switches(switch_id => $switch_id);
     } else {
-        $switches = $self->db->get_switches(workgroup_id => $wg->{id});
+        $switches = $self->db->get_switches(workgroup_id => $wg->{id}, switch_id => $switch_id);
     }
     if (!defined $switches) {
         my $err = "Could not get switches from database.";

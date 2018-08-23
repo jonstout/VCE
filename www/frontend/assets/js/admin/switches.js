@@ -58,7 +58,7 @@ async function renderSwitchList(switches) {
     let items = '';
 
     switches.forEach(function(sw) {
-        items += `<li><a href="switches.html?switch_id=${sw.id}">${sw.name}</a></li>`;
+        items += `<li><a href="modify_switches.html?switch_id=${sw.id}">${sw.name}</a></li>`;
     });
 
     list.innerHTML = items;

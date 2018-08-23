@@ -101,6 +101,10 @@ sub get_switches {
         push @$keys, 'switch.name=?';
         push @$args, $params{name};
     }
+    if (defined $params{switch_id}) {
+        push @$keys, 'switch.id=?';
+        push @$args, $params{switch_id};
+    }
 
     my $values = join(' AND ', @$keys);
     my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
