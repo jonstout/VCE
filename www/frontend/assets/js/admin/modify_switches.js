@@ -41,6 +41,41 @@ function modifySwitch(form) {
     return false;
 }
 
+function deleteSwitch() {
+    let ok = confirm('Are you sure you wish to delete this device?');
+    if (!ok) {
+        return false;
+    }
+
+    let del = async function(data) {
+        let cookie = Cookies.getJSON('vce');
+        let wg = cookie.workgroup;
+
+        let id = data.get('id');
+        let method = 'delete_switch';
+
+        try {
+            const url = `../api/switch.cgi?method=${method}&id=${id}&workgroup=${wg}`;
+            const resp = await fetch(url, {method: 'get', credentials: 'include'});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) {
+                console.log(obj.error_text);
+                return false;
+            }
+            window.location.href = `switches.html`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    let form = document.forms['modify-switch'];
+    let data = new FormData(form);
+    del(data);
+    return false;
+}
+
 async function getSwitch(switch_id) {
     let cookie = Cookies.getJSON('vce');
     let workgroup = cookie.workgroup;

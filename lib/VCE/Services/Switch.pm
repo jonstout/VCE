@@ -387,21 +387,10 @@ sub _delete_switch {
         return;
     }
 
-    my $result = $self->db->delete_switch (
-        id          => $params->{id}{value},
-        name        => $params->{name}{value},
-        description => $params->{description}{value},
-        ip          => $params->{ip}{value},
-        ssh         => $params->{ssh}{value},
-        netconf     => $params->{netconf}{value},
-        vendor      => $params->{vendor}{value},
-        model       => $params->{model}{value},
-        version     => $params->{version}{value},
-    );
+    my $result = $self->db->delete_switch (id => $params->{id}{value});
     warn Dumper("DELETE RESULT: $result");
 
     if ($result eq "0E0") {
-
         $result = "Could not find Switch: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
