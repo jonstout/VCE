@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
 
     <link rel="stylesheet" href="../assets/css/admin/base.css">
+    <link rel="stylesheet" href="../assets/css/admin/modify_switches.css"><!-- overrides everything from base -->
     <title>React App</title>
   </head>
 
@@ -29,6 +30,14 @@
       <div class="grnoc-aside">
         <aside class="menu">
           <ul class="menu-list" id="aside-list">
+            <li><a>Loading</a></li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="grnoc-aside2">
+        <aside class="menu">
+          <ul class="menu-list" id="aside2-list">
             <li><a>Loading</a></li>
           </ul>
         </aside>
@@ -66,7 +75,7 @@
       </div>
 
       <div class="grnoc-content">
-        <h1 class="title">Create a new switch</h1>
+        <h1 class="title">Modify switch</h1>
 
         <form name="modify-switch" onsubmit="return modifySwitch(this)">
           <input class="input" type="hidden" name="method" value="modify_switch" />

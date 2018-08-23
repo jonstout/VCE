@@ -7,13 +7,14 @@ async function init() {
 
     let params = new URLSearchParams(location.search);
     let switch_id = params.get('switch_id');
-
-    getSwitch(switch_id).then(function(sw) {
-        renderSwitch(sw);
-    });
+    let interface_id = params.get('interface_id');
 
     getInterfaces(switch_id).then(function(intfs) {
         renderInterfaceList(intfs);
+    });
+
+    getInterface(interface_id).then(function(intf) {
+        renderInterface(intf);
     });
 };
 
@@ -102,17 +103,36 @@ async function getSwitch(switch_id) {
     }
 }
 
-async function renderSwitch(sw) {
-    let form = document.forms['modify-switch'];
-    form.elements['id'].value = sw.id;
-    form.elements['name'].value = sw.name;
-    form.elements['description'].value = sw.description;
-    form.elements['ip'].value = sw.ipv4;
-    form.elements['ssh'].value = sw.ssh;
-    form.elements['netconf'].value = sw.netconf;
-    form.elements['vendor'].value = sw.vendor;
-    form.elements['model'].value = sw.model;
-    form.elements['version'].value = sw.version;
+async function getInterface(interface_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let url = '../' + baseUrl + `interface.cgi?method=get_interfaces&workgroup=${workgroup}&interface_id=${interface_id}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
+
+    try {
+        let data = await response.json();
+        if ('error_text' in data) {
+            console.log(data.error_text);
+            return null;
+        }
+        return data.results[0];
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+async function renderInterface(intf) {
+    if (intf.description === '') { intf.description = '&nbsp;'; }
+
+    document.querySelector('#name').innerHTML = `<b>Name:</b> ${intf.name}`;
+    document.querySelector('#description').innerHTML = `<b>Description:</b> ${intf.description}`;
+
+    document.querySelector('#hardware_type').innerHTML = `<b>Hardware:</b> ${intf.hardware_type}`;
+    document.querySelector('#mac_addr').innerHTML = `<b>MAC Address:</b> ${intf.mac_addr}`;
+    document.querySelector('#speed').innerHTML = `<b>Speed:</b> ${intf.speed}`;
+    document.querySelector('#mtu').innerHTML = `<b>MTU:</b> ${intf.mtu}`;
 }
 
 async function getSwitches() {
@@ -180,9 +200,14 @@ async function renderInterfaceList(interfaces) {
 
     let params = new URLSearchParams(location.search);
     let switch_id = params.get('switch_id');
+    let interface_id = params.get('interface_id');
 
     interfaces.forEach(function(intf) {
-        items += `<li><a href="modify_interfaces.html?switch_id=${switch_id}&interface_id=${intf.id}">${intf.name}</a></li>`;
+        if (intf.id == interface_id) {
+            items += `<li><a class="is-active" href="modify_interfaces.html?switch_id=${switch_id}&interface_id=${intf.id}">${intf.name}</a></li>`;
+        } else {
+            items += `<li><a href="modify_interfaces.html?switch_id=${switch_id}&interface_id=${intf.id}">${intf.name}</a></li>`;
+        }
     });
 
     if (interfaces.length === 0) {
