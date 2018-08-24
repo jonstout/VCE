@@ -217,7 +217,11 @@ sub load_switches {
                 $db->add_command_to_switch($cmd2id->{$cmd->{actual_command}}, $sw_id, $cmd->{user_type});
                 next;
             }
-            my $cmd_id = $db->add_command($cmd->{name}, $cmd->{description}, 'interface', $cmd->{actual_command});
+            my $operation = 'read';
+            if (defined $cmd->{type} && $cmd->{type} eq 'action') {
+                $operation = 'write';
+            }
+            my $cmd_id = $db->add_command($cmd->{name}, $cmd->{description}, $operation, 'interface', $cmd->{actual_command});
             foreach my $name (keys %{$cmd->{params}}) {
                 my $type = $cmd->{params}->{$name}->{type} eq 'select' ? 'option' : 'input';
                 $db->add_parameter(
@@ -237,7 +241,11 @@ sub load_switches {
                 $db->add_command_to_switch($cmd2id->{$cmd->{actual_command}}, $sw_id, $cmd->{user_type});
                 next;
             }
-            my $cmd_id = $db->add_command($cmd->{name}, $cmd->{description}, 'switch', $cmd->{actual_command});
+            my $operation = 'read';
+            if (defined $cmd->{type} && $cmd->{type} eq 'action') {
+                $operation = 'write';
+            }
+            my $cmd_id = $db->add_command($cmd->{name}, $cmd->{description}, $operation, 'switch', $cmd->{actual_command});
             foreach my $name (keys %{$cmd->{params}}) {
                 my $type = $cmd->{params}->{$name}->{type} eq 'select' ? 'option' : 'input';
                 $db->add_parameter(
@@ -257,7 +265,11 @@ sub load_switches {
                 $db->add_command_to_switch($cmd2id->{$cmd->{actual_command}}, $sw_id, $cmd->{user_type});
                 next;
             }
-            my $cmd_id = $db->add_command($cmd->{name}, $cmd->{description}, 'vlan', $cmd->{actual_command});
+            my $operation = 'read';
+            if (defined $cmd->{type} && $cmd->{type} eq 'action') {
+                $operation = 'write';
+            }
+            my $cmd_id = $db->add_command($cmd->{name}, $cmd->{description}, $operation, 'vlan', $cmd->{actual_command});
             foreach my $name (keys %{$cmd->{params}}) {
                 my $type = $cmd->{params}->{$name}->{type} eq 'select' ? 'option' : 'input';
                 $db->add_parameter(

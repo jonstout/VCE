@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS command(
     id INTEGER PRIMARY KEY,
     name TEXT,
     description TEXT,
+    operation STRING CHECK (operation in ("read", "write")),
     type STRING CHECK (type in ("interface", "switch", "vlan")),
     template TEXT
 );

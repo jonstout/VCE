@@ -11,16 +11,16 @@ our @EXPORT = qw( add_command get_commands add_command_to_switch);
 =head2 add_command
 =cut
 sub add_command {
-    my ( $self, $name, $description, $type, $template ) = @_;
+    my ( $self, $name, $description, $operation, $type, $template ) = @_;
 
-    $self->{log}->debug("add_command($name, $description, $type, $template)");
+    $self->{log}->debug("add_command($name, $description, $operation, $type, $template)");
 
     my $q = $self->{conn}->prepare(
         "insert into command
-         (name, description, type, template)
-         values (?, ?, ?, ?)"
+         (name, description, operation, type, template)
+         values (?, ?, ?, ?, ?)"
     );
-    $q->execute($name, $description, $type, $template);
+    $q->execute($name, $description, $operation, $type, $template);
 
     return $self->{conn}->last_insert_id("", "", "command", "");
 }
