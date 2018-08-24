@@ -101,10 +101,8 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
 %{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-update-db
-<<<<<<< HEAD
-=======
 %{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-migrate-access-policy
->>>>>>> 90d449ad1f2cd31320fcce91700ce81766f7ba32
+
 
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
