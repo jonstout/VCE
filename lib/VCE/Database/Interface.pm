@@ -136,6 +136,10 @@ sub get_interfaces {
         push @$keys, 'switch_id=?';
         push @$args, $params{switch_id};
     }
+    if (defined $params{interface_id}) {
+        push @$keys, 'id=?';
+        push @$args, $params{interface_id};
+    }
     if (defined $params{name}) {
         push @$keys, 'name=?';
         push @$args, $params{name};
@@ -149,7 +153,7 @@ sub get_interfaces {
     my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
 
     my $q = $self->{conn}->prepare(
-        "SELECT * FROM interface $where"
+        "SELECT * FROM interface $where ORDER BY name ASC"
     );
     $q->execute(@$args);
 

@@ -133,6 +133,28 @@ sub _register_switch_functions {
     };
     undef $method;
 
+    $method = GRNOC::WebService::Method->new(
+        name => "get_switches",
+        description => "Method for adding a switch",
+        callback => sub { return $self->_get_switches(@_); }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "Name of workgroup"
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'switch_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Switch id to filter on"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
     #--- Registering modify switch method
     $method = GRNOC::WebService::Method->new( name => "modify_switch",
         description => "Method for modifying a switch",
@@ -271,6 +293,48 @@ sub _add_switch {
 
 }
 
+sub _get_switches {
+
+    warn Dumper("--- IN GET SWITCHES ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $switch_id = $params->{switch_id}{value};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+    my $switches = [];
+
+    my $wg = $self->db->get_workgroups(name => $workgroup)->[0];
+    if (!defined $wg) {
+        my $err = "Could not identify specified workgroup.";
+        $method_ref->set_error($err);
+        return;
+    }
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        $switches = $self->db->get_switches(switch_id => $switch_id);
+    } else {
+        $switches = $self->db->get_switches(workgroup_id => $wg->{id}, switch_id => $switch_id);
+    }
+    if (!defined $switches) {
+        my $err = "Could not get switches from database.";
+        warn Dumper("Error: $err");
+        $method_ref->set_error($err);
+        return;
+    }
+
+    return { results => $switches };
+}
+
+
 sub _modify_switch {
     warn Dumper("IN MODIFY SWITCH");
     my $self = shift;
@@ -323,21 +387,10 @@ sub _delete_switch {
         return;
     }
 
-    my $result = $self->db->delete_switch (
-        id          => $params->{id}{value},
-        name        => $params->{name}{value},
-        description => $params->{description}{value},
-        ip          => $params->{ip}{value},
-        ssh         => $params->{ssh}{value},
-        netconf     => $params->{netconf}{value},
-        vendor      => $params->{vendor}{value},
-        model       => $params->{model}{value},
-        version     => $params->{version}{value},
-    );
+    my $result = $self->db->delete_switch (id => $params->{id}{value});
     warn Dumper("DELETE RESULT: $result");
 
     if ($result eq "0E0") {
-
         $result = "Could not find Switch: $params->{id}{value}";
         $method_ref->set_error($result);
         return;

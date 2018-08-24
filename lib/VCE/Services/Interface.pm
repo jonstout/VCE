@@ -109,6 +109,35 @@ sub _register_interface_functions {
     };
     undef $method;
 
+    $method = GRNOC::WebService::Method->new(
+        name => "get_interfaces",
+        description => "Method for getting an interface",
+        callback => sub { return $self->_get_interfaces(@_); }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "Name of workgroup"
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'switch_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Switch id to filter on"
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'interface_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Interface id to filter on"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+
     #--- Registering update interface method
     $method = GRNOC::WebService::Method->new( name => "update_interface",
         description => "Method for updating a interface",
@@ -211,6 +240,49 @@ sub _add_interface {
 
     return { results => [ { id => $id } ] }
 
+}
+
+
+sub _get_interfaces {
+
+    warn Dumper("--- IN GET INTERFACES ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $interface_id = $params->{interface_id}{value};
+    my $switch_id = $params->{switch_id}{value};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+    my $interfaces = [];
+
+    my $wg = $self->db->get_workgroups(name => $workgroup)->[0];
+    if (!defined $wg) {
+        my $err = "Could not identify specified workgroup.";
+        $method_ref->set_error($err);
+        return;
+    }
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        $interfaces = $self->db->get_interfaces(interface_id => $interface_id, switch_id => $switch_id);
+    } else {
+        $interfaces = $self->db->get_interfaces(workgroup_id => $wg->{id}, interface_id => $interface_id, switch_id => $switch_id);
+    }
+    if (!defined $interfaces) {
+        my $err = "Could not get interfaces from database.";
+        warn Dumper("Error: $err");
+        $method_ref->set_error($err);
+        return;
+    }
+
+    return { results => $interfaces };
 }
 
 
