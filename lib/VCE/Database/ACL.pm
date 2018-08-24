@@ -28,8 +28,7 @@ sub add_acl {
 
 
     if ($@) {
-        # $self->{log}->error("$@");
-        warn Dumper($@);
+        $self->{log}->error("$@");
         return (undef,$@)
     }
 
@@ -96,8 +95,6 @@ sub modify_acl {
         $result = $q->execute(@$args);
     };
     if ($@) {
-        
-        warn Dumper($@);
         $self->{log}->error("$@");
         return 0;
     }
@@ -125,7 +122,6 @@ sub delete_acl {
         $query->execute($acl_id);
     };
     if ($@) {
-        warn Dumper($@);
         $self->{log}->error("$@");
         return 0;
     }
