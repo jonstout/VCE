@@ -186,7 +186,7 @@ sub _add_workgroup {
         return;
     }
     if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup ) && !$is_admin){
+            workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -225,7 +225,7 @@ sub _update_workgroup {
     }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup ) && !$is_admin){
+            workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
