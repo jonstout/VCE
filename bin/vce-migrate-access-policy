@@ -169,7 +169,8 @@ sub load_switches {
 
     foreach my $key (keys %$switches) {
         my $sw = $switches->{$key};
-        my $sw_id = $db->add_switch(
+
+        my ($sw_id, $err) = $db->add_switch(
             $sw->{name},
             $sw->{description},
             $sw->{ip},
@@ -179,14 +180,13 @@ sub load_switches {
             $sw->{model},
             $sw->{version}
         );
-
         $sw2id->{$sw->{name}} = $sw_id;
 
         foreach my $pname (keys %{$sw->{ports}}) {
             my $p = $sw->{ports}->{$pname};
             my $w = $db->get_workgroup(name => $p->{owner});
 
-            my $intf_id = $db->add_interface(
+            my ($intf_id, $err) = $db->add_interface(
                 name => $pname,
                 description => $p->{description} || '',
                 switch_id => $sw_id,
@@ -196,6 +196,11 @@ sub load_switches {
 
             foreach my $acl (@{$p->{tags}}) {
                 my $w2 = $db->get_workgroup(name => $acl->{workgroup});
+                if (!defined $w2->{id}) {
+                    warn "Skipping ACL for workgroup $acl->{workgroup}. Workgroup doesn't exist.";
+                    next;
+                }
+
                 $db->add_acl($w2->{id}, $intf_id, $acl->{start}, $acl->{end});
             }
         }
