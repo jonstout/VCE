@@ -2,9 +2,8 @@ package VCE::Database::ACL;
 
 use strict;
 use warnings;
-use Data::Dumper;
 use Exporter;
-
+# use Data::Dumper;
 our @ISA = qw( Exporter );
 our @EXPORT = qw( add_acl get_acls modify_acl delete_acl);
 
@@ -28,8 +27,7 @@ sub add_acl {
 
 
     if ($@) {
-        $self->{log}->error("$@");
-        return (undef,$@)
+        return (undef,"$@");
     }
 
     my $id = $self->{conn}->last_insert_id("", "", "acl", "");
@@ -115,17 +113,19 @@ sub delete_acl {
         return;
     }
 
+
+    my $result;
     eval {
         my $query = $self->{conn}->prepare(
             'DELETE FROM acl WHERE id=?'
         );
-        $query->execute($acl_id);
+       $result = $query->execute($acl_id);
     };
     if ($@) {
         $self->{log}->error("$@");
         return 0;
     }
 
-    return 1;
+    return $result;
 }
 return 1;
