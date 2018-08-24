@@ -187,18 +187,25 @@ sub _add_acl {
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
-
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to add ACL.");
+        return;
+    }
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
+
+
     my ($id, $err) = $self->db->add_acl(
-        $params->{'interface_id'}{'value'},
-        $params->{'workgroup_id'}{'value'},
-        $params->{'low'}{'value'},
-        $params->{'high'}{'value'},
+        $params->{interface_id}{value},
+        $params->{workgroup_id}{value},
+        $params->{low}{value},
+        $params->{high}{value},
     );
     warn Dumper("ID: $id");
     if (defined $err) {
@@ -219,7 +226,14 @@ sub _modify_acl {
     my $params = shift;
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete ACL.");
+        return;
+    }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
@@ -239,6 +253,11 @@ sub _modify_acl {
         $method_ref->set_error($result);
         return;
     }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
     return { results => [ { value => $result } ] }
 }
 
@@ -250,7 +269,14 @@ sub _delete_acl {
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete ACL.");
+        return;
+    }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
@@ -263,11 +289,16 @@ sub _delete_acl {
     );
     warn Dumper("delete result: $result");
 
-    if ($result eq "0E0") {
+    if ($result eq 0) {
 
         $result = "Delete ACL failed for ID: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
     }
 
     return { results => [ { value => $result } ] }
