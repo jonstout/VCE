@@ -2,7 +2,6 @@ package VCE::Database::Workgroup;
 
 use strict;
 use warnings;
-use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
@@ -15,8 +14,6 @@ our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_inter
 =cut
 sub add_workgroup {
     my ( $self, $name, $description ) = @_;
-    warn Dumper($name);
-    warn Dumper($description);
     $self->{log}->debug("add_workgroup($name, $description)");
 
     eval {
@@ -129,7 +126,6 @@ sub get_workgroup_interfaces {
 sub update_workgroup {
     my $self   = shift;
     my %params = @_;
-    # warn Dumper($params{name});
 
     return if (!defined $params{id});
 
