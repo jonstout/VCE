@@ -11,25 +11,28 @@ our @EXPORT = qw( add_interface get_interface get_interfaces update_interface de
 
 =head2 add_interface
 
-    my $id = add_interface(
-      admin_up => 0,
-      description => '',
-      hardware_type => '100GigabitEthernet',
-      link_up => 1,
-      mac_addr => 'cc4e.240c.0cc1',
-      mtu => '9216',
+add_interface creates a new interface in the database. If
+C<workgroup_id> is not provided the interface is assigned to
+C<workgroup_id> 1.
+
+    my ($id, $err) = add_interface(
       name => 'ethernet 5/2',
-      workgroup_id => 1,
-      speed => 'unknown',
-      switch_id => 1
+      switch_id => 1,
+      admin_up => 0,                         # Optional
+      description => '',                     # Optional
+      hardware_type => '100GigabitEthernet', # Optional
+      link_up => 1,                          # Optional
+      mac_addr => 'cc4e.240c.0cc1',          # Optional
+      mtu => '9216',                         # Optional
+      workgroup_id => 1,                     # Optional
+      speed => 'unknown'                     # Optional
     );
 
 =cut
 sub add_interface {
     my $self   = shift;
     my %params = @_;
-    # warn Dumper(%params);
-    return if (!defined $params{description});
+
     return if (!defined $params{name});
     return if (!defined $params{switch_id});
 
@@ -44,21 +47,21 @@ sub add_interface {
         );
 
         $q->execute(
-            $params{admin_up} || 0,
-            $params{description} || '',
-            $params{hardware_type},
-            $params{link_up} || 0,
-            $params{mac_addr},
-            $params{mtu},
+            $params{admin_up}      || 0,
+            $params{description}   || '',
+            $params{hardware_type} || '',
+            $params{link_up}       || 0,
+            $params{mac_addr}      || '',
+            $params{mtu}           || 0,
             $params{name},
-            $params{workgroup_id} || 1,
-            $params{speed} || 'unknown',
+            $params{workgroup_id}  || 1,
+            $params{speed}         || 'unknown',
             $params{switch_id}
         );
     };
     if ($@) {
         $self->{log}->error("$@");
-        return (undef,"$@")
+        return (undef, "$@")
     }
 
     my $id = $self->{conn}->last_insert_id("", "", "interface", "");
