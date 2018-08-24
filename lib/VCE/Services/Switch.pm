@@ -388,6 +388,7 @@ sub _delete_switch {
     }
 
     my $result = $self->db->delete_switch (id => $params->{id}{value});
+
     warn Dumper("DELETE RESULT: $result");
 
     if ($result eq "0E0") {

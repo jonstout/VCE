@@ -200,7 +200,6 @@ sub _add_acl {
         return;
     }
 
-
     my ($id, $err) = $self->db->add_acl(
         $params->{interface_id}{value},
         $params->{workgroup_id}{value},

@@ -113,7 +113,6 @@ sub delete_acl {
         return;
     }
 
-
     my $result;
     eval {
         my $query = $self->{conn}->prepare(
