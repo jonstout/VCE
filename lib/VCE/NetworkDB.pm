@@ -11,8 +11,10 @@ use GRNOC::Log;
 use Data::Dumper;
 use Data::UUID;
 use DBI;
+use VCE::Database::Connection;
 
 has db     => (is => 'rwp');
+has db2    => (is => 'rwp');
 has logger => (is => 'rwp');
 has path   => (is => 'rwp', default => '/var/lib/vce/network_model.sqlite' );
 has uuid   => (is => 'rwp');
@@ -24,6 +26,8 @@ creates a new NetworkModel object
 =over 4
 
 =item db
+
+=item db2
 
 =item logger
 
@@ -49,6 +53,7 @@ sub BUILD{
         RaiseError => 1,
         sqlite_see_if_its_a_number => 1
     }));
+    $self->_set_db2(VCE::Database::Connection->new($path));
 
     my $query = undef;
     $query = $self->db->prepare(
@@ -272,33 +277,20 @@ sub get_interfaces {
     my $self = shift;
     my %params = @_;
 
-    my $args = [];
-    my $reqs = [];
-    my $where = '';
-
-    # TODO - Cleanup this garbage for optional filters
-    if (defined $params{workgroup} || defined $params{switch}) {
-        $where .= 'WHERE ';
-        if (defined $params{switch}) {
-            push(@{$reqs}, 'interface.switch=?');
-            push(@{$args}, $params{switch});
-        }
-        $where .= join(' AND ', @{$reqs});
+    my $sw = $self->db2->get_switches(name => $params{switch})->[0];
+    if (!defined $sw) {
+        return;
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT * FROM interface ' .
-            $where
-        );
-        $query->execute(@{$args});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return undef;
+    my $wg = $self->db2->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $wg) {
+        return;
     }
-    my $interfaces = $query->fetchall_arrayref({});
+
+    my $interfaces = $self->db2->get_interfaces(
+        workgroup_id => $wg->{id},
+        switch_id => $sw->{id}
+    );
     return $interfaces;
 }
 
@@ -334,59 +326,43 @@ sub add_vlan {
     return if(!defined($params{vlan}));
     return if(!defined($params{workgroup}));
 
-    my $vlan_uuid = $self->uuid->to_string($self->uuid->create());
-    if (defined $params{vlan_id}) {
-        # Check if vlan already exists; If it does return undef.
-        my $existing_vlan = $self->get_vlan_details(vlan_id => $params{vlan_id});
-
-        if (defined $existing_vlan) {
-            return {vlan_id => undef, error => "Add VLAN: with vlan id already existing"};
-        }
-
-        $vlan_uuid = $params{vlan_id};
+    my $switch = $self->db2->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return { vlan_id => undef, error => "Couldn't add VLAN to specified switch." };
+    }
+    my $workgroup = $self->db2->get_workgroups(name => $params{workgroup})->[0];
+    if (!defined $workgroup) {
+        return { vlan_id => undef, error => "Couldn't find specified workgroup." };
+    }
+    my $user = $self->db2->get_user_by_name($params{username});
+    if (!defined $user) {
+        return { vlan_id => undef, error => "Couldn't find specified user." };
     }
 
-    my $ok = undef;
-    my $query = undef;
-
-    eval {
-        $query = $self->db->prepare(
-            'INSERT INTO network (created, description, number, switch, username, uuid, workgroup) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        );
-        $query->execute(
-            time(),
-            $params{description},
-            $params{vlan},
-            $params{switch},
-            $params{username},
-            $vlan_uuid,
-            $params{workgroup}
-        );
-    };
-    if ($@) {
-        my $error_msg = "$@";
-        $self->logger->error("$error_msg");
+    my $nvlan_id = $self->db2->add_vlan(
+        name => $params{description},
+        description => $params{description},
+        number => $params{vlan},
+        created_by => $user->{id},
+        switch_id => $switch->{id},
+        workgroup_id => $workgroup->{id},
+        created_on => time
+    );
+    if (!defined $nvlan_id) {
         return {vlan_id => undef, error => "Unable to add VLAN to the database. Please verify the VLAN does't already exist."};
     }
 
-    my $network_id = $self->db->sqlite_last_insert_rowid();
-
     foreach my $endpoint (@{$params{endpoints}}) {
         my $interface = $endpoint->{port};
-
-        eval {
-            $query = $self->db->prepare(
-                'INSERT INTO vlan (interface, mode, network_id) VALUES (?, ?, ?)'
-            );
-            $query->execute($interface, 'TAGGED', $network_id);
-        };
-        if ($@) {
-            $self->logger->error("$@");
+        my $intf = $self->db2->get_interfaces(name => $interface)->[0];
+        if (!defined $intf) {
+            next;
         }
+        $self->db2->add_tag('tagged', $intf->{id}, $nvlan_id);
     }
 
     $self->logger->debug("Called add_vlan");
-    return {vlan_id => $vlan_uuid, error => undef};
+    return {vlan_id => $nvlan_id, error => undef};
 }
 
 =head2 delete_vlan
@@ -408,47 +384,8 @@ sub delete_vlan{
         return;
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT * FROM network WHERE uuid=?'
-        );
-        $query->execute($params{vlan_id});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return;
-    }
-    my $network = $query->fetchall_arrayref({});
-    if (@{$network} == 0) {
-        $self->logger->error("Couldn't find VLAN " . $params{'vlan_id'});
-        return;
-    }
-
-    eval {
-        $query = $self->db->prepare(
-            'DELETE FROM vlan WHERE network_id=?'
-        );
-        $query->execute($network->[0]->{id});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return;
-    }
-
-    eval {
-        $query = $self->db->prepare(
-            'DELETE FROM network WHERE id=?'
-        );
-        $query->execute($network->[0]->{id});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return;
-    }
-
-    $self->logger->debug("Called delete_vlan");
-    return 1;
+    my $ok = $self->db2->delete_vlan($params{vlan_id});
+    return $ok;
 }
 
 =head2 get_vlans
@@ -470,40 +407,25 @@ sub get_vlans{
     my $reqs = [];
     my $where = '';
 
-    # TODO - Cleanup this garbage for optional filters
-    if (defined $params{workgroup} || defined $params{switch}) {
-        $where .= 'WHERE ';
-        if (defined $params{workgroup}) {
-            push(@{$reqs}, 'network.workgroup=?');
-            push(@{$args}, $params{workgroup});
-        }
-        if (defined $params{switch}) {
-            push(@{$reqs}, 'network.switch=?');
-            push(@{$args}, $params{switch});
-        }
-        $where .= join(' AND ', @{$reqs});
+    my $switch_id;
+    if (defined $params{switch}) {
+        $switch_id = $self->db2->get_switches(name => $params{switch})->[0]->{id};
+        return [] if (!defined $switch_id);
+    }
+    my $workgroup_id;
+    if (defined $params{workgroup}) {
+        $workgroup_id = $self->db2->get_workgroups(name => $params{workgroup})->[0]->{id};
+        return [] if (!defined $workgroup_id);
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT network.number, network.uuid FROM network ' .
-             $where .
-            'GROUP BY network.id
-             ORDER BY network.number ASC'
-        );
-        $query->execute(@{$args});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return undef;
-    }
-    my $networks = $query->fetchall_arrayref({});
-    $self->logger->debug(Dumper($networks));
+    my $networks = $self->db2->get_vlans(
+        switch_id => $switch_id,
+        workgroup_id => $workgroup_id
+    );
 
     my $result = [];
     foreach my $network (@{$networks}) {
-        push(@{$result}, $network->{uuid});
+        push(@{$result}, $network->{id});
     }
 
     return $result;
@@ -613,45 +535,34 @@ sub get_vlan_details{
         return;
     }
 
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT * FROM network
-             LEFT JOIN vlan on network.id=vlan.network_id
-             WHERE network.uuid=?
-             ORDER BY network.number ASC'
-        );
-        $query->execute($params{vlan_id});
-    };
-    if ($@) {
-        $self->logger->error("$@");
-        return undef;
+    my $vlan = $self->db2->get_vlan($params{vlan_id});
+    if (!defined $vlan) {
+        $self->logger->error("No VLAN found");
+        return;
     }
 
-    my $endpoints = $query->fetchall_arrayref({});
-    if (@{$endpoints} == 0) {
-        $self->logger->error("Couldn't find VLAN " . $params{vlan_id});
-        return undef;
-    }
+    my $workgroup = $self->db2->get_workgroup(id => $vlan->{workgroup_id});
+    my $user = $self->db2->get_user($vlan->{created_by});
+    my $switch = $self->db2->get_switch($vlan->{switch_id});
+    my $endpoints = $self->db2->get_tags(vlan_id => $vlan->{id});
 
     my $result = {
-        create_time => $endpoints->[0]->{created},
-        description => $endpoints->[0]->{description},
+        create_time => $vlan->{created_on},
+        description => $vlan->{description},
         endpoints   => [],
         status      => 'Active',
-        switch      => $endpoints->[0]->{switch},
-        username    => $endpoints->[0]->{username},
-        vlan        => $endpoints->[0]->{number},
-        vlan_id     => $endpoints->[0]->{uuid},
-        workgroup   => $endpoints->[0]->{workgroup}
-
+        switch      => $switch->{name},
+        username    => $user->{username},
+        vlan        => $vlan->{number},
+        vlan_id     => $vlan->{id},
+        workgroup   => $workgroup->{name}
     };
     foreach my $endpoint (@{$endpoints}) {
-        if (!defined $endpoint->{interface}) {
+        if (!defined $endpoint->{name}) {
             next;
         }
         my $info = {
-            port => $endpoint->{interface}
+            port => $endpoint->{name}
         };
         push(@{$result->{endpoints}}, $info);
     }
@@ -678,50 +589,21 @@ sub get_vlan_details_by_number {
         $self->logger->error("No VLAN ID specified");
         return undef;
     }
-
-    my $query = undef;
-    eval {
-        $query = $self->db->prepare(
-            'SELECT * FROM network
-             LEFT JOIN vlan on network.id=vlan.network_id
-             WHERE network.number=?'
-        );
-        $query->execute($params{number});
-    };
-    if ($@) {
-        $self->logger->error("$@");
+    if (!defined $params{switch}) {
+        $self->logger->error("No VLAN ID specified");
         return undef;
     }
 
-    my $endpoints = $query->fetchall_arrayref({});
-    if (@{$endpoints} == 0) {
-        $self->logger->error("Couldn't find VLAN number " . $params{number});
-        return undef;
+    my $switch = $self->db2->get_switches(name => $params{switch})->[0];
+    if (!defined $switch) {
+        return 0;
     }
 
-    my $result = {
-        create_time => $endpoints->[0]->{created},
-        description => $endpoints->[0]->{description},
-        endpoints   => [],
-        status      => 'Active',
-        switch      => $endpoints->[0]->{switch},
-        username    => $endpoints->[0]->{username},
-        vlan        => $endpoints->[0]->{number},
-        vlan_id     => $endpoints->[0]->{uuid},
-        workgroup   => $endpoints->[0]->{workgroup}
-    };
-    foreach my $endpoint (@{$endpoints}) {
-        if (!defined $endpoint->{interface}) {
-            next;
-        }
-        my $info = {
-            port => $endpoint->{interface}
-        };
-        push(@{$result->{endpoints}}, $info);
-    }
-
-    $self->logger->debug("Called get_vlan_details_by_number");
-    return $result;
+    my $vlan = $self->db2->get_vlans(
+        switch_id => $switch->{id},
+        number => $params{number}
+    )->[0];
+    return $vlan;
 }
 
 =head2 set_vlan_endpoints

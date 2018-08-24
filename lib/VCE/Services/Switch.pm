@@ -1,3 +1,4 @@
+
 #!/usr/bin/perl
 
 package VCE::Services::Switch;
@@ -13,14 +14,14 @@ use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
 
 use VCE::Access;
+use VCE::Database::Connection;
 use Template;
 
 has vce => (is => 'rwp');
 has logger => (is => 'rwp');
-has rabbit_client => (is => 'rwp');
 has dispatcher => (is => 'rwp');
-has rabbit_mq => (is => 'rwp');
 has template => (is => 'rwp');
+has db => (is => 'rwp');
 
 =head2 BUILD
 
@@ -38,6 +39,8 @@ has template => (is => 'rwp');
 
 =item template
 
+=item db
+
 =item vce
 
 =back
@@ -46,95 +49,202 @@ has template => (is => 'rwp');
 
 sub BUILD{
     my ($self) = @_;
-
     my $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf', watch => 15);
     my $log    = $logger->get_logger("VCE::Services::Switch");
     $self->_set_logger($log);
 
+
     $self->_set_vce( VCE->new() );
 
-    my $client = GRNOC::RabbitMQ::Client->new(
-        user     => $self->rabbit_mq->{'user'},
-        pass     => $self->rabbit_mq->{'pass'},
-        host     => $self->rabbit_mq->{'host'},
-        timeout  => 30,
-        port     => $self->rabbit_mq->{'port'},
-        exchange => 'VCE',
-        topic    => 'VCE.Switch.'
-    );
-    $self->_set_rabbit_client($client);
-
     my $dispatcher = GRNOC::WebService::Dispatcher->new();
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
     $self->_set_template(Template->new());
 
-    $self->_register_commands($dispatcher);
+    $self->_register_switch_functions($dispatcher);
 
     $self->_set_dispatcher($dispatcher);
 
     return $self;
 }
 
-sub _register_commands{
+sub _register_switch_functions {
     my $self = shift;
     my $d = shift;
 
-    my $list_of_commands = {};
+    #--- Registering modify switch method
+    my $method = GRNOC::WebService::Method->new( name => "add_switch",
+        description => "Method for adding a switch",
+        callback => sub {
+            return $self->_add_switch(@_)
+        });
 
-    my $switches = $self->vce->get_all_switches();
+    $method->add_input_parameter( required => 1,
+        name => 'name',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "Name of the switch to be added" );
 
-    foreach my $switch (@$switches){
-        my $commands = $switch->{'commands'};
-        foreach my $type (keys (%{$commands})){
-            foreach my $command (@{$commands->{$type}}){
-                $command->{'cli_type'} = $command->{'type'};
-                $command->{'type'}     = $type;
 
-                my $method = GRNOC::WebService::Method->new( name => $command->{'method_name'},
-                                                             description => $command->{'description'},
-                                                             callback => sub {
-                                                                 return $self->_execute_command($command, @_)
-                                                             });
+    $method->add_input_parameter( required => 1,
+        name => 'ip',
+        pattern => $GRNOC::WebService::Regex::IP_ADDRESS,
+        description => "IP address of switch" );
 
-                $method->add_input_parameter( required => 1,
-                                              name => 'workgroup',
-                                              pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                              description => "workgroup to run the command as" );
 
-                if($type eq 'system' || $type eq 'port' || $type eq 'vlan'){
-                    warn "Adding required param switch!\n";
-                    $method->add_input_parameter( required => 1,
-                                                  name => 'switch',
-                                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                                  description => "Switch to run the command on" );
-                }
+    $method->add_input_parameter( required => 0,
+        name => "description",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch description");
 
-                if($type eq 'port'){
-                    $method->add_input_parameter( required => 1,
-                                                  name => "port",
-                                                  pattern => "(.*)",
-                                                  description => "the port to run the command on");
-                }
 
-                if($type eq 'vlan'){
-                    $method->add_input_parameter( required => 1,
-                                                  name => 'vlan_id',
-                                                  pattern => $GRNOC::WebService::Regex::NAME_ID,
-                                                  description => "the vlan to run the command for" );
-                }
+    $method->add_input_parameter( required => 1,
+        name => 'ssh',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
 
-                foreach my $param (keys %{$command->{'params'}}){
-                    $method->add_input_parameter( required => 1,
-                                                  name => $param,
-                                                  pattern => $command->{'params'}{$param}->{'pattern'},
-                                                  description => $command->{'params'}{$param}->{'description'} );
-                }
+    $method->add_input_parameter( required => 1,
+        name => 'netconf',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
 
-                $d->register_method( $method );
-            }
-        }
-    }
+    $method->add_input_parameter( required => 1,
+        name => "vendor",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Switch vendor");
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'model',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch model" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'version',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch version" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to." );
+
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    $method = GRNOC::WebService::Method->new(
+        name => "get_switches",
+        description => "Method for adding a switch",
+        callback => sub { return $self->_get_switches(@_); }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "Name of workgroup"
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'switch_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Switch id to filter on"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    #--- Registering modify switch method
+    $method = GRNOC::WebService::Method->new( name => "modify_switch",
+        description => "Method for modifying a switch",
+        callback => sub {
+            return $self->_modify_switch(@_)
+        });
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Name of the switch to be added" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'name',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "Name of the switch to be added" );
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'ip',
+        pattern => $GRNOC::WebService::Regex::IP_ADDRESS,
+        description => "IP address of switch" );
+
+
+    $method->add_input_parameter( required => 0,
+        name => "description",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch description");
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'ssh',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'netconf',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ssh port for the switch" );
+
+    $method->add_input_parameter( required => 1,
+        name => "vendor",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Switch vendor");
+
+
+    $method->add_input_parameter( required => 1,
+        name => 'model',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch model" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'version',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "switch version" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to." );
+
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    #--- Registering delete switch method
+    $method = GRNOC::WebService::Method->new( name => "delete_switch",
+        description => "Method for deleting a switch",
+        callback => sub {
+            return $self->_delete_switch(@_)
+        });
+
+    $method->add_input_parameter( required => 1,
+        name => 'id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Name of the switch to be added" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to." );
+
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
 }
+
 
 =head2 handle_request
 
@@ -142,128 +252,150 @@ sub _register_commands{
 
 sub handle_request{
     my $self = shift;
-    
     $self->dispatcher->handle_request();
 }
 
-sub _execute_command{
+
+
+sub _add_switch {
+
+    warn Dumper("--- IN ADD SWITCH ---");
     my $self = shift;
-    my $command = shift;
-    my $m_ref = shift;
-    my $p_ref = shift;
+    my $method_ref = shift;
+    my $params = shift;
 
-    $p_ref->{'command'} = $command;
-    $self->logger->debug("In _execute_command");
+    my $user = $ENV{'REMOTE_USER'};
 
-    # Verify we have the permissions to execute this
-    if(!$self->_authorize_command( %{$p_ref})){
-        my $err = "Workgroup not authorized for command " . $command->{'name'} . " on switch " . $p_ref->{'switch'}{'value'};
-        $self->logger->error($err);
-        return {results => [], error => {msg => $err}};
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+    my ($id, $err) = $self->db->add_switch( $params->{'name'}{'value'},
+        $params->{'description'}{'value'},
+        $params->{'ip'}{'value'},
+        $params->{'ssh'}{'value'},
+        $params->{'netconf'}{'value'},
+        $params->{'vendor'}{'value'},
+        $params->{'model'}{'value'},
+        $params->{'version'}{'value'},
+    );
+    warn Dumper("ID: $id");
+    if (defined $err) {
+        warn Dumper("Error: $err");
+        $method_ref->set_error($err);
+        return;
     }
 
-    my $cmd_string;
-    my $context_string;
-    my $vars = {};
-    foreach my $var (keys %{$p_ref}){
-        $vars->{$var} = $p_ref->{$var}{'value'};
+    return { results => [ { id => $id } ] };
 
-        # The frontend uses a uuid to identify a (pair of vlans ||
-        # circuit || network). This should be a valid vlan number.
-        if ($var eq 'vlan_id') {
-            my $vlan = $self->vce->network_model->get_vlan_details( vlan_id => $vars->{'vlan_id'} );
-            $vars->{'vlan_id'} = $vlan->{'vlan'};
-        }
-    }
-
-    if(defined($command->{'context'})){
-        #some commands might not have context
-        my $text = $command->{'context'};
-        $self->template->process(\$text, $vars, \$context_string) or $self->logger->error("Error creating Context string");
-        $self->logger->debug("Context String: " . $context_string);
-    }
-
-    my $text = $command->{'actual_command'};
-
-    # Old template->process failure handler
-    # or warn "Error creating template string: " . Dumper($self->template->error());
-    $self->template->process(\$text, $vars, \$cmd_string) or $self->logger->error("Error creating command template: " . Dumper($self->template->error()));
-
-    if(!defined($cmd_string)){
-        return {results => [], error => {msg => "Error processing command"}};
-    }
-
-    if (!defined $command->{'configure'} || $command->{'configure'} ne 'true') {
-        $command->{'configure'} = 0;
-    } else {
-        $command->{'configure'} = 1;
-    }
-
-    $self->logger->debug("Running $cmd_string with params: " . Dumper($vars));
-    $self->rabbit_client->{topic} = 'VCE.Switch.' . $p_ref->{switch}{value};
-
-    my $res;
-    if (defined $context_string) {
-        $self->logger->debug("Running $cmd_string in context $context_string: " . Dumper($command));
-        $res = $self->rabbit_client->execute_command( context => $context_string,
-                                                      command => $cmd_string,
-                                                      config => $command->{'configure'},
-                                                      cli_type => $command->{'cli_type'} );
-    } else {
-        $self->logger->debug("Running $cmd_string with no context: " . Dumper($command));
-        $res = $self->rabbit_client->execute_command( command => $cmd_string,
-                                                      config => $command->{'configure'},
-                                                      cli_type => $command->{'cli_type'} );
-    }
-
-    if ($res->{'results'}->{'error'}) {
-        return {success => 0, error => {msg => $res->{'results'}->{'error_message'}}};
-    } else {
-        return { success => 1, raw => $res->{'results'}->{'raw'}};
-    }
 }
 
-sub _authorize_command{
+sub _get_switches {
+
+    warn Dumper("--- IN GET SWITCHES ---");
     my $self = shift;
-    my %params = @_;
+    my $method_ref = shift;
+    my $params = shift;
 
-    warn "IN AUTHORIZE COMMAND\n";
-    warn Dumper(%params);
+    my $user = $ENV{'REMOTE_USER'};
 
-    if($params{'command'}->{'type'} eq 'system'){
-        my $ports = $self->vce->get_available_ports( workgroup => $params{'workgroup'}{'value'}, switch => $params{'switch'}{'value'});
-        if(scalar @{$ports} >= 0){
-            $self->logger->debug("Ports detected.");
-            return 1;
-        }else{
-            $self->logger->debug("More than one port detected.");
-            return 0;
-        }
-    }elsif($params{'command'}->{'type'} eq 'port'){
-        if($self->vce->access->workgroup_has_access_to_port( workgroup => $params{'workgroup'}{'value'},
-                                                        switch => $params{'switch'}{'value'},
-                                                        port => $params{'port'}{'value'})){
-            return 1;
-        }else{
-            return 0;
-        }
+    my $workgroup = $params->{workgroup}{value};
+    my $switch_id = $params->{switch_id}{value};
 
-    }elsif($params{'command'}->{'type'} eq 'vlan'){
-        my $vlan = $self->vce->network_model->get_vlan_details( vlan_id => $params{'vlan_id'}{'value'} );
-        if(!defined($vlan)){
-            return 0;
-        }
-        if($vlan->{'workgroup'} eq $params{'workgroup'}{'value'}){
-            return 1;
-        }else{
-            return 0;
-        }
-    
-    }else{
-        return 0;
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
     }
-    
+    my $switches = [];
+
+    my $wg = $self->db->get_workgroups(name => $workgroup)->[0];
+    if (!defined $wg) {
+        my $err = "Could not identify specified workgroup.";
+        $method_ref->set_error($err);
+        return;
+    }
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if ($is_admin) {
+        $switches = $self->db->get_switches(switch_id => $switch_id);
+    } else {
+        $switches = $self->db->get_switches(workgroup_id => $wg->{id}, switch_id => $switch_id);
+    }
+    if (!defined $switches) {
+        my $err = "Could not get switches from database.";
+        warn Dumper("Error: $err");
+        $method_ref->set_error($err);
+        return;
+    }
+
+    return { results => $switches };
 }
 
 
+sub _modify_switch {
+    warn Dumper("IN MODIFY SWITCH");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $result = $self->db->modify_switch(
+        id          => $params->{id}{value},
+        name        => $params->{name}{value},
+        description => $params->{description}{value},
+        ip          => $params->{ip}{value},
+        ssh         => $params->{ssh}{value},
+        netconf     => $params->{netconf}{value},
+        vendor      => $params->{vendor}{value},
+        model       => $params->{model}{value},
+        version     => $params->{version}{value},
+    );
+    warn Dumper("MODIFY RESULT: $result");
+    if ($result eq "0E0") {
+
+        $result = "Could not find Switch: $params->{name}{value}, ID: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+    return { results => [ { value => $result } ] };
+}
+
+sub _delete_switch {
+    warn Dumper("IN DELETE SWITCH");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $result = $self->db->delete_switch (id => $params->{id}{value});
+    warn Dumper("DELETE RESULT: $result");
+
+    if ($result eq "0E0") {
+        $result = "Could not find Switch: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+
+    return { results => [ { value => $result } ] };
+}
 1;

@@ -6,7 +6,7 @@ use warnings;
 use Test::More skip_all => "Skipping";
 #use Test::More tests => 1;
 
-`cp t/etc/nm1.sqlite.orig t/etc/nm1.sqlite`;
+`cp t/etc/nm1.sqlite.orig2 t/etc/nm1.sqlite`;
 
 use GRNOC::WebService::Client;
 use Data::Dumper;

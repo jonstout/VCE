@@ -6,6 +6,7 @@ use warnings;
 use Getopt::Long;
 use JSON::XS;
 
+use VCE::Database::Connection;
 use VCE;
 use VCE::Switch;
 
@@ -16,7 +17,8 @@ use Parallel::ForkManager;
 use Proc::Daemon;
 
 use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
-use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
+# use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
+use constant DEFAULT_MODEL_FILE => '/var/lib/vce/database.sqlite';
 use constant DEFAULT_PASSWORD_FILE => '/etc/vce/password.json';
 
 use Data::Dumper;
@@ -90,7 +92,8 @@ sub main {
         password_file => $password_file
     );
 
-    my $switches = $vce->get_all_switches();
+    my $db = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
+    my $switches = $db->get_switches();
     my $creds    = get_credentials($password_file);
 
     my $forker = Parallel::ForkManager->new(scalar($switches));
@@ -114,13 +117,14 @@ sub main {
         my $s = VCE::Switch->new(
             username => $creds->{$switch->{'name'}}->{'username'},
             password => $creds->{$switch->{'name'}}->{'password'},
-            hostname => $switch->{'ip'},
-            port => $switch->{'ssh_port'},
+            hostname => $switch->{'ipv4'},
+            port => $switch->{'ssh'},
             vendor => $switch->{'vendor'},
             type => $switch->{'model'},
             version => $switch->{'version'},
             name => $switch->{'name'},
-            rabbit_mq => $vce->rabbit_mq
+            rabbit_mq => $vce->rabbit_mq,
+            id => $switch->{'id'}
         );
 
         $logger->info("Switch $switch->{name} created.");

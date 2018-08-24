@@ -1,0 +1,118 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS user(
+    id       INTEGER PRIMARY KEY,
+    username TEXT,
+    email    TEXT,
+    fullname TEXT
+);
+
+CREATE TABLE IF NOT EXISTS workgroup(
+    id   INTEGER PRIMARY KEY,
+    name TEXT,
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS user_workgroup(
+    id           INTEGER PRIMARY KEY,
+    role         STRING CHECK (role in ("admin", "rw", "ro")),
+    user_id      TEXT,
+    workgroup_id INTEGER,
+    FOREIGN KEY(user_id) REFERENCES user(id),
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS switch(
+    id          INTEGER PRIMARY KEY,
+    name        TEXT,
+    description TEXT,
+    ipv4        TEXT,
+    ssh         INTEGER,
+    netconf     INTEGER,
+    vendor      TEXT,
+    model       TEXT,
+    version     TEXT
+);
+
+CREATE TABLE IF NOT EXISTS interface(
+    id INTEGER PRIMARY KEY,
+    admin_up BOOLEAN CHECK (admin_up in (0, 1)),
+    hardware_type TEXT,
+    mac_addr TEXT,
+    mtu INTEGER,
+    name TEXT,
+    speed TEXT,
+    description TEXT,
+    link_up BOOLEAN CHECK (link_up in (0, 1)),
+    workgroup_id INTEGER,
+    switch_id INTEGER,
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id),
+    FOREIGN KEY(switch_id) REFERENCES switch(id)
+);
+
+CREATE TABLE IF NOT EXISTS vlan(
+    id INTEGER PRIMARY KEY,
+    created_by INTEGER,
+    created_on INTEGER,
+    description TEXT,
+    name TEXT,
+    number INTEGER CHECK (number > 0 AND number < 4095),
+    switch_id INTEGER,
+    workgroup_id INTEGER,
+    FOREIGN KEY(created_by) REFERENCES user(id),
+    FOREIGN KEY(switch_id) REFERENCES switch(id),
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id),
+    CONSTRAINT number_switch_id UNIQUE (number, switch_id)
+);
+
+CREATE TABLE IF NOT EXISTS tag(
+    id INTEGER PRIMARY KEY,
+    interface_id INTEGER,
+    mode TEXT,
+    vlan_id INTEGER,
+    FOREIGN KEY(interface_id) REFERENCES interface(id),
+    FOREIGN KEY(vlan_id) REFERENCES vlan(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS acl(
+    id           INTEGER PRIMARY KEY,
+    interface_id INTEGER,
+    workgroup_id INTEGER,
+    low          INTEGER CHECK (low > 0 AND low <= high),
+    high         INTEGER CHECK (high < 4095 AND high >= low),
+    FOREIGN KEY(interface_id) REFERENCES interface(id),
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS command(
+    id INTEGER PRIMARY KEY,
+    name TEXT,
+    description TEXT,
+    operation STRING CHECK (operation in ("read", "write")),
+    type STRING CHECK (type in ("interface", "switch", "vlan")),
+    template TEXT
+);
+
+CREATE TABLE IF NOT EXISTS switch_command(
+    id INTEGER PRIMARY KEY,
+    command_id INTEGER,
+    switch_id INTEGER,
+    role STRING CHECK (role in ("admin", "owner", "user")),
+    FOREIGN KEY(switch_id) REFERENCES switch(id),
+    FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS parameter(
+    id INTEGER PRIMARY KEY,
+    command_id INTEGER,
+    name TEXT,
+    description TEXT,
+    regex TEXT,
+    type STRING CHECK (type in ("input", "option")),
+    FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE
+);
+
+CREATE TABLE version(
+    id      INTEGER PRIMARY KEY,
+    version TEXT
+);

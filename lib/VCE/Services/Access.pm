@@ -48,6 +48,8 @@ sub BUILD{
     my $logger = GRNOC::Log->get_logger("VCE::Services::Switch");
     $self->_set_logger($logger);
 
+    $self->logger->info('Using network model: ' . $self->network_model_file);
+
     $self->_set_vce( VCE->new( config_file => $self->config_file,
                                network_model_file => $self->network_model_file  ) );
 
@@ -317,21 +319,23 @@ sub get_switch_commands{
     }
 
     my $switch_commands = $self->vce->access->get_switch_commands( switch => $switch );
+    warn Dumper($switch);
+    warn Dumper($switch_commands);
     my @results;
     foreach my $cmd (@$switch_commands){
         my $is_admin = ($workgroup eq 'admin') ? 1 : 0;
         my $is_owner = 0;
 
         my $authorized = 0;
-        if ($cmd->{user_type} eq 'user') {
+        if ($cmd->{role} eq 'user') {
             $authorized = 1;
         }
 
-        if ($cmd->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+        if ($cmd->{role} eq 'owner' && ($is_admin || $is_owner)) {
             $authorized = 1;
         }
 
-        if ($cmd->{user_type} eq 'admin' && $is_admin) {
+        if ($cmd->{role} eq 'admin' && $is_admin) {
             $authorized = 1;
         }
 
@@ -340,7 +344,7 @@ sub get_switch_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'method_name'};
+        $obj->{'method_name'} = $cmd->{'name'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
@@ -354,19 +358,33 @@ sub get_switch_commands{
                                         description => "switch to run the command on",
                                         required => 1 });
 
-        foreach my $param (keys (%{$cmd->{'params'}})){
+        foreach my $param (@{$cmd->{params}}) {
             my $p = {};
 
-            if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
-                @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
+            if ($param->{type} eq 'option') {
+                my @t = split(/\(|\||\)/, $param->{regex});
+                $p->{options} = \@t;
             }
 
-            $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-            $p->{'name'} = $param;
-            $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-            $p->{'required'} = 1;
-            push(@{$obj->{'parameters'}}, $p);
+            $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
+            $p->{name}        = $param->{name};
+            $p->{description} = $param->{description};
+            $p->{required}    = 1; #TODO
+            push @{$obj->{parameters}}, $p;
         }
+        # foreach my $param (keys (%{$cmd->{'params'}})){
+        #     my $p = {};
+
+        #     if($cmd->{'parameters'}{$param}{'type'} eq 'select'){
+        #         @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
+        #     }
+
+        #     $p->{'type'} = $cmd->{'params'}{$param}{'type'};
+        #     $p->{'name'} = $param;
+        #     $p->{'description'} = $cmd->{'params'}{$param}{'description'};
+        #     $p->{'required'} = 1;
+        #     push(@{$obj->{'parameters'}}, $p);
+        # }
 
         push(@results, $obj);
     }
@@ -403,17 +421,17 @@ sub get_port_commands{
 
             my $commands = $self->vce->access->get_port_commands(switch => $switch, port => $port);
             my $authorized_commands = [];
-
+warn Dumper($commands);
             foreach my $command (@{$commands}) {
-                if ($command->{user_type} eq 'user') {
+                if ($command->{role} eq 'user') {
                     push(@{$authorized_commands}, $command);
                 }
 
-                if ($command->{user_type} eq 'owner' && ($is_admin || $is_owner)) {
+                if ($command->{role} eq 'owner' && ($is_admin || $is_owner)) {
                     push(@{$authorized_commands}, $command);
                 }
 
-                if ($command->{user_type} eq 'admin' && $is_admin) {
+                if ($command->{role} eq 'admin' && $is_admin) {
                     push(@{$authorized_commands}, $command);
                 }
             }
@@ -442,21 +460,36 @@ sub get_port_commands{
                     }
                 ];
 
-                foreach my $param (keys %{$command->{'params'}}) {
+                foreach my $param (@{$command->{params}}) {
                     my $p = {};
 
-                    if($command->{'params'}{$param}{'type'} eq 'select'){
-                        @{$p->{'options'}} = split(',',$command->{'params'}{$param}{'options'});
+                    if ($param->{type} eq 'option') {
+                        my @t = split(/\(|\||\)/, $param->{regex});
+                        $p->{options} = \@t;
                     }
 
-                    $p->{'type'} = $command->{'params'}{$param}{'type'};
-                    $p->{'name'} = $param;
-                    $p->{'description'} = $command->{'params'}{$param}{'description'};
-                    $p->{'required'} = 1;
-                    push(@{$params}, $p);
+                    $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
+                    $p->{name}        = $param->{name};
+                    $p->{description} = $param->{description};
+                    $p->{required}    = 1; #TODO
+                    push @$params, $p;
                 }
+                # foreach my $param (keys %{$command->{'params'}}) {
+                #     my $p = {};
+
+                #     if($command->{'params'}{$param}{'type'} eq 'select'){
+                #         @{$p->{'options'}} = split(',',$command->{'params'}{$param}{'options'});
+                #     }
+
+                #     $p->{'type'} = $command->{'params'}{$param}{'type'};
+                #     $p->{'name'} = $param;
+                #     $p->{'description'} = $command->{'params'}{$param}{'description'};
+                #     $p->{'required'} = 1;
+                #     push(@{$params}, $p);
+                # }
 
                 $command->{parameters} = $params;
+                $command->{method_name} = $command->{name};
                 delete $command->{params};
                 delete $command->{interaction};
                 delete $command->{description};
@@ -524,7 +557,7 @@ sub get_vlan_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'method_name'};
+        $obj->{'method_name'} = $cmd->{'name'};
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
@@ -536,26 +569,44 @@ sub get_vlan_commands{
                                         required => 1 });
 
         push(@{$obj->{'parameters'}}, { type => 'hidden',
+                                        name => 'switch',
+                                        description => "switch to run the command as",
+                                        required => 1 });
+
+        push(@{$obj->{'parameters'}}, { type => 'hidden',
                                         name => 'vlan_id',
                                         description => "vlan_id of the vlan to run the command on",
                                         required => 1 });
 
-        foreach my $param (keys (%{$cmd->{'params'}})){
-            my $p = {};
+                foreach my $param (@{$cmd->{params}}) {
+                    my $p = {};
 
-            if($cmd->{'params'}{$param}{'type'} eq 'select'){
-                @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
-            }else{
+                    if ($param->{type} eq 'option') {
+                        my @t = split(/\(|\||\)/, $param->{regex});
+                        $p->{options} = \@t;
+                    }
 
-            }
+                    $p->{type}        = $param->{type} eq 'option' ? 'select' : 'text';
+                    $p->{name}        = $param->{name};
+                    $p->{description} = $param->{description};
+                    $p->{required}    = 1; #TODO
+                    push @{$obj->{parameters}}, $p;
+                }
 
-            $p->{'type'} = $cmd->{'params'}{$param}{'type'};
-            $p->{'name'} = $param;
-            $p->{'description'} = $cmd->{'params'}{$param}{'description'};
-            $p->{'required'} = 1;
+        # foreach my $param (keys (%{$cmd->{'params'}})){
+        #     my $p = {};
 
-            push(@{$obj->{'parameters'}}, $p);
-        }
+        #     if($cmd->{'params'}{$param}{'type'} eq 'select'){
+        #         @{$p->{'options'}} = split(',',$cmd->{'params'}{$param}{'options'});
+        #     }
+
+        #     $p->{'type'} = $cmd->{'params'}{$param}{'type'};
+        #     $p->{'name'} = $param;
+        #     $p->{'description'} = $cmd->{'params'}{$param}{'description'};
+        #     $p->{'required'} = 1;
+
+        #     push(@{$obj->{'parameters'}}, $p);
+        # }
         push(@results, $obj);
     }
 
@@ -570,8 +621,8 @@ sub get_workgroups{
     my $self = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-    
     $self->logger->debug("Fetching workgroups for user: " . $user);
+
     return {results => [{workgroups => $self->vce->get_workgroups( username => $user )}]};
 }
 
@@ -629,7 +680,6 @@ sub get_ports{
 =head2 get_tags_on_ports
 
 =cut
-
 sub get_tags_on_ports{
     my $self = shift;
     my $m_ref = shift;
@@ -640,21 +690,23 @@ sub get_tags_on_ports{
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
     my $ports = $p_ref->{'port'}{'value'};
-    
+
     #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-					      workgroup => $workgroup )){
-	
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    }
+
 	my @results;
 	foreach my $port (@$ports){
 	    my $tags = $self->vce->get_tags_on_port( workgroup => $workgroup, switch => $switch, port => $port);
-	    #push(@results, {port => $port, tags => $tags});
-            push(@results, {port => $port, tags => $self->vce->access->friendly_display_vlans($tags)});
+        if (!defined $tags) {
+            next;
+        }
+
+        push(@results, {port => $port, tags => $self->vce->access->friendly_display_vlans($tags)});
 	}
+
 	return {results => [{ports => \@results}]};
-    }else{
-	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
-    }
 }
 
 
@@ -668,7 +720,7 @@ sub is_tag_available{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-    
+
     my $workgroup = $p_ref->{'workgroup'}{'value'};
     my $switch = $p_ref->{'switch'}{'value'};
     my $port = $p_ref->{'port'}{'value'};
@@ -677,32 +729,29 @@ sub is_tag_available{
     warn "Is tag available\n";
 
     #verify user in workgroup
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-        warn "USer is in workgroup\n";
-	
-        #first verify user has access to switch/port/tag
-        if($self->vce->access->workgroup_has_access_to_port( workgroup => $workgroup,
-                                                             switch => $switch, 
-                                                             port => $port,
-                                                             vlan => $tag)){
-            
-            warn "workgroup has access to port and vlan\n";
-            my $tag_avail = $self->vce->is_tag_available( switch => $switch, port => $port, tag => $tag);
-            return {results => [{ available => $tag_avail}]};
-        }else{
-            return {results => [{ available => 0}], error => {msg => "Workgroup $workgroup is not allowed tag $tag on $switch:$port"}};
-        }
-    }else{
-	return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    #first verify user has access to switch/port/tag
+    my $has_access = $self->vce->access->workgroup_has_access_to_port(
+        workgroup => $workgroup,
+        switch => $switch,
+        port => $port,
+        vlan => $tag
+    );
+    if (!$has_access) {
+        return {results => [{ available => 0}], error => {msg => "Workgroup $workgroup is not allowed tag $tag on $switch:$port"}};
+    };
+
+    warn "workgroup has access to vlan $tag on port $port";
+    my $tag_avail = $self->vce->is_tag_available( switch => $switch, port => $port, tag => $tag);
+    return {results => [{ available => $tag_avail}]};
 }
 
 =head2 get_switches
 
 =cut
-
-
 sub get_switches{
     my $self = shift;
 
@@ -713,15 +762,12 @@ sub get_switches{
 
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if($self->vce->access->user_in_workgroup( username => $user,
-                                              workgroup => $workgroup )){
-
-        my $switches = $self->vce->get_switches( workgroup => $workgroup);
-
-        return {results => [{switch => $switches}]};
-    }else{
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
         return {results => [], error => {msg => "User $user not in specified workgroup $workgroup"}};
     }
+
+    my $switches = $self->vce->get_switches(workgroup => $workgroup);
+    return {results => [{switch => $switches}]};
 }
 
 =head2 get_vlans

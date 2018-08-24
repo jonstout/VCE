@@ -12,11 +12,13 @@ use GRNOC::RabbitMQ::Method;
 use GRNOC::RabbitMQ::Dispatcher;
 use GRNOC::WebService::Regex;
 
+use VCE::Database::Connection;
 use VCE::Device;
 use VCE::Device::Brocade::MLXe::5_8_0;
 use VCE::NetworkDB;
 
 has logger => (is => 'rwp');
+has id => (is => 'rwp');
 has db => (is => 'rwp');
 has device => (is => 'rwp');
 has type => (is => 'rwp');
@@ -55,6 +57,8 @@ has name => (is => 'rwp');
 
 =item hostname
 
+=item id
+
 =item db
 
 =item dispatcher
@@ -79,9 +83,9 @@ sub BUILD {
 
     $0 = "VCE(" . $self->username . ")";
 
-    $self->_set_db(VCE::NetworkDB->new());
+    $self->_set_db(VCE::Database::Connection->new('/var/lib/vce/database.sqlite'));
 
-    $self->logger->debug("Creating Dispatcher");
+    $self->logger->info("Creating Dispatcher for " . $self->name);
     my $dispatcher = GRNOC::RabbitMQ::Dispatcher->new(
         host     => $self->rabbit_mq->{'host'},
         port     => $self->rabbit_mq->{'port'},
@@ -628,39 +632,39 @@ sub _gather_operational_status{
         return undef;
     }
 
-    my $interfaces_state = $self->db->get_interfaces(switch => $self->name);
+    my $interfaces = $self->db->get_interfaces(switch_id => $self->id);
     my $ifaces = {};
-    foreach my $intf (@{$interfaces_state}) {
+    foreach my $intf (@{$interfaces}) {
         $ifaces->{$intf->{name}} = $intf;
     }
 
-    $interfaces_state = $self->device->get_interfaces();
+    my $interfaces_state = $self->device->get_interfaces();
     $interfaces_state = $interfaces_state->{'interfaces'};
 
     foreach my $name (keys %{$interfaces_state}) {
         if (defined $ifaces->{$name}) {
             $self->logger->info('Updating info on interface');
             $self->db->update_interface(
-                id            => $ifaces->{$name}->{id},
-                admin_status  => $interfaces_state->{$name}->{admin_status},
-                description   => $interfaces_state->{$name}->{description},
-                mtu           => $interfaces_state->{$name}->{mtu},
-                speed         => $interfaces_state->{$name}->{speed},
-                status        => $interfaces_state->{$name}->{status}
+                id          => $ifaces->{$name}->{id},
+                admin_up    => $interfaces_state->{$name}->{admin_status},
+                link_up     => $interfaces_state->{$name}->{status},
+                description => $interfaces_state->{$name}->{description},
+                mtu         => $interfaces_state->{$name}->{mtu},
+                speed       => $interfaces_state->{$name}->{speed}
             );
             delete $ifaces->{$name};
         } else {
             $self->logger->info('Creating interface');
             $self->db->add_interface(
-                admin_status  => $interfaces_state->{$name}->{admin_status},
+                admin_up      => $interfaces_state->{$name}->{admin_status},
                 description   => $interfaces_state->{$name}->{description},
                 hardware_type => $interfaces_state->{$name}->{hardware_type},
                 mac_addr      => $interfaces_state->{$name}->{mac_addr},
                 mtu           => $interfaces_state->{$name}->{mtu},
                 name          => $interfaces_state->{$name}->{name},
                 speed         => $interfaces_state->{$name}->{speed},
-                status        => $interfaces_state->{$name}->{status},
-                switch        => $self->name
+                link_up       => $interfaces_state->{$name}->{status},
+                switch_id     => $self->{id}
             );
         }
     }
@@ -669,20 +673,27 @@ sub _gather_operational_status{
     # with updates are removed above, the only thing left are
     # interfaces which no longer exist on the device.
     foreach my $name (keys %{$ifaces}) {
-        my $ok = $self->db->delete_interface(id => $ifaces->{$name}->{id});
+        my $ok = $self->db->delete_interface($ifaces->{$name}->{id});
         if ($ok) {
             $self->logger->warn("Interface $name was removed from " . $self->name . "; Removing it from database.");
         }
     }
 
-    my $vlans_state = $self->db->get_vlans_state(switch => $self->name);
-    my $vlans = {};
-    foreach my $vlan (@{$vlans_state}) {
-        $vlans->{$vlan->{vlan}} = $vlan;
+
+    $interfaces = $self->db->get_interfaces(switch_id => $self->id);
+    $ifaces = {};
+    foreach my $intf (@{$interfaces}) {
+        $ifaces->{$intf->{name}} = $intf;
     }
 
-    my $err = undef;
-    ($vlans_state, $err) = $self->device->get_vlans();
+    my $new_vlans = $self->db->get_vlans(switch_id => $self->id);
+
+    my $vlans = {};
+    foreach my $vlan (@{$new_vlans}) {
+        $vlans->{$vlan->{number}} = $vlan;
+    }
+
+    my ($vlans_state, $err) = $self->device->get_vlans();
     if (defined $err) {
         $self->logger->error($err);
         return undef;
@@ -690,22 +701,36 @@ sub _gather_operational_status{
 
     foreach my $vlan (@{$vlans_state}) {
         if (defined $vlans->{$vlan->{vlan}}) {
-            $self->logger->info('Updating ports on vlan');
-            $self->db->set_vlan_endpoints(
-                vlan_id   => $vlans->{$vlan->{vlan}}->{vlan_id},
-                endpoints => $vlan->{ports}
-            );
-            delete $vlans->{$vlan->{vlan}};
+            $self->logger->info("Updating vlan $vlan->{vlan}!");
+            $self->db->delete_tags($vlans->{$vlan->{vlan}}->{id});
         } else {
-            $self->logger->info('Creating vlan');
-            $self->db->add_vlan(
+            $self->logger->info("Discovered vlan $vlan->{vlan}!");
+            my $id = $self->db->add_vlan(
+                created_by => 1, # admin user
                 description => $vlan->{name},
-                endpoints   => $vlan->{ports},
-                switch      => $self->name,
-                username    => 'admin',
-                vlan        => $vlan->{vlan},
-                workgroup   => 'admin'
+                name => $vlan->{name},
+                number => $vlan->{vlan},
+                switch_id => $self->{id},
+                workgroup_id => 1, # admin workgroup
             );
+            if (!defined $id) {
+                next;
+            }
+            $vlans->{$vlan->{vlan}} = { id => $id };
+        }
+
+        foreach my $port (@{$vlan->{ports}}) {
+            my $mode = 'tagged';
+            if ($port->{mode} ne 'TAGGED') {
+                $mode = 'untagged';
+            }
+            my $int_id = $ifaces->{$port->{port}}->{id};
+            my $vlan_id = $vlans->{$vlan->{vlan}}->{id};
+            $self->db->add_tag($mode, $int_id, $vlan_id);
+        }
+
+        if (defined $vlans->{$vlan->{vlan}}) {
+            delete $vlans->{$vlan->{vlan}};
         }
     }
 
@@ -713,13 +738,12 @@ sub _gather_operational_status{
     # are removed above, the only thing left are vlans which no longer
     # exist on the device.
     foreach my $vlan (keys %{$vlans}) {
-        my $ok = $self->db->delete_vlan(vlan_id => $vlans->{$vlan}->{vlan_id});
+        my $ok = $self->db->delete_vlan($vlans->{$vlan}->{id});
         if ($ok) {
             $self->logger->warn("VLAN $vlan was removed from " . $self->name . "; Removing it from database.");
         }
     }
 }
-
 
 =head2 start
 
@@ -755,60 +779,18 @@ sub execute_command{
     my $success = $m_ref->{'success_callback'};
     my $error   = $m_ref->{'error_callback'};
 
-    $self->logger->info("Calling execute_command");
-    $self->logger->debug(Dumper($p_ref));
+    $self->logger->error(Dumper(keys %{$p_ref}));
 
     if (!$self->device->connected) {
         return &$success({success => 0, error => 1, error_msg => 'Device is currently disconnected.'});
     }
 
-    my $in_configure = 0;
-    my $in_context   = 0;
-    my $prompt       = undef;
-
-    if ($p_ref->{'config'}{'value'}) {
-        $self->logger->debug('Trying to enter configure mode.');
-
-        my $ok = $self->device->configure();
-        if (!$ok) {
-            my $err = "Couldn't enter configure mode.";
-            $self->logger->error($err);
-            return &$success({success => 0, error => 1, error_msg => $err});
-        }
-
-        $in_configure = 1;
-    }
-
-    if (defined $p_ref->{'context'}{'value'}) {
-        $self->logger->debug('Trying to enter context ' . $p_ref->{'context'}{'value'});
-
-        my $ok = $self->device->set_context($p_ref->{'context'}{'value'});
-        if (!$ok) {
-            if ($in_configure) {
-                $self->device->exit_configure();
-            }
-
-            my $err = "Couldn't enter desired context.";
-            $self->logger->error($err);
-            return &$success({success => 0, error => 1, error_msg => $err});
-        }
-
-        $prompt = "#";
-        $in_context = 1;
-    }
-
-    # OK. We are now ready to send our command and get the results!
-    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, $prompt);
+    # We are now ready to send our command and get the results! The
+    # regex prompt matches on the end of a line followed by text that
+    # ends with a hash.
+    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, /\n.*\#$/);
     if (defined $err) {
         return &$success({success => 0, error => 1, error_msg => $err});
-    }
-
-    if($in_context){
-        $self->device->exit_context();
-    }
-
-    if($in_configure){
-        $self->device->exit_configure();
     }
 
     # TODO _gather_operational_status takes a while to complete which
@@ -822,11 +804,7 @@ sub execute_command{
         $self->_gather_operational_status();
     }
 
-    if (defined $prompt) {
-        return &$success({success => 1, raw => "ok"});
-    } else {
-        return &$success({success => 1, raw => $result});
-    }
+    return &$success({success => 1, raw => $result});
 }
 
 1;

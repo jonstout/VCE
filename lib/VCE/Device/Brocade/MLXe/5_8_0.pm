@@ -341,6 +341,34 @@ sub get_vlans {
 
 =head2 get_interfaces
 
+get_interfaces combines the result of C<get_interfaces_state> and
+C<_get_interface> into a hash of interfaces by interface name.
+
+    'ethernet 11/1' => {
+        'input' => {
+            'bytes' => '0',
+            'CRC_errors' => '0',
+            'errors' => '0',
+            'packets' => '0',
+            'ignored' => '0',
+            'error_frames' => '0'
+        },
+        'status' => 0,
+        'mac_addr' => 'cc4e.240c.09e0',
+        'hardware_type' => '100GigabitEthernet',
+        'name' => 'ethernet 11/1',
+        'description' => '',
+        'output' => {
+            'bytes' => '0',
+            'errors' => '0',
+            'collisions' => '0',
+            'packets' => '0'
+        },
+        'speed' => 'unknown',
+        'admin_status' => 1,
+        'mtu' => '9216'
+    }
+
 =cut
 sub get_interfaces {
     my $self = shift;
@@ -927,22 +955,51 @@ sub issue_command{
     my $command = shift;
     my $prompt  = shift;
 
-    my $err = undef;
+    my $statements_run = 0;
+    my @statements = split(/;\s*/, $command);
+    my $result = undef;
 
-    $self->logger->debug("Running command: $command");
-    my $result = $self->comm->issue_command($command, $prompt);
-    if (!defined $result) {
-        $err = $self->comm->get_error();
-        $self->logger->error($err);
+    foreach my $statement (@statements) {
+        $self->logger->info("Running command: $statement");
 
-        # Clear causes a reconnect to ensure valid switch context so
-        # we clear our state after calling this.
-        $self->comm->clear_error();
-        $self->_set_context('');
-        $self->_set_in_configure(0);
+        $result = $self->comm->issue_command($statement, $prompt);
+        if (!defined $result) {
+            my $err = $self->comm->get_error();
+            $self->comm->clear_error();
+
+            # TODO Remove context tracking
+            $self->_set_context('');
+            $self->_set_in_configure(0);
+
+            return (undef, $err);
+        }
+
+        $statements_run += 1;
     }
 
-    return ($result, $err);
+    # Consider running C<conf t>, C<vlan 218>, C<spanning-tree>. To
+    # exit to the main menu, exit should be run twice: One less than
+    # the number of statements executed.
+
+    for (my $i = 0; $i < $statements_run - 1; $i++) {
+        my $ok = $self->comm->issue_command('exit', $prompt);
+        if (!$ok) {
+            # Failing to exit to the main menu isn't ideal, but also
+            # not a deal breaker because we got the result of the
+            # actual command.
+
+            my $err = $self->comm->get_error();
+            $self->comm->clear_error();
+            last;
+        }
+    }
+
+    # TODO Remove context tracking
+    $self->_set_context('');
+    $self->_set_in_configure(0);
+
+    $result =~ s/\A\s+//gm; # Strip any leading whitespace
+    return ($result, undef);
 }
 
 1;

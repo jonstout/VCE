@@ -1,0 +1,63 @@
+<accessPolicy>
+  <rabbit host="localhost" port="5672" user="guest" pass="guest"/>
+
+  <switch name="foobar" ip="managementip" ssh_port="22" vendor="Brocade" model="MLXe" version="5.8.0">
+    <commands>
+      <port>
+        <command method_name='show_interface' name='show interface' type='show' interaction='cli' description='shows a list of all interfaces'>
+          <cmd>show interface [% port %]</cmd>
+        </command>
+      </port>
+
+      <system>
+        <command method_name='show_version' type='show' name='show version' interaction='cli' description='shows the version of code running on this switch'>
+          <cmd>show version</cmd>
+        </command>
+      </system>
+
+      <vlan>
+        <command method_name='show_vlan' type='show' name='show vlan' interaction='cli' description='show the vlan details'>
+          <cmd>show vlan [% vlan_id %]</cmd>
+        </command>
+      </vlan>
+    </commands>
+
+    <port name="eth0/1" owner="charlie">
+      <tags start="1" end="100" workgroup="alpha"/>
+      <tags start="101" end="200" workgroup="bravo"/>
+    </port>
+
+    <port name="eth0/2" owner="charlie">
+      <tags start="1" end="100" workgroup="alpha"/>
+      <tags start="101" end="200" workgroup="bravo"/>
+      <tags start="201" end="300" workgroup="alpha"/>
+      <tags start="301" end="400" workgroup="charlie"/>
+    </port>
+
+    <port name="eth0/3" owner="charlie">
+      <tags start="1" end="100" workgroup="alpha"/>
+      <tags start="1" end="100" workgroup="alpha"/>
+    </port>
+
+    <port name="eth0/4" owner="charlie">
+      <tags start="100" end="199" workgroup="alpha"/>
+      <tags start="205" end="205" workgroup="alpha"/>
+      <tags start="201" end="201" workgroup="bravo"/>
+    </port>
+  </switch>
+
+  <workgroup name="alpha" description="this is edcos exchange point access workgroup">
+    <user id="cartman"/>
+    <user id="kenny" />
+  </workgroup>
+
+  <workgroup name="bravo" admin="" description="this is ajcos exchange point access workgroup">
+    <user id="kenny" />
+    <user id="kyle" />
+  </workgroup>
+
+  <workgroup name="charlie" admin="1" description="admin workgroup">
+    <user id="kyle" />
+    <user id="stan" />
+  </workgroup>
+</accessPolicy>

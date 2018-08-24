@@ -1,0 +1,220 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="../assets/css/admin/base.css">
+    <link rel="stylesheet" href="../assets/css/admin/modify_interfaces.css"><!-- overrides everything from base -->
+    <title>React App</title>
+  </head>
+
+  <body>
+    <nav class="navbar is-dark">
+      <div class="navbar-brand">
+        <h3 class="navbar-item title is-4">VCE</h3>
+      </div>
+
+      <div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item">Home</a>
+        </div>
+
+        <div class="navbar-end">
+          <a class="navbar-item">Admin</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="grnoc-aside">
+        <aside class="menu">
+          <ul class="menu-list" id="aside-list">
+            <li><a>Loading</a></li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="grnoc-aside2">
+        <aside class="menu">
+          <ul class="menu-list" id="aside2-list">
+            <li><a>Loading</a></li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="grnoc-tabs">
+        <div class="tabs is-centered">
+          <ul>
+            <li>
+              <a>
+                <span class="icon is-small"><i class="fa fa-terminal" aria-hidden="true"></i></span>
+                <span>Commands</span>
+              </a>
+            </li>
+            <li class="is-active">
+              <a href="switches.html">
+                <span class="icon is-small"><i class="fa fa-server" aria-hidden="true"></i></span>
+                <span>Switches</span>
+              </a>
+            </li>
+            <li>
+              <a>
+                <span class="icon is-small"><i class="fa fa-user" aria-hidden="true"></i></span>
+                <span>Users</span>
+              </a>
+            </li>
+            <li>
+              <a>
+                <span class="icon is-small"><i class="fa fa-users" aria-hidden="true"></i></span>
+                <span>Workgroups</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grnoc-content">
+        <h1 class="title is-3">Modify interface</h1>
+        <ul>
+          <li id="name"><b>Name:</b></li>
+          <li id="description"><b>Description:</b></li>
+        </ul>
+        <br/>
+        <ul>
+          <li id="hardware_type"><b>Hardware:</b></li>
+          <li id="mac_addr"><b>MAC Address:</b></li>
+          <li id="speed"><b>Speed:</b></li>
+          <li id="mtu"><b>MTU:</b></li>
+        </ul>
+        <br/>
+        <hr/>
+
+        <form name="add_acl" onsubmit="return addACL(this)">
+          <input class="input" type="hidden" name="method" value="add_acl" />
+          <input class="input" type="hidden" name="workgroup" required />
+          <input class="input" type="hidden" name="interface_id" required />
+
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Range</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control is-expanded">
+                  <input class="input" type="text" placeholder="2" name="low" required>
+                </p>
+              </div>
+              <div class="field">
+                <p class="control is-expanded">
+                  <input class="input" type="text" placeholder="4095" name="high" requried>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Workgroup</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="workgroup">
+                      <option>admin</option>
+                      <option>testlab</option>
+                    </select>
+                  </div>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <!-- Left empty for spacing -->
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <div class="control">
+                  <button type="submit" class="button is-link">Add ACL</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+        <hr/>
+
+        <form name="modify_acl" onsubmit="return modifyACL(this)">
+          <input class="input" type="hidden" name="method" value="modify_acl" />
+          <input class="input" type="hidden" name="workgroup" required />
+          <input class="input" type="hidden" name="acl_id" required />
+
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Range</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control is-expanded">
+                  <input class="input" type="text" placeholder="2" name="low" required>
+                </p>
+              </div>
+              <div class="field">
+                <p class="control is-expanded">
+                  <input class="input" type="text" placeholder="4095" name="high" requried>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label is-normal">
+              <label class="label">Workgroup</label>
+            </div>
+            <div class="field-body">
+              <div class="field">
+                <p class="control is-expanded">
+                  <div class="select is-fullwidth">
+                    <select name="workgroup">
+                      <option>admin</option>
+                      <option>testlab</option>
+                    </select>
+                  </div>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field is-horizontal">
+            <div class="field-label">
+              <!-- Left empty for spacing -->
+            </div>
+            <div class="field-body">
+
+              <div class="field is-grouped">
+                <div class="control">
+                  <button type="submit" class="button is-link">Modify ACL</button>
+                </div>
+                <div class="control">
+                  <button type="button" class="button is-danger is-outlined" onclick="return deleteACL()">
+                    <span>Delete</span>
+                    <span class="icon is-small">
+                      <i class="fas fa-times"></i>
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="../assets/js/aconst.js"></script>
+    <script type="text/javascript" src="../assets/js/admin/modify_interfaces.js"></script>
+  </body>
+</html>

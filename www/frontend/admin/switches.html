@@ -1,0 +1,149 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="../assets/css/admin/base.css">
+    <title>React App</title>
+  </head>
+
+  <body>
+    <nav class="navbar is-dark">
+      <div class="navbar-brand">
+        <h3 class="navbar-item title is-4">VCE</h3>
+      </div>
+
+      <div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item">Home</a>
+        </div>
+
+        <div class="navbar-end">
+          <a class="navbar-item">Admin</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="grnoc-aside">
+        <aside class="menu">
+          <ul class="menu-list" id="aside-list">
+            <li><a>Loading</a></li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="grnoc-tabs">
+        <div class="tabs is-centered">
+          <ul>
+            <li>
+              <a>
+                <span class="icon is-small"><i class="fa fa-terminal" aria-hidden="true"></i></span>
+                <span>Commands</span>
+              </a>
+            </li>
+            <li class="is-active">
+              <a href="switches.html">
+                <span class="icon is-small"><i class="fa fa-server" aria-hidden="true"></i></span>
+                <span>Switches</span>
+              </a>
+            </li>
+            <li>
+              <a>
+                <span class="icon is-small"><i class="fa fa-user" aria-hidden="true"></i></span>
+                <span>Users</span>
+              </a>
+            </li>
+            <li>
+              <a>
+                <span class="icon is-small"><i class="fa fa-users" aria-hidden="true"></i></span>
+                <span>Workgroups</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grnoc-content">
+        <h1 class="title">Create a new switch</h1>
+
+        <form name="add-switch" onsubmit="return addSwitch(this)">
+          <input class="input" type="hidden" name="method" value="add_switch" />
+          <input class="input" type="hidden" name="workgroup" required />
+          <div class="field">
+            <label class="label">Hostname</label>
+            <div class="control">
+              <input class="input" type="text" name="name" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Description</label>
+            <div class="control">
+              <input class="input" type="text" name="description" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Management Address</label>
+            <div class="control">
+              <input class="input" type="text" name="ip" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">SSH Port</label>
+            <div class="control">
+              <input class="input" type="text" name="ssh" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">NetConf Port</label>
+            <div class="control">
+              <input class="input" type="text" name="netconf" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Vendor</label>
+            <div class="control">
+              <div class="select">
+                <select name="vendor">
+                  <option>Brocade</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Model</label>
+            <div class="control">
+              <div class="select">
+                <select name="model">
+                  <option>MLXe</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Firmware Version</label>
+            <div class="control">
+              <div class="select">
+                <select name="version">
+                  <option>5.8.0</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="control">
+              <button type="submit" class="button is-link">Create Switch</button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="../assets/js/aconst.js"></script>
+    <script type="text/javascript" src="../assets/js/admin/switches.js"></script>
+  </body>
+</html>
