@@ -177,16 +177,23 @@ sub _add_workgroup {
 
     my $user = $ENV{'REMOTE_USER'};
 
+    # Validations
     my $workgroup = $params->{'workgroup'}{'value'};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to add workgroup $params->{name}{value}");
+        return;
+    }
     if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup )){
+            workgroup => $workgroup ) && !$is_admin){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
 
     my ($id, $err) = $self->db->add_workgroup(
-        $params->{'name'}{'value'},
-        $params->{'description'}{'value'},
+        $params->{name}{value},
+        $params->{description}{value},
     );
     warn Dumper("ID: $id");
     if (defined $err) {
@@ -209,9 +216,16 @@ sub _update_workgroup {
     my $user = $ENV{'REMOTE_USER'};
 
 
+    # Validations
     my $workgroup = $params->{'workgroup'}{'value'};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to update workgroup $params->{id}{value}");
+        return;
+    }
+
     if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup )){
+            workgroup => $workgroup ) && !$is_admin){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -221,6 +235,7 @@ sub _update_workgroup {
         name            => $params->{name}{value},
         description     => $params->{description}{value},
     );
+
     warn Dumper("update result: $result");
     if ($result eq "0E0") {
 
@@ -239,8 +254,13 @@ sub _delete_workgroup {
 
     my $user = $ENV{'REMOTE_USER'};
 
+    # Validations
     my $workgroup = $params->{'workgroup'}{'value'};
-
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete workgroup $params->{id}{value}");
+        return;
+    }
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
@@ -250,8 +270,8 @@ sub _delete_workgroup {
     my $result = $self->db->delete_workgroup (
         id => $params->{id}{value}
     );
-    warn Dumper("delete result: $result");
 
+    warn Dumper("delete result: $result");
     if ($result eq "0E0") {
 
         $method_ref->set_error("Delete failed for workgroup: $params->{id}{value}");
