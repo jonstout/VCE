@@ -202,8 +202,7 @@ sub _add_workgroup {
         return;
     }
 
-    return { results => [ { id => $id } ] }
-
+    return { results => [ { id => $id } ] };
 }
 
 
@@ -224,12 +223,7 @@ sub _update_workgroup {
         return;
     }
 
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-<<<<<<< HEAD
-            workgroup => $workgroup )){
-=======
-            workgroup => $workgroup ) && !$is_admin){
->>>>>>> 7f96a5d8780b3893253ec10a9398a5c602c8d1d8
+    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -240,13 +234,11 @@ sub _update_workgroup {
         description     => $params->{description}{value},
     );
 
-    warn Dumper("update result: $result");
     if ($result eq "0E0") {
-
         $method_ref->set_error("Update failed for workgroup: $params->{id}{value}");
         return;
     }
-    return { results => [ { value => $result } ] }
+    return { results => [ { value => $result } ] };
 }
 
 # --- Delete workgroup
@@ -265,8 +257,7 @@ sub _delete_workgroup {
         $method_ref->set_error("Workgroup $workgroup is not authorized to delete workgroup $params->{id}{value}");
         return;
     }
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup )){
+    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -275,13 +266,12 @@ sub _delete_workgroup {
         id => $params->{id}{value}
     );
 
-    warn Dumper("delete result: $result");
     if ($result eq "0E0") {
-
         $method_ref->set_error("Delete failed for workgroup: $params->{id}{value}");
         return;
     }
 
-    return { results => [ { value => $result } ] }
+    return { results => [ { value => $result } ] };
 }
+
 1;
