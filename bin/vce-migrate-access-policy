@@ -402,6 +402,8 @@ sub main {
     my $new_db        = $ARGV[2] || '/var/lib/vce/database.sqlite';
 
     `sqlite3 $new_db < /etc/vce/schema.sqlite`;
+    `chmod 664 $new_db`;
+    `chown vce:vce $new_db`;
 
     my $db1 = DBI->connect("dbi:SQLite:dbname=$old_db", undef, undef, {
         AutoCommit => 1,
