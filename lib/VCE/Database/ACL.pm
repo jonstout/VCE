@@ -11,7 +11,7 @@ our @EXPORT = qw( add_acl get_acls modify_acl delete_acl);
 =head2 add_acl
 =cut
 sub add_acl {
-    my ( $self, $interface_id, $workgroup_id, $low, $high ) = @_;
+    my ( $self, $workgroup_id, $interface_id, $low, $high ) = @_;
 
     $self->{log}->debug("add_acl($workgroup_id, $interface_id, $low, $high)");
 

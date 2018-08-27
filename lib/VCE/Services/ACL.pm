@@ -202,8 +202,8 @@ sub _add_acl {
 
 
     my ($id, $err) = $self->db->add_acl(
-        $params->{interface_id}{value},
         $params->{workgroup_id}{value},
+        $params->{interface_id}{value},
         $params->{low}{value},
         $params->{high}{value},
     );
