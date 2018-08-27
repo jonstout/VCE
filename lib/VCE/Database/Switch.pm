@@ -171,10 +171,21 @@ sub modify_switch {
     my $values = join(', ', @$keys);
     push @$args, $params{id};
 
-    my $q = $self->{conn}->prepare(
-        "UPDATE switch  SET $values WHERE id=?"
-    );
-    return $q->execute(@$args);
+
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "update switch set $values where id=?"
+        );
+        $result = $q->execute(@$args);
+
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+    return $result;
 }
 
 =head2 delete_switch
@@ -182,21 +193,35 @@ sub modify_switch {
 =cut
 sub delete_switch {
     my $self   = shift;
-    my %params = @_;
+    my $switch_id = shift;
 
-    return if (!defined $params{id});
+    if (!defined $switch_id){
+        $self->{log}->error("Switch ID not specified");
+        return 0;
+    }
 
-    $self->{log}->debug("delete_switch($params{id}, ...)");
+    $self->{log}->debug("delete_switch($switch_id, ...)");
 
     my $keys = [];
     my $args = [];
 
-    push @$args, $params{id};
+    push @$args, $switch_id;
 
-    my $q = $self->{conn}->prepare(
-        "DELETE FROM switch WHERE id=?"
-    );
-    return $q->execute(@$args);
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "delete from switch where id=?"
+        );
+        $result = $q->execute(@$args);
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+
+    return $result;
+
 }
 
 =head2 add_command_to_switch
@@ -206,14 +231,22 @@ sub add_command_to_switch {
 
     $self->{log}->debug("add_command_to_switch($command_id, $switch_id, $role)");
 
-    my $q = $self->{conn}->prepare(
-        "insert into switch_command
-         (command_id, switch_id, role)
-         values (?, ?, ?)"
-    );
-    $q->execute($command_id, $switch_id, $role);
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into switch_command
+            (command_id, switch_id, role)
+            values (?, ?, ?)"
+        );
+        $q->execute($command_id, $switch_id, $role);
 
-    return $self->{conn}->last_insert_id("", "", "switch_command", "");
+    };
+
+    if ($@) {
+        return (undef,"$@");
+    }
+
+    my $id = $self->{conn}->last_insert_id("", "", "switch_command", "");
+    return ($id, undef);
 }
 
 =head2 remove_command_from_switch
@@ -221,21 +254,27 @@ sub add_command_to_switch {
 =cut
 sub remove_command_from_switch {
     my $self   = shift;
-    my %params = @_;
+    my $switch_command_id = shift;
 
-    return if (!defined $params{id});
+    if (!defined $switch_command_id){
+        $self->{log}->error("Switch Command ID not specified");
+        return 0;
+    }
 
-    $self->{log}->debug("remove_command_from_switch($params{id}, ...)");
+    $self->{log}->debug("remove_command_from_switch($switch_command_id, ...)");
 
-    my $keys = [];
-    my $args = [];
+    eval {
+        my $query = $self->{conn}->prepare(
+            "delete from switch_command where id=?"
+        );
+       $result = $query->execute($switch_command_id);
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
 
-    push @$args, $params{id};
-
-    my $q = $self->{conn}->prepare(
-        "DELETE FROM switch_command WHERE id=?"
-    );
-    return $q->execute(@$args);
+    return $result;
 }
 
 
