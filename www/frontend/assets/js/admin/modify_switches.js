@@ -260,7 +260,7 @@ async function renderCommands(cmds) {
       </select>
     </div>
   </td>
-  <td>Read</td>
+  <td>${cmd.operation == 'read' ? 'Read' : 'Write'}</td>
 </tr>`;
         if (cmd.type === 'interface') {
             intfs += row;
