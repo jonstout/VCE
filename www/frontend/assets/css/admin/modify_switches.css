@@ -33,3 +33,9 @@
     padding: 15px;
     padding-right: 30px;
 }
+
+.command-list {
+    max-height: 300px;
+    overflow-y: scroll;
+    margin-bottom: 30px;
+}

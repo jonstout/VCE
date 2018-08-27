@@ -15,6 +15,23 @@ async function init() {
     getInterfaces(switch_id).then(function(intfs) {
         renderInterfaceList(intfs);
     });
+
+    getCommands(switch_id).then(function(cmds) {
+        renderCommands(cmds);
+    });
+
+    document.querySelector('#switch-tab').addEventListener('click', function(e) {
+        document.querySelector('#command-tab').classList.remove("is-active");
+        document.querySelector('#command-tab-content').style.display = 'none';
+        document.querySelector('#switch-tab-content').style.display = 'block';
+        e.target.parentElement.classList.add("is-active");
+    });
+    document.querySelector('#command-tab').addEventListener('click', function(e) {
+        document.querySelector('#switch-tab').classList.remove("is-active");
+        document.querySelector('#switch-tab-content').style.display = 'none';
+        document.querySelector('#command-tab-content').style.display = 'block';
+        e.target.parentElement.classList.add("is-active");
+    });
 };
 
 function modifySwitch(form) {
@@ -189,4 +206,79 @@ async function renderInterfaceList(interfaces) {
         items += `<li><a>No interfaces</a></li>`;
     }
     list.innerHTML = items;
+}
+
+async function getCommands(switch_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let url = '../' + baseUrl + `command.cgi?method=get_commands&workgroup=${workgroup}&switch_id=${switch_id}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
+
+    try {
+        let data = await response.json();
+        if ('error_text' in data) {
+            console.log(data.error_text);
+            return null;
+        }
+        return data.results;
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+async function toggleCommand(e) {
+    console.log(e.checked);
+    console.log(e.dataset.id);
+    console.log(e.dataset.switchCommandId);
+    if (e.checked) {
+        console.log('adding command to switch');
+    } else {
+        console.log('removing command from switch');
+    }
+}
+
+async function renderCommands(cmds) {
+    let intfs = '';
+    let sws = '';
+    let vlans = '';
+
+    cmds.forEach(function(cmd) {
+        let row = `
+<tr>
+  <td><label class="checkbox">
+    <input data-id="${cmd.id}" data-switch-command-id="${cmd.switch_command_id}" onclick="toggleCommand(this)" type="checkbox" ${cmd.switch_command_id != null ? 'checked' : ''}>
+  </label></td>
+  <td><div style="font-family: monospace">${cmd.template}</div></td>
+  <td>
+    <div class="select is-small">
+      <select>
+        <option ${cmd.role == 'admin' ? 'selected' : ''}>admin</option>
+        <option ${cmd.role == 'owner' ? 'selected' : ''}>owner</option>
+        <option ${cmd.role == 'user' ? 'selected' : ''}>user</option>
+      </select>
+    </div>
+  </td>
+  <td>Read</td>
+</tr>`;
+        if (cmd.type === 'interface') {
+            intfs += row;
+        } else if (cmd.type === 'switch') {
+            sws += row;
+        } else if (cmd.type === 'vlan') {
+            vlans += row;
+        } else {
+            console.log(row);
+        }
+    });
+
+    let ilist = document.querySelector('#interface-command-list');
+    ilist.innerHTML = intfs;
+
+    let slist = document.querySelector('#switch-command-list');
+    slist.innerHTML = sws;
+
+    let vlist = document.querySelector('#vlan-command-list');
+    vlist.innerHTML = vlans;
 }
