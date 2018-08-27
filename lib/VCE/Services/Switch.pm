@@ -22,7 +22,7 @@ has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has template => (is => 'rwp');
 has db => (is => 'rwp');
-
+has rabbit_mq => (is => 'rwp');
 =head2 BUILD
 
 =over 4
@@ -270,8 +270,8 @@ sub _add_switch {
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
-        $method_ref->set_error("User $user not in specified workgroup $workgroup");
-        return;
+        #$method_ref->set_error("User $user not in specified workgroup $workgroup");
+        #return;
     }
     my ($id, $err) = $self->db->add_switch( $params->{'name'}{'value'},
         $params->{'description'}{'value'},
@@ -289,7 +289,22 @@ sub _add_switch {
         return;
     }
 
-    return { results => [ { id => $id } ] };
+
+
+    #build rabbitmq client
+    my $client = GRNOC::RabbitMQ::Client->new(
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        host     => $self->rabbit_mq->{'host'},
+        timeout  => 30,
+        port     => $self->rabbit_mq->{'port'},
+        exchange => 'VCE',
+        topic    => 'VCE'
+	);    
+
+    my $res = $client->add_switch(switch_id => $id);
+    
+    return { results => [ { id => $id, status => $res } ] };
 
 }
 
