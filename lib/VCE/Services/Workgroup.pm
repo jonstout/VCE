@@ -273,4 +273,5 @@ sub _delete_workgroup {
 
     return { results => [ { value => $result } ] };
 }
+
 1;
