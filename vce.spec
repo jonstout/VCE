@@ -73,12 +73,14 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Database/VLAN.pm %{buildroot}%{perl_vendorlib}/VCE/Database/VLAN.pm
 %{__install} lib/VCE/Database/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Database/Workgroup.pm
 
+%{__install} lib/VCE/Services/ACL.pm %{buildroot}%{perl_vendorlib}/VCE/Services/ACL.pm
 %{__install} lib/VCE/Services/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Access.pm
 %{__install} lib/VCE/Services/Command.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Command.pm
 %{__install} lib/VCE/Services/Interface.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Interface.pm
 %{__install} lib/VCE/Services/Operational.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Operational.pm
 %{__install} lib/VCE/Services/Provisioning.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{__install} lib/VCE/Services/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Switch.pm
+%{__install} lib/VCE/Services/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Workgroup.pm
 
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
@@ -86,12 +88,14 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/api
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/frontend
 
+%{__install} www/services/acl.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/access.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/command.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/interface.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/operational.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/provisioning.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/switch.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/workgroup.cgi %{buildroot}%{_datadir}/vce/www/api
 
 cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
@@ -101,7 +105,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
 %{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-update-db
-%{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-migrate-access-policy
+%{__install} -m 544 bin/vce-migrate-access-policy %{buildroot}%{_bindir}/vce-migrate-access-policy
 
 
 # Init Scripts
@@ -149,20 +153,24 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Database/User.pm
 %{perl_vendorlib}/VCE/Database/VLAN.pm
 %{perl_vendorlib}/VCE/Database/Workgroup.pm
+%{perl_vendorlib}/VCE/Services/ACL.pm
 %{perl_vendorlib}/VCE/Services/Access.pm
 %{perl_vendorlib}/VCE/Services/Command.pm
 %{perl_vendorlib}/VCE/Services/Interface.pm
 %{perl_vendorlib}/VCE/Services/Operational.pm
 %{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{perl_vendorlib}/VCE/Services/Switch.pm
+%{perl_vendorlib}/VCE/Services/Workgroup.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
+%{_datadir}/vce/www/api/acl.cgi
 %{_datadir}/vce/www/api/access.cgi
 %{_datadir}/vce/www/api/command.cgi
 %{_datadir}/vce/www/api/interface.cgi
 %{_datadir}/vce/www/api/operational.cgi
 %{_datadir}/vce/www/api/provisioning.cgi
 %{_datadir}/vce/www/api/switch.cgi
+%{_datadir}/vce/www/api/workgroup.cgi
 %{_datadir}/vce/www/frontend/
 
 %{_bindir}/vce

@@ -127,7 +127,7 @@ sub get_switches {
 sub modify_switch {
     my $self   = shift;
     my %params = @_;
-    warn Dumper($params{name});
+    # warn Dumper($params{name});
 
     return if (!defined $params{id});
 

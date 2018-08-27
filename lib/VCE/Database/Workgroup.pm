@@ -2,11 +2,10 @@ package VCE::Database::Workgroup;
 
 use strict;
 use warnings;
-
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces );
+our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup delete_workgroup );
 
 
 =head2 add_workgroup
@@ -15,15 +14,20 @@ our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_inter
 =cut
 sub add_workgroup {
     my ( $self, $name, $description ) = @_;
-
     $self->{log}->debug("add_workgroup($name, $description)");
 
-    my $q = $self->{conn}->prepare(
-        "insert into workgroup (name, description) values (?, ?)"
-    );
-    $q->execute($name, $description);
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into workgroup (name, description) values (?, ?)"
+        );
+        $q->execute($name, $description);
+    };
 
-    return $self->{conn}->last_insert_id("", "", "workgroup", "");
+    if ($@) {
+        return (undef,"$@")
+    }
+
+    return ($self->{conn}->last_insert_id("", "", "workgroup", ""), undef);
 }
 
 =head2 get_workgroup
@@ -117,6 +121,54 @@ sub get_workgroup_interfaces {
 
     my $result = $q->fetchall_arrayref({});
     return $result;
+}
+
+sub update_workgroup {
+    my $self   = shift;
+    my %params = @_;
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("modify_switch($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{description}) {
+        push @$keys, 'description=?';
+        push @$args, $params{description};
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "UPDATE workgroup SET $values WHERE id=?"
+    );
+    return $q->execute(@$args);
+}
+
+sub delete_workgroup {
+    my $self   = shift;
+    my %params = @_;
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("delete_workgroup($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "DELETE FROM workgroup WHERE id=?"
+    );
+    return $q->execute(@$args);
 }
 
 return 1;
