@@ -120,7 +120,7 @@ sub load_workgroups {
     my $workgroups = $conf->{workgroups};
     foreach my $key (keys %$workgroups) {
         my $wg = $workgroups->{$key};
-        my $r = $db->add_workgroup($wg->{name}, $wg->{description});
+        my ($r, $err) = $db->add_workgroup($wg->{name}, $wg->{description});
     }
 
     my $db_workgroups = $db->get_workgroups();
