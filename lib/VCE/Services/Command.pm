@@ -434,7 +434,15 @@ sub add_command{
     my $method_ref = shift;
     my $p_ref = shift;
     
-    warn Dumper($p_ref);
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+					       workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
     
     my $name = $p_ref->{'name'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
@@ -450,6 +458,16 @@ sub modify_command{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
+    
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+					       workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
 
     my $name = $p_ref->{'name'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
@@ -467,6 +485,16 @@ sub delete_command{
     my $method_ref = shift;
     my $p_ref = shift;
     
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{'workgroup'}{'value'};
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+					       workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
     my $res = $self->db->delete_command( command_id => $p_ref->{'command_id'}{'value'});
     return {results => $res};
 
