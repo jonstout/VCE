@@ -457,6 +457,7 @@ sub modify_command{
     my $type = $p_ref->{'type'}{'value'};
     my $template = $p_ref->{'template'}{'value'};
     my $command_id = $p_ref->{'command_id'}{'value'};
+
     my $res = $self->db->modify_command( name => $name, description => $description, operation => $operation, type => $type, template => $template, command_id => $command_id );
     return {results => $res};
 }

@@ -13,12 +13,13 @@ our @EXPORT = qw( add_command get_commands add_command_to_switch delete_command 
 =cut
 
 sub delete_command{
-    my $self;
+    my $self = shift;
     my %params = @_;
     
+    warn Dumper(\%params);
     my $command_id = $params{'command_id'};
     if(!defined($command_id)){
-	return;
+	return "No command ID specified";
     }
 
     my $q = $self->{conn}->prepare("delete from command where id = ?");
