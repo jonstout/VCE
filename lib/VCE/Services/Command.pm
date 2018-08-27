@@ -76,9 +76,129 @@ sub BUILD{
 
     $self->_register_commands($dispatcher);
 
+    $self->_register_methods($dispatcher);
+
     $self->_set_dispatcher($dispatcher);
 
     return $self;
+}
+
+sub _register_methods{
+    my $self = shift;
+    my $dispatcher = shift;
+
+    my $method = GRNOC::WebService::Method->new( name => 'get_commands',
+						 description => 'get a list of commands and the details of those commands',
+						 callback => sub { return $self->get_commands(@_); }
+	);
+
+    $method->add_input_parameter(
+	required => 0,
+	name => 'command_id',
+	pattern => $GRNOC::WebService::Regex::NUMBER_ID,
+	description => "command_id to fetch");
+
+    $dispatcher->register_method($method);
+    
+    $method = GRNOC::WebService::Method->new( name => 'add_command',
+					      description => 'adds a new command to the list of commands',
+					      callback => sub { return $self->add_command(@_); }
+	);
+
+    $method->add_input_parameter(
+	required => 1,
+	name => 'name',
+	pattern => $GRNOC::WebService::Regex::NAME_ID,
+	description => "name of the command to be added"
+	);
+
+    $method->add_input_parameter(
+	required => 1,
+	name => 'description',
+	pattern => $GRNOC::WebService::Regex::TEXT,
+	description => "friendly description of the command"
+	);
+
+    $method->add_input_parameter(
+	required => 1,
+	name => 'operation',
+	pattern => "(read|write)",
+	description => "What type of operation is this 'read' or 'write'"
+	);
+
+    $method->add_input_parameter(
+	required => 1,
+	name => 'type',
+	pattern => "(interface|switch|vlan)",
+	description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
+	);
+
+    $method->add_input_parameter(
+	required => 1,
+	name => 'template',
+	pattern => $GRNOC::WebService::Regex::TEXT,
+	description => "workgroup to run the command as"
+	);
+
+    $dispatcher->register_method($method);
+					
+    $method = GRNOC::WebService::Method->new( name => 'modify_command',
+                                              description => 'modifies and existing command',
+					      callback => sub { return $self->modify_command(@_); }
+	);
+    
+    $method->add_input_parameter(
+        required => 1,
+        name => 'command_id',
+        pattern => $GRNOC::WebService::Regex::NUMBER_ID,
+        description => "ID of the command to be modified"
+	);
+    
+    $method->add_input_parameter(
+        required => 1,
+        name => 'name',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of the command to be modified"
+        );
+
+    $method->add_input_parameter(
+        required => 1,
+        name => 'description',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "description of the command"
+        );
+
+    $method->add_input_parameter(
+        required => 1,
+        name => 'operation',
+        pattern => "(read|write)",
+        description => "Operation type 'read' or 'write'"
+        );
+
+    $method->add_input_parameter(
+        required => 1,
+        name => 'type',
+        pattern => "(interface|switch|vlan)",
+        description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
+        );    
+
+
+    $dispatcher->register_method($method);
+
+    $method = GRNOC::WebService::Method->new( name => 'delete_command',
+                                              description => 'deletes and existing command',
+					      callback => sub { return $self->delete_command(@_); }
+	);
+
+    $method->add_input_parameter(
+        required => 1,
+        name => 'command_id',
+        pattern => $GRNOC::WebService::Regex::NUMBER_ID,
+        description => "ID of the command to be deleted"
+        );    
+    
+    $dispatcher->register_method($method);
+    
 }
 
 sub _register_commands{
@@ -288,6 +408,67 @@ return 1;
     }else{
         return 0;
     }
+}
+
+sub get_commands{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+    
+    my %params;
+    if(defined($p_ref->{'command_id'}{'value'})){
+	$params{'command_id'} = $p_ref->{'command_id'}{'value'};
+    }
+    if(defined($p_ref->{'type'}{'value'})){
+	$params{'type'} = $p_ref->{'type'}{'value'};
+    }
+
+    
+    my $commands = $self->db->get_commands( %params );
+    return {results => $commands };
+    
+}
+
+sub add_command{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+    
+    warn Dumper($p_ref);
+    
+    my $name = $p_ref->{'name'}{'value'};
+    my $description = $p_ref->{'description'}{'value'};
+    my $operation = $p_ref->{'operation'}{'value'};
+    my $type = $p_ref->{'type'}{'value'};
+    my $template = $p_ref->{'template'}{'value'};
+    my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
+    
+    return {results => $res};
+}
+
+sub modify_command{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+
+    my $name = $p_ref->{'name'}{'value'};
+    my $description = $p_ref->{'description'}{'value'};
+    my $operation = $p_ref->{'operation'}{'value'};
+    my $type = $p_ref->{'type'}{'value'};
+    my $template = $p_ref->{'template'}{'value'};
+    my $command_id = $p_ref->{'command_id'}{'value'};
+    my $res = $self->db->modify_command( name => $name, description => $description, operation => $operation, type => $type, template => $template, command_id => $command_id );
+    return {results => $res};
+}
+
+sub delete_command{
+    my $self = shift;
+    my $method_ref = shift;
+    my $p_ref = shift;
+    
+    my $res = $self->db->delete_command( command_id => $p_ref->{'command_id'}{'value'});
+    return {results => $res};
+
 }
 
 
