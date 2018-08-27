@@ -2,11 +2,10 @@ package VCE::Database::Switch;
 
 use strict;
 use warnings;
-use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch);
+our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch add_command_to_switch remove_command_from_switch );
 
 
 =head1 Package VCE::Database::Switch
@@ -127,7 +126,6 @@ sub get_switches {
 sub modify_switch {
     my $self   = shift;
     my %params = @_;
-    # warn Dumper($params{name});
 
     return if (!defined $params{id});
 
@@ -200,5 +198,45 @@ sub delete_switch {
     );
     return $q->execute(@$args);
 }
+
+=head2 add_command_to_switch
+=cut
+sub add_command_to_switch {
+    my ( $self, $command_id, $switch_id, $role ) = @_;
+
+    $self->{log}->debug("add_command_to_switch($command_id, $switch_id, $role)");
+
+    my $q = $self->{conn}->prepare(
+        "insert into switch_command
+         (command_id, switch_id, role)
+         values (?, ?, ?)"
+    );
+    $q->execute($command_id, $switch_id, $role);
+
+    return $self->{conn}->last_insert_id("", "", "switch_command", "");
+}
+
+=head2 remove_command_from_switch
+
+=cut
+sub remove_command_from_switch {
+    my $self   = shift;
+    my %params = @_;
+
+    return if (!defined $params{id});
+
+    $self->{log}->debug("remove_command_from_switch($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    push @$args, $params{id};
+
+    my $q = $self->{conn}->prepare(
+        "DELETE FROM switch_command WHERE id=?"
+    );
+    return $q->execute(@$args);
+}
+
 
 1;
