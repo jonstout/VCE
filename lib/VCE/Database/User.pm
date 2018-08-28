@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_user add_user_to_workgroup get_user get_users get_user_by_name get_users_by_workgroup_id );
+our @EXPORT = qw( delete_user modify_user add_user add_user_to_workgroup get_user get_users get_user_by_name get_users_by_workgroup_id );
 
 
 =head2 add_user
@@ -100,20 +100,77 @@ sub get_user_by_name {
     return $user;
 }
 
+=head2 modify_user
+=cut
+
+sub modify_user{
+    my $self = shift;
+    my %params = @_;
+
+    $self->{log}->debug("modify_user()");
+
+    my @args;
+    my $updates;
+    foreach my $key (keys %params){
+	next if $key eq 'user_id';
+	next if !defined($params{$key});
+    	$updates = join( ' , ', "$key = ?");
+    	push(@args, $params{$key});
+    }
+    #push our last arg on
+    push(@args, $params{'user_id'});
+
+    my $q = $self->{conn}->prepare( "update user set $updates where id = ?" );
+
+    return $q->execute(@args);
+}
+
 =head2 get_users
 =cut
 sub get_users {
-    my ( $self ) = @_;
-
+    my $self = shift;
+    my %params = @_;
+    
     $self->{log}->debug("get_users()");
 
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{user_id}) {
+        push @$keys, 'user.id=?';
+        push @$args, $params{user_id};
+    }
+    if (defined $params{fullname}) {
+        push @$keys, 'user.fullname like ?';
+        push @$args, $params{type};
+    }
+    if(defined($params{email})){
+        push @$keys, 'user.email like ?';
+        push @$args, $params{email};
+    }
+    if(defined($params{username})){
+        push @$keys, 'user.username like ?';
+        push @$args, $params{username};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
     my $q = $self->{conn}->prepare(
-        "select * from user"
+        "select * from user $where"
     );
-    $q->execute();
+    $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
     return $result;
+}
+
+sub delete_user{
+    my $self = shift;
+    my $user_id = shift;
+    
+    my $q = $self->{conn}->prepare("delete from user where id = ?");
+    return $q->execute($user_id);
 }
 
 =head2 get_users_by_workgroup_id
@@ -134,4 +191,4 @@ sub get_users_by_workgroup_id {
     return $w->fetchall_arrayref({});
 }
 
-return 1;
+1;
