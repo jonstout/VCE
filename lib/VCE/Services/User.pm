@@ -209,7 +209,10 @@ sub modify_user{
 				     username => $username,
 				     fullname => $fullname,
 				     email => $email);
-
+    if ($res eq "0E0") {
+        $method_ref->set_error("Update failed for user: $user_id");
+        return;
+    }
     return {results => [$res]};
 }
 
@@ -221,6 +224,11 @@ sub delete_user{
     my $user_id = $p_ref->{'user_id'}{'value'};
     
     my $res = $self->db->delete_user( $user_id );
+
+    if ($res eq "0E0") {
+        $method_ref->set_error("Delete failed for user: $user_id");
+        return;
+    }
     return {results => [$res]};
 }
 
