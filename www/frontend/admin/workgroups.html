@@ -43,7 +43,7 @@
                 <span>Commands</span>
               </a>
             </li>
-            <li class="is-active">
+            <li>
               <a href="switches.html">
                 <span class="icon is-small"><i class="fa fa-server" aria-hidden="true"></i></span>
                 <span>Switches</span>
@@ -55,7 +55,7 @@
                 <span>Users</span>
               </a>
             </li>
-            <li>
+            <li class="is-active">
               <a href="workgroups.html">
                 <span class="icon is-small"><i class="fa fa-users" aria-hidden="true"></i></span>
                 <span>Workgroups</span>
@@ -66,13 +66,13 @@
       </div>
 
       <div class="grnoc-content">
-        <h1 class="title">Create a new switch</h1>
+        <h1 class="title">Create a new workgroup</h1>
 
         <form name="add-switch" onsubmit="return addSwitch(this)">
-          <input class="input" type="hidden" name="method" value="add_switch" />
+          <input class="input" type="hidden" name="method" value="add_workgroup" />
           <input class="input" type="hidden" name="workgroup" required />
           <div class="field">
-            <label class="label">Hostname</label>
+            <label class="label">Name</label>
             <div class="control">
               <input class="input" type="text" name="name" required />
             </div>
@@ -83,58 +83,10 @@
               <input class="input" type="text" name="description" required />
             </div>
           </div>
-          <div class="field">
-            <label class="label">Management Address</label>
-            <div class="control">
-              <input class="input" type="text" name="ip" required />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">SSH Port</label>
-            <div class="control">
-              <input class="input" type="text" name="ssh" required />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">NetConf Port</label>
-            <div class="control">
-              <input class="input" type="text" name="netconf" required />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Vendor</label>
-            <div class="control">
-              <div class="select">
-                <select name="vendor">
-                  <option>Brocade</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Model</label>
-            <div class="control">
-              <div class="select">
-                <select name="model">
-                  <option>MLXe</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Firmware Version</label>
-            <div class="control">
-              <div class="select">
-                <select name="version">
-                  <option>5.8.0</option>
-                </select>
-              </div>
-            </div>
-          </div>
 
           <div class="field">
             <div class="control">
-              <button type="submit" class="button is-link">Create Switch</button>
+              <button type="submit" class="button is-link">Create Workgroup</button>
             </div>
           </div>
 
@@ -144,6 +96,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script src="../assets/js/aconst.js"></script>
-    <script type="text/javascript" src="../assets/js/admin/switches.js"></script>
+    <script type="text/javascript" src="../assets/js/admin/workgroups.js"></script>
   </body>
 </html>

@@ -155,28 +155,28 @@ sub _register_methods{
 	);
     
     $method->add_input_parameter(
-        required => 1,
+        required => 0,
         name => 'name',
         pattern => $GRNOC::WebService::Regex::NAME_ID,
         description => "name of the command to be modified"
         );
 
     $method->add_input_parameter(
-        required => 1,
+        required => 0,
         name => 'description',
         pattern => $GRNOC::WebService::Regex::TEXT,
         description => "description of the command"
         );
 
     $method->add_input_parameter(
-        required => 1,
+        required => 0,
         name => 'operation',
         pattern => "(read|write)",
         description => "Operation type 'read' or 'write'"
         );
 
     $method->add_input_parameter(
-        required => 1,
+        required => 0,
         name => 'type',
         pattern => "(interface|switch|vlan)",
         description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
@@ -451,7 +451,7 @@ sub add_command{
     my $template = $p_ref->{'template'}{'value'};
     my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
     
-    return {results => $res};
+    return {results => [{id => $res}]};
 }
 
 sub modify_command{
@@ -477,7 +477,11 @@ sub modify_command{
     my $command_id = $p_ref->{'command_id'}{'value'};
 
     my $res = $self->db->modify_command( name => $name, description => $description, operation => $operation, type => $type, template => $template, command_id => $command_id );
-    return {results => $res};
+    if($res eq "0E0"){
+	$method_ref->set_error("Update failed for command: " . $command_id);
+	return;
+    }
+    return {results => [{value => $res}]};
 }
 
 sub delete_command{
@@ -495,8 +499,12 @@ sub delete_command{
         return;
     }
 
-    my $res = $self->db->delete_command( command_id => $p_ref->{'command_id'}{'value'});
-    return {results => $res};
+    my $res = $self->db->delete_command($p_ref->{'command_id'}{'value'});
+    if($res eq "0E0"){
+        $method_ref->set_error("Delete failed for command: " . $p_ref->{'command_id'}{'value'});
+	return;
+    }
+    return {results => [{ value => $res}]};
 
 }
 

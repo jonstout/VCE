@@ -128,6 +128,12 @@ sub _register_interface_functions {
     );
     $method->add_input_parameter(
         required => 0,
+        name => 'workgroup_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Workgroup id to filter on"
+    );
+    $method->add_input_parameter(
+        required => 0,
         name => 'interface_id',
         pattern => $GRNOC::WebService::Regex::INTEGER,
         description => "Interface id to filter on"
@@ -254,6 +260,7 @@ sub _get_interfaces {
 
     my $workgroup = $params->{workgroup}{value};
     my $interface_id = $params->{interface_id}{value};
+    my $workgroup_id = $params->{workgroup_id}{value};
     my $switch_id = $params->{switch_id}{value};
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
@@ -271,7 +278,7 @@ sub _get_interfaces {
 
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if ($is_admin) {
-        $interfaces = $self->db->get_interfaces(interface_id => $interface_id, switch_id => $switch_id);
+        $interfaces = $self->db->get_interfaces(workgroup_id => $workgroup_id, interface_id => $interface_id, switch_id => $switch_id);
     } else {
         $interfaces = $self->db->get_interfaces(workgroup_id => $wg->{id}, interface_id => $interface_id, switch_id => $switch_id);
     }

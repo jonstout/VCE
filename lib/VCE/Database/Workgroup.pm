@@ -78,6 +78,10 @@ sub get_workgroups {
         push @$keys, 'name=?';
         push @$args, $params{name};
     }
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'workgroup.id=?';
+        push @$args, $params{workgroup_id};
+    }
     if (defined $params{username}) {
         push @$keys, 'user.username=?';
         push @$args, $params{username};

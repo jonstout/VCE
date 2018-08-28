@@ -136,19 +136,19 @@ sub get_interfaces {
     my $args = [];
 
     if (defined $params{switch_id}) {
-        push @$keys, 'switch_id=?';
+        push @$keys, 'interface.switch_id=?';
         push @$args, $params{switch_id};
     }
     if (defined $params{interface_id}) {
-        push @$keys, 'id=?';
+        push @$keys, 'interface.id=?';
         push @$args, $params{interface_id};
     }
     if (defined $params{name}) {
-        push @$keys, 'name=?';
+        push @$keys, 'interface.name=?';
         push @$args, $params{name};
     }
     if (defined $params{workgroup_id}) {
-        push @$keys, 'workgroup_id=?';
+        push @$keys, 'interface.workgroup_id=?';
         push @$args, $params{workgroup_id};
     }
 
@@ -156,7 +156,9 @@ sub get_interfaces {
     my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
 
     my $q = $self->{conn}->prepare(
-        "SELECT * FROM interface $where ORDER BY name ASC"
+        "SELECT interface.*, switch.name as switch_name FROM interface
+         JOIN switch on switch.id=interface.switch_id
+         $where ORDER BY switch.name, interface.name ASC"
     );
     $q->execute(@$args);
 

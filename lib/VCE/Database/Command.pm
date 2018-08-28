@@ -14,10 +14,8 @@ our @EXPORT = qw( add_command get_commands add_command_to_switch delete_command 
 
 sub delete_command{
     my $self = shift;
-    my %params = @_;
+    my $command_id = shift;
     
-    warn Dumper(\%params);
-    my $command_id = $params{'command_id'};
     if(!defined($command_id)){
 	return "No command ID specified";
     }
@@ -35,48 +33,20 @@ sub modify_command{
     my $self = shift;
     my %params = @_;
     
-    my $command_id = $params{'command_id'};
-    my $name = $params{'name'};
-    my $description = $params{'description'};
-    my $operation = $params{'operation'};
-    my $type = $params{'type'};
-    my $template = $params{'template'};
-
-    my $cmd_q = $self->{conn}->prepare("select * from command where id = ?");
-    $cmd_q->execute($command_id);
-    my $res = $cmd_q->fetchall_arrayref({});
-
-    warn Dumper(\%params);
-    warn Dumper($res);
-
-    if(!defined($res) || !defined($res->[0])){
-	#unable to find the instance to update
-	return;
+    my @args;
+    my $updates;
+    foreach my $key (keys %params){
+        next if $key eq 'command_id';
+        next if !defined($params{$key});
+        $updates = join( ' , ', "$key = ?");
+        push(@args, $params{$key});
     }
+    #push our last arg on
+    push(@args, $params{'command_id'});
 
-    if(!defined($name)){
-	$name = $res->[0]->{'name'};
-    }
+    my $q = $self->{conn}->prepare( "update command set $updates where id = ?" );
 
-    if(!defined($description)){
-	$description = $res->[0]->{'description'};
-    }
-
-    if(!defined($operation)){
-        $operation = $res->[0]->{'operation'};
-    }
-
-    if(!defined($description)){
-        $type = $res->[0]->{'type'};
-    }
-
-    if(!defined($template)){
-        $template = $res->[0]->{'template'};
-    }
-
-    my $q = $self->{conn}->prepare("update command set name = ?, description = ?, operation = ?, type = ?, template = ? where id = ?");
-    
-    return $q->execute($name, $description, $operation, $type, $template, $command_id);
+    return $q->execute(@args);
     
     
 }
