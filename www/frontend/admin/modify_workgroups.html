@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
 
     <link rel="stylesheet" href="../assets/css/admin/base.css">
-    <link rel="stylesheet" href="../assets/css/admin/modify_switches.css"><!-- overrides everything from base -->
+    <link rel="stylesheet" href="../assets/css/admin/modify_workgroups.css"><!-- overrides everything from base -->
     <title>React App</title>
   </head>
 
@@ -30,14 +30,6 @@
       <div class="grnoc-aside">
         <aside class="menu">
           <ul class="menu-list" id="aside-list">
-            <li><a>Loading</a></li>
-          </ul>
-        </aside>
-      </div>
-
-      <div class="grnoc-aside2">
-        <aside class="menu">
-          <ul class="menu-list" id="aside2-list">
             <li><a>Loading</a></li>
           </ul>
         </aside>
@@ -91,7 +83,7 @@
 
         <div id="workgroup-tab-content">
           <form name="modify-workgroup" onsubmit="return modifyWorkgroup(this)">
-            <input class="input" type="hidden" name="method" value="modify_workgroup" />
+            <input class="input" type="hidden" name="method" value="update_workgroup" />
             <input class="input" type="hidden" name="workgroup" required />
             <input class="input" type="hidden" name="id" required />
             <div class="field">
@@ -123,21 +115,31 @@
         </div>
 
         <div id="interface-tab-content" style="display: none;">
-          <form name="add-interface" onsubmit="return addWorkgroupOwner(this)">
-            <input class="input" type="hidden" name="method" value="add_interface_to_workgroup" />
+          <form name="add-workgroup-interface" onsubmit="return modifyInterface(this)">
+            <input class="input" type="hidden" name="method" value="update_interface" />
             <input class="input" type="hidden" name="workgroup" required />
+            <input class="input" type="hidden" name="workgroup_id" required />
+
             <div class="field">
               <label class="label">Switch</label>
               <div class="control">
-                <input class="input" type="text" name="name" required />
+                <div class="select">
+                  <select name="switch" id="switch-select" onchange="loadSwitchInterfaces(this)">
+                  </select>
+                </div>
               </div>
             </div>
+
             <div class="field">
               <label class="label">Interface</label>
               <div class="control">
-                <input class="input" type="text" name="description" required />
+                <div class="select">
+                  <select name="id" id="interface-select">
+                  </select>
+                </div>
               </div>
             </div>
+
             <div class="field is-grouped">
               <div class="control">
                 <button type="submit" class="button is-link">Grant Ownership</button>
@@ -155,6 +157,7 @@
                 <th>Interface</th>
                 <th>Hardware type</th>
                 <th>Description</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="workgroup-interface-list">
