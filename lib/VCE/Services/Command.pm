@@ -451,11 +451,6 @@ sub add_command{
     my $template = $p_ref->{'template'}{'value'};
     my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
     
-    if ($result eq "0E0") {
-	$method_ref->set_error("add failed for command");
-        return;
-    }
-
     return {results => [{id => $res}]};
 }
 
