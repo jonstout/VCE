@@ -501,7 +501,7 @@ sub delete_command{
 
     my $res = $self->db->delete_command($p_ref->{'command_id'}{'value'});
     if($res eq "0E0"){
-        $method_ref->set_error("Delete failed for command: " . $command_id);
+        $method_ref->set_error("Delete failed for command: " . $p_ref->{'command_id'}{'value'});
 	return;
     }
     return {results => [{ value => $res}]};
