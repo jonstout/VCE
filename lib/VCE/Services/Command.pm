@@ -451,7 +451,12 @@ sub add_command{
     my $template = $p_ref->{'template'}{'value'};
     my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
     
-    return {results => $res};
+    if ($result eq "0E0") {
+	$method_ref->set_error("add failed for command");
+        return;
+    }
+
+    return {results => [{id => $res}]};
 }
 
 sub modify_command{
@@ -477,7 +482,11 @@ sub modify_command{
     my $command_id = $p_ref->{'command_id'}{'value'};
 
     my $res = $self->db->modify_command( name => $name, description => $description, operation => $operation, type => $type, template => $template, command_id => $command_id );
-    return {results => $res};
+    if($res eq "0E0"){
+	$method_ref->set_error("Update failed for command: " . $command_id);
+	return;
+    }
+    return {results => [{value => $res}]};
 }
 
 sub delete_command{
@@ -496,7 +505,11 @@ sub delete_command{
     }
 
     my $res = $self->db->delete_command($p_ref->{'command_id'}{'value'});
-    return {results => $res};
+    if($res eq "0E0"){
+        $method_ref->set_error("Delete failed for command: " . $command_id);
+	return;
+    }
+    return {results => [{ value => $res}]};
 
 }
 
