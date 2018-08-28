@@ -107,6 +107,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-update-db
 %{__install} -m 544 bin/vce-migrate-access-policy %{buildroot}%{_bindir}/vce-migrate-access-policy
 
+
 # Init Scripts
 %{__install} -d -p %{buildroot}%{_initddir}
 %{__install} -d -p %{buildroot}/usr/lib/systemd/scripts
