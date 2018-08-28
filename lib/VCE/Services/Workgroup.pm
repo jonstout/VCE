@@ -99,6 +99,30 @@ sub _register_workgroup_functions {
     };
     undef $method;
 
+    #--- Registering add_workgroup method
+    $method = GRNOC::WebService::Method->new(
+        name => "get_workgroups",
+        description => "Method for getting workgroups",
+        callback => sub {
+            return $self->_get_workgroups(@_)
+        });
+    $method->add_input_parameter(
+        required => 1,
+        name => "workgroup",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "check if user belonging to admin workgroup"
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => "workgroup_id",
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "filter result on workgroup_id"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
     #--- Registering update workgroup method
     $method = GRNOC::WebService::Method->new( name => "update_workgroup",
         description => "Method for updating a workgroup",
@@ -205,6 +229,33 @@ sub _add_workgroup {
     return { results => [ { id => $id } ] };
 }
 
+# --- get workgroups
+sub _get_workgroups {
+
+    warn Dumper("--- in add workgroup ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $workgroup_id = $params->{workgroup_id}{value};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method_ref->set_error("User $user not in specified workgroup $workgroup.");
+        return;
+    }
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to get workgroups.");
+        return;
+    }
+
+    my $workgroups = $self->db->get_workgroups(workgroup_id => $workgroup_id);
+    return { results => $workgroups };
+}
 
 # --- Update workgroup
 sub _update_workgroup {
@@ -217,6 +268,7 @@ sub _update_workgroup {
 
     # Validations
     my $workgroup = $params->{'workgroup'}{'value'};
+
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
         $method_ref->set_error("Workgroup $workgroup is not authorized to update workgroup $params->{id}{value}");
