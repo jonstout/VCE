@@ -178,12 +178,7 @@ sub main {
 		return {success => 0};
 	    }
 	    
-	    my %args;
-	    $args{'switch'} = $switch;
-	    $args{'rabbit_mq'} = $vce->rabbit_mq;
-	    $args{'creds'} = $creds->{$switch->{'name'}};
-
-	    make_switch_process( %args );
+	    make_switch_process( $switch, $creds );
 
 	},
         description => "adds a switch process"
