@@ -72,7 +72,7 @@ sub _register_switch_functions {
     my $self = shift;
     my $d = shift;
 
-    #--- Registering modify switch method
+    #--- Registering add_switch method
     my $method = GRNOC::WebService::Method->new( name => "add_switch",
         description => "Method for adding a switch",
         callback => sub {
@@ -105,7 +105,7 @@ sub _register_switch_functions {
     $method->add_input_parameter( required => 1,
         name => 'netconf',
         pattern => $GRNOC::WebService::Regex::INTEGER,
-        description => "ssh port for the switch" );
+        description => "netconf port for the switch" );
 
     $method->add_input_parameter( required => 1,
         name => "vendor",
@@ -166,12 +166,12 @@ sub _register_switch_functions {
     $method->add_input_parameter( required => 1,
         name => 'id',
         pattern => $GRNOC::WebService::Regex::INTEGER,
-        description => "Name of the switch to be added" );
+        description => "id of the switch to be modified " );
 
     $method->add_input_parameter( required => 1,
         name => 'name',
         pattern => $GRNOC::WebService::Regex::NAME_ID,
-        description => "Name of the switch to be added" );
+        description => "name of the switch to be modified " );
 
 
     $method->add_input_parameter( required => 1,
@@ -194,7 +194,7 @@ sub _register_switch_functions {
     $method->add_input_parameter( required => 1,
         name => 'netconf',
         pattern => $GRNOC::WebService::Regex::INTEGER,
-        description => "ssh port for the switch" );
+        description => "netconf port for the switch" );
 
     $method->add_input_parameter( required => 1,
         name => "vendor",
@@ -232,12 +232,94 @@ sub _register_switch_functions {
     $method->add_input_parameter( required => 1,
         name => 'id',
         pattern => $GRNOC::WebService::Regex::INTEGER,
-        description => "Name of the switch to be added" );
+        description => "id of the switch to be deleted" );
 
     $method->add_input_parameter( required => 1,
         name => 'workgroup',
         pattern => $GRNOC::WebService::Regex::TEXT,
         description => "Workgroup that the user belongs to." );
+
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+
+    #--- Registering add_command_to_switch method
+    $method = GRNOC::WebService::Method->new( name => "add_command_to_switch",
+        description => "Method for adding command to a switch",
+        callback => sub {
+            return $self->_add_command_to_switch(@_)
+        });
+
+    $method->add_input_parameter( required => 1,
+        name => 'command_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "id of the command to be associated with the switch" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'switch_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "id of the switch to which command has to be added" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'role',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "role" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "workgoup of the user" );
+
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    #--- Registering modify_switch_command method
+    $method = GRNOC::WebService::Method->new( name => "modify_switch_command",
+        description => "Method for removing command from a switch",
+        callback => sub {
+            return $self->_modify_switch_command(@_)
+        });
+
+    $method->add_input_parameter( required => 1,
+        name => 'id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "id of the switch command to be modified" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'role',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "role" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "workgoup of the user" );
+
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    #--- Registering remove_command_from_switch method
+    $method = GRNOC::WebService::Method->new( name => "remove_command_from_switch",
+        description => "Method for removing command from a switch",
+        callback => sub {
+            return $self->_remove_command_from_switch(@_)
+        });
+
+    $method->add_input_parameter( required => 1,
+        name => 'id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "id of the switch command to be deleted" );
+
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "workgoup of the user" );
 
     eval {
         $d->register_method($method);
@@ -255,32 +337,38 @@ sub handle_request{
     $self->dispatcher->handle_request();
 }
 
-
-
+#--- Method to add switches
 sub _add_switch {
 
-    warn Dumper("--- IN ADD SWITCH ---");
+    warn Dumper("--- in add switch ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to add switch.");
+        return;
+    }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
-    my ($id, $err) = $self->db->add_switch( $params->{'name'}{'value'},
-        $params->{'description'}{'value'},
-        $params->{'ip'}{'value'},
-        $params->{'ssh'}{'value'},
-        $params->{'netconf'}{'value'},
-        $params->{'vendor'}{'value'},
-        $params->{'model'}{'value'},
-        $params->{'version'}{'value'},
+
+    my ($id, $err) = $self->db->add_switch( $params->{name}{value},
+        $params->{description}{value},
+        $params->{ip}{value},
+        $params->{ssh}{value},
+        $params->{netconf}{value},
+        $params->{vendor}{value},
+        $params->{model}{value},
+        $params->{version}{value},
     );
     warn Dumper("ID: $id");
     if (defined $err) {
@@ -293,9 +381,11 @@ sub _add_switch {
 
 }
 
+
+#--- Method to get switches
 sub _get_switches {
 
-    warn Dumper("--- IN GET SWITCHES ---");
+    warn Dumper("--- in get switches ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
@@ -335,14 +425,21 @@ sub _get_switches {
 }
 
 
+#--- Method to moddify switches
 sub _modify_switch {
-    warn Dumper("IN MODIFY SWITCH");
+    warn Dumper("--- in modify switche ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to modify switch.");
+        return;
+    }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
@@ -361,25 +458,38 @@ sub _modify_switch {
         model       => $params->{model}{value},
         version     => $params->{version}{value},
     );
-    warn Dumper("MODIFY RESULT: $result");
-    if ($result eq "0E0") {
+    warn Dumper("modify result: $result");
+    if ($result eq 0) {
 
-        $result = "Could not find Switch: $params->{name}{value}, ID: $params->{id}{value}";
+        $result = "Update Switch failed for ID: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
     }
     return { results => [ { value => $result } ] };
 }
 
+
+#--- Method to modify the switch
 sub _delete_switch {
-    warn Dumper("IN DELETE SWITCH");
+    warn Dumper("--- in delete switch ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete switch.");
+        return;
+    }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
@@ -387,15 +497,153 @@ sub _delete_switch {
         return;
     }
 
-    my $result = $self->db->delete_switch (id => $params->{id}{value});
-    warn Dumper("DELETE RESULT: $result");
+    my $result = $self->db->delete_switch (
+        $params->{id}{value}
+    );
+    warn Dumper("delete result: $result");
 
-    if ($result eq "0E0") {
-        $result = "Could not find Switch: $params->{id}{value}";
+    if ($result eq 0) {
+        $result = "Delete Switch failed for ID: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
     }
 
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
+
     return { results => [ { value => $result } ] };
 }
+
+
+#--- Method to associate a command with a switch
+sub _add_command_to_switch  {
+
+    warn Dumper("--- in add command to switch ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to add command to a switch.");
+        return;
+    }
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my ($id, $err) = $self->db->add_command_to_switch(
+        $params->{command_id}{value},
+        $params->{switch_id}{value},
+        $params->{role}{value}
+    );
+    warn Dumper("add switch_command result: $id");
+    if (defined $err) {
+        warn Dumper("Error: $err");
+        $method_ref->set_error($err);
+        return;
+    }
+
+    return { results => [ { id => $id } ] };
+}
+
+
+#--- Method to remove a command from a switch
+sub _remove_command_from_switch {
+
+    warn Dumper("--- in remove command from switch ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to remove command from a switch.");
+        return;
+    }
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $result = $self->db->remove_command_from_switch (
+        $params->{id}{value}
+    );
+    warn Dumper("delete switch_command result: $result");
+
+    if ($result eq 0) {
+
+        $result = "Delete command from switch failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
+
+    return { results => [ { value => $result } ] }
+}
+
+#--- Method to modify command's role on the switch
+sub _modify_switch_command {
+
+    warn Dumper("--- in modify switch command ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to remove command from a switch.");
+        return;
+    }
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $result = $self->db->modify_switch_command (
+        $params->{id}{value},
+        $params->{role}{value}
+    );
+    warn Dumper("modify switch_command result: $result");
+
+    if ($result eq 0) {
+
+        $result = "Modify switch_command failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
+
+    return { results => [ { value => $result } ] }
+}
+
 1;
