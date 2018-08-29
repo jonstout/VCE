@@ -246,7 +246,7 @@ sub _register_switch_functions {
 
 
     #--- Registering add_command_to_switch method
-    my $method = GRNOC::WebService::Method->new( name => "add_command_to_switch",
+    $method = GRNOC::WebService::Method->new( name => "add_command_to_switch",
         description => "Method for adding command to a switch",
         callback => sub {
             return $self->_add_command_to_switch(@_)
@@ -278,7 +278,7 @@ sub _register_switch_functions {
     undef $method;
 
     #--- Registering modify_switch_command method
-    my $method = GRNOC::WebService::Method->new( name => "modify_switch_command",
+    $method = GRNOC::WebService::Method->new( name => "modify_switch_command",
         description => "Method for removing command from a switch",
         callback => sub {
             return $self->_modify_switch_command(@_)
@@ -305,7 +305,7 @@ sub _register_switch_functions {
     undef $method;
 
     #--- Registering remove_command_from_switch method
-    my $method = GRNOC::WebService::Method->new( name => "remove_command_from_switch",
+    $method = GRNOC::WebService::Method->new( name => "remove_command_from_switch",
         description => "Method for removing command from a switch",
         callback => sub {
             return $self->_remove_command_from_switch(@_)
@@ -337,6 +337,7 @@ sub handle_request{
     $self->dispatcher->handle_request();
 }
 
+#--- Method to add switches
 sub _add_switch {
 
     warn Dumper("--- in add switch ---");
@@ -380,6 +381,8 @@ sub _add_switch {
 
 }
 
+
+#--- Method to get switches
 sub _get_switches {
 
     warn Dumper("--- in get switches ---");
@@ -422,6 +425,7 @@ sub _get_switches {
 }
 
 
+#--- Method to moddify switches
 sub _modify_switch {
     warn Dumper("--- in modify switche ---");
     my $self = shift;
@@ -469,6 +473,8 @@ sub _modify_switch {
     return { results => [ { value => $result } ] };
 }
 
+
+#--- Method to modify the switch
 sub _delete_switch {
     warn Dumper("--- in delete switch ---");
     my $self = shift;
@@ -510,6 +516,8 @@ sub _delete_switch {
     return { results => [ { value => $result } ] };
 }
 
+
+#--- Method to associate a command with a switch
 sub _add_command_to_switch  {
 
     warn Dumper("--- in add command to switch ---");
@@ -538,7 +546,7 @@ sub _add_command_to_switch  {
         $params->{switch_id}{value},
         $params->{role}{value}
     );
-    warn Dumper("add switch command result: $id");
+    warn Dumper("add switch_command result: $id");
     if (defined $err) {
         warn Dumper("Error: $err");
         $method_ref->set_error($err);
@@ -548,6 +556,8 @@ sub _add_command_to_switch  {
     return { results => [ { id => $id } ] };
 }
 
+
+#--- Method to remove a command from a switch
 sub _remove_command_from_switch {
 
     warn Dumper("--- in remove command from switch ---");
@@ -571,17 +581,69 @@ sub _remove_command_from_switch {
         return;
     }
 
-    my ($id, $err) = $self->db->add_switch(
+    my $result = $self->db->remove_command_from_switch (
         $params->{id}{value}
     );
-    warn Dumper("remove switch command result: $id");
-    if (defined $err) {
-        warn Dumper("Error: $err");
-        $method_ref->set_error($err);
+    warn Dumper("delete switch_command result: $result");
+
+    if ($result eq 0) {
+
+        $result = "Delete command from switch failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
         return;
     }
 
-    return { results => [ { id => $id } ] };
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
+
+    return { results => [ { value => $result } ] }
+}
+
+#--- Method to modify command's role on the switch
+sub _modify_switch_command {
+
+    warn Dumper("--- in modify switch command ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to remove command from a switch.");
+        return;
+    }
+
+    if(!$self->vce->access->user_in_workgroup( username => $user,
+            workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $result = $self->db->modify_switch_command (
+        $params->{id}{value},
+        $params->{role}{value}
+    );
+    warn Dumper("modify switch_command result: $result");
+
+    if ($result eq 0) {
+
+        $result = "Modify switch_command failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
+        return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
+
+    return { results => [ { value => $result } ] }
 }
 
 1;
