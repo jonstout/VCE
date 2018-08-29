@@ -44,6 +44,8 @@ async function init() {
         document.querySelector('#user-tab-content').style.display = 'block';
         e.target.parentElement.classList.add("is-active");
     });
+
+    setupAutoComplete();
 };
 
 function modifyWorkgroup(form) {
@@ -344,4 +346,71 @@ function loadSwitchInterfaces(e) {
         });
         select.innerHTML = options;
     });
+}
+
+
+async function getUsers(workgroup_id, username) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    username = username === null ? '' : username;
+
+    let url = '../' + baseUrl + `user.cgi?method=get_users&workgroup=${workgroup}&workgroup_id=${workgroup_id}&username=${username}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
+
+    try {
+        let data = await response.json();
+        if ('error_text' in data) {
+            console.log(data.error_text);
+            return null;
+        }
+        return data.results;
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+function setupAutoComplete() {
+    let input = document.querySelector('#user-input');
+    let autocomp = document.querySelector('#user-input-autocomplete');
+
+    autocomp.style.maxHeight = '150px';
+    autocomp.style.overflowY = 'scroll';
+    autocomp.style.borderWidth = '1px';
+    autocomp.style.borderStyle = 'solid';
+    autocomp.style.borderColor = '#dbdbdb';
+    autocomp.style.borderRadius = '5px';
+
+    input.addEventListener('focusout', function(e) {
+        setTimeout(function() { autocomp.style.display = 'none'; }, 250);
+    });
+
+    input.addEventListener('input', function(e) {
+        if (e.target.value.length > 2) {
+            getUsers(e.target.value).then(function(users) {
+                renderAutoCompleteSuggestions(users);
+            });
+            // loadAutoComplete(options);
+            autocomp.style.display = 'block';
+        } else {
+            autocomp.style.display = 'none';
+        }
+    });
+}
+
+function setAutoCompleteValue(value) {
+    let input = document.querySelector('#user-input');
+    input.value = value;
+}
+
+async function renderAutoCompleteSuggestions(values) {
+    console.log(values);
+    let select = document.querySelector('#user-input-autocomplete');
+    let options = '';
+
+    values.forEach(function(val) {
+        options += `<li><a onclick="setAutoCompleteValue('${val.username}')">${val.username}</a></li>`
+    });
+    select.innerHTML = options;
 }

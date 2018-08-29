@@ -165,7 +165,31 @@
           </table>
         </div>
 
-        <div id="user-tab-content" style="display: none;">
+        <div id="user-tab-content" style="display: block;">
+
+            <div class="field">
+              <label class="label">User</label>
+              <div class="control">
+                <input class="input" type="text" id="user-input"/>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="select is-multiple is-fullwidth">
+                <aside class="menu">
+                  <ul class="menu-list" id="user-input-autocomplete" style="display: none;">
+                    <li><a onclick="setAutoCompleteValue('user1')">user1</a></li>
+                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
+                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
+                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
+                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
+                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
+                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
+                  </ul>
+                </aside>
+              </div>
+            </div>
+
         </div>
 
       </div>
