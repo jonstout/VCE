@@ -119,10 +119,18 @@ sub modify_user{
     }
     #push our last arg on
     push(@args, $params{'user_id'});
+    my $q;
+    my $res;
+    eval{
+	$q = $self->{conn}->prepare( "update user set $updates where id = ?" );
+	$res = $q->execute(@args);
+    };
+    if($@){
+	$self->{log}->error("Error Executing SQL: " . Dumper($@));
+	return;
+    }
 
-    my $q = $self->{conn}->prepare( "update user set $updates where id = ?" );
-
-    return $q->execute(@args);
+    return $res;
 }
 
 =head2 get_users
@@ -156,10 +164,17 @@ sub get_users {
     my $values = join(' AND ', @$keys);
     my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
 
-    my $q = $self->{conn}->prepare(
-        "select * from user $where"
-    );
-    $q->execute(@$args);
+    my $q;
+    eval{
+	$q = $self->{conn}->prepare(
+	    "select * from user $where"
+	    );
+	$q->execute(@$args);
+    };
+    if($@){
+	$self->{log}->error("Error executing SQL: " . Dumper($@));
+	return;
+    }
 
     my $result = $q->fetchall_arrayref({});
     return $result;
@@ -169,8 +184,18 @@ sub delete_user{
     my $self = shift;
     my $user_id = shift;
     
-    my $q = $self->{conn}->prepare("delete from user where id = ?");
-    return $q->execute($user_id);
+    my $q;
+    my $res;
+    eval{
+	$q = $self->{conn}->prepare("delete from user where id = ?");
+	$res = $q->execute($user_id);
+    };
+    if($@){
+	$self->{log}->error("Error executing SQL: " . Dumper($@));
+	return;
+    }
+
+    return $res;
 }
 
 =head2 get_users_by_workgroup_id
@@ -180,14 +205,21 @@ sub get_users_by_workgroup_id {
 
     $self->{log}->debug("get_users_by_workgroup_id($workgroup_id)");
 
-    my $w = $self->{conn}->prepare(
-        "select user.username from user
+
+    my $w;
+    eval{
+	$w = $self->{conn}->prepare(
+	    "select user.username from user
          join user_workgroup on user_workgroup.user_id=user.id
          join workgroup on workgroup.id=user_workgroup.workgroup_id
          where workgroup.id=?"
-    );
+	    );
     $w->execute($workgroup_id);
-
+    };
+    if($@){
+	$self->{log}->error("Error executing SQL: " . Dumper($@));
+	return;
+    }
     return $w->fetchall_arrayref({});
 }
 

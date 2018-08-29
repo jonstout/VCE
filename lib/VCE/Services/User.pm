@@ -108,13 +108,13 @@ sub _register_methods{
         description => "username of the new user");
 
     $method->add_input_parameter(
-	required => 1,
+	required => 0,
 	name => 'email',
 	pattern => $GRNOC::WebService::Regex::TEXT,
 	description => "Email address of the new user");
 
     $method->add_input_parameter(
-	required => 1,
+	required => 0,
 	name => 'fullname',
 	pattern => $GRNOC::WebService::Regex::TEXT,
 	description => "Full Name of the new user");
@@ -125,12 +125,6 @@ sub _register_methods{
                                               description => 'Modifies and existing user',
 					      callback => sub { return $self->modify_user(@_); }
 	);
-
-    $method->add_input_parameter(
-        required => 0,
-        name => 'username',
-        pattern => $GRNOC::WebService::Regex::NAME_ID,
-        description => "username of the new user");
 
     $method->add_input_parameter(
         required => 0,
