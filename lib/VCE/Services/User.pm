@@ -12,7 +12,6 @@ use GRNOC::WebService::Regex;
 
 use VCE::Access;
 use VCE::Database::Connection;
-use VCE::Database::User;
 
 has vce => (is => 'rwp');
 has db => (is => 'rwp');
@@ -204,7 +203,7 @@ sub modify_user{
 				     fullname => $fullname,
 				     email => $email);
     if ($res eq "0E0") {
-        $method_ref->set_error("Update failed for user: $user_id");
+        $m_ref->set_error("Update failed for user: $user_id");
         return;
     }
     return {results => [$res]};
@@ -220,7 +219,7 @@ sub delete_user{
     my $res = $self->db->delete_user( $user_id );
 
     if ($res eq "0E0") {
-        $method_ref->set_error("Delete failed for user: $user_id");
+        $m_ref->set_error("Delete failed for user: $user_id");
         return;
     }
     return {results => [$res]};
