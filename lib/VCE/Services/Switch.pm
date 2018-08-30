@@ -512,6 +512,10 @@ sub _delete_switch {
         return;
     }
 
+    my $switch = $self->db->get_switch( $params->{id}{value} );
+
+    warn Dumper($switch);
+
     my $result = $self->db->delete_switch (
         $params->{id}{value}
     );
@@ -528,6 +532,19 @@ sub _delete_switch {
         $result = 0;
     }
 
+
+    #build rabbitmq client
+    my $client = GRNOC::RabbitMQ::Client->new(
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        host     => $self->rabbit_mq->{'host'},
+        timeout  => 30,
+        port     => $self->rabbit_mq->{'port'},
+        exchange => 'VCE',
+        topic    => "VCE.Switch." . $switch->{'name'}
+        ); 
+
+    my $result = 1;
     return { results => [ { value => $result } ] };
 }
 

@@ -28,6 +28,7 @@ use Data::Dumper;
 
 my @children;
 my $vce;
+my $d;
 sub usage {
     print "Usage: $0 [--config <file path>] [--model <file path>]\n";
     exit( 1 );
@@ -35,6 +36,7 @@ sub usage {
 
 # setup signal handlers
 $SIG{'TERM'} = sub {
+    $d->stop();
     stop();
 };
 
@@ -43,6 +45,7 @@ $SIG{'HUP'} = sub {
 };
 
 sub stop {
+    
     return kill( 'TERM', @children);
 }
 
@@ -160,7 +163,7 @@ sub main {
 
     }
 
-    my $d = GRNOC::RabbitMQ::Dispatcher->new( host     => $vce->rabbit_mq->{'host'},
+    $d = GRNOC::RabbitMQ::Dispatcher->new( host     => $vce->rabbit_mq->{'host'},
 					      port     => $vce->rabbit_mq->{'port'},
 					      user     => $vce->rabbit_mq->{'user'},
 					      pass     => $vce->rabbit_mq->{'pass'},

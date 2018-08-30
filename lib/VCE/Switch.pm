@@ -343,6 +343,15 @@ sub _register_rpc_methods{
         pattern     => $GRNOC::WebService::Regex::INTEGER
     );
     $d->register_method($method);
+
+    $method = GRNOC::RabbitMQ::Method->new(
+        name => "stop",
+        callback => sub { $self->stop(); return; },
+        description => "stop the child"
+    );
+
+    $d->register_method($method);
+
 }
 
 
@@ -765,6 +774,7 @@ sub start{
 =cut
 sub stop{
     my $self = shift;
+    $self->logger->error("Stopping: " . $self->name);
     $self->dispatcher->stop_consuming();
 }
 
