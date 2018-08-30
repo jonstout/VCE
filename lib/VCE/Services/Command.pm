@@ -408,6 +408,9 @@ return 1;
     }
 }
 
+=head2 get_commands
+
+=cut
 sub get_commands{
     my $self = shift;
     my $method_ref = shift;
@@ -425,6 +428,9 @@ sub get_commands{
     return {results => $commands };
 }
 
+=head2 add_command
+
+=cut
 sub add_command{
     my $self = shift;
     my $method_ref = shift;
@@ -449,6 +455,9 @@ sub add_command{
     return {results => [{id => $res}]};
 }
 
+=head2 modify_command
+
+=cut
 sub modify_command{
     my $self = shift;
     my $method_ref = shift;
@@ -479,6 +488,9 @@ sub modify_command{
     return {results => [{value => $res}]};
 }
 
+=head2 delete_command
+
+=cut
 sub delete_command{
     my $self = shift;
     my $method_ref = shift;
