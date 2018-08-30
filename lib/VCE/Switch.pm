@@ -774,7 +774,7 @@ sub start{
 =cut
 sub stop{
     my $self = shift;
-    $self->logger->error("Stopping: " . $self->name);
+    $self->logger->info("Stopping: " . $self->name);
     $self->dispatcher->stop_consuming();
 }
 

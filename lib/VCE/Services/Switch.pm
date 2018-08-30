@@ -514,8 +514,6 @@ sub _delete_switch {
 
     my $switch = $self->db->get_switch( $params->{id}{value} );
 
-    warn Dumper($switch);
-
     my $result = $self->db->delete_switch (
         $params->{id}{value}
     );
@@ -544,7 +542,6 @@ sub _delete_switch {
         topic    => "VCE.Switch." . $switch->{'name'}
         ); 
 
-    my $result = 1;
     return { results => [ { value => $result } ] };
 }
 
