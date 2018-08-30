@@ -277,6 +277,30 @@ sub _register_switch_functions {
     };
     undef $method;
 
+
+    $method = GRNOC::WebService::Method->new(
+        name => "get_switch_commands",
+        description => "Method for adding command to a switch",
+        callback => sub {
+            return $self->_get_switch_commands(@_)
+        }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'switch_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "id of the switch commands to return"
+    );
+    $method->add_input_parameter( required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "workgoup of the requesting user"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
     #--- Registering modify_switch_command method
     $method = GRNOC::WebService::Method->new( name => "modify_switch_command",
         description => "Method for removing command from a switch",
@@ -556,6 +580,29 @@ sub _add_command_to_switch  {
     return { results => [ { id => $id } ] };
 }
 
+#--- Method to get commands associated with switch
+sub _get_switch_commands  {
+    my $self = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+    my $workgroup = $params->{workgroup}{value};
+    my $switch_id = $params->{switch_id}{value};
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method->set_error("Workgroup $workgroup is not authorized to get switch command associations.");
+        return;
+    }
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $commands = $self->db->get_assigned_commands(switch_id => $switch_id);
+    return { results => $commands };
+}
 
 #--- Method to remove a command from a switch
 sub _remove_command_from_switch {

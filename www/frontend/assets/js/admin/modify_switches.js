@@ -212,7 +212,7 @@ async function getCommands(switch_id) {
     let cookie = Cookies.getJSON('vce');
     let workgroup = cookie.workgroup;
 
-    let url = '../' + baseUrl + `command.cgi?method=get_commands&workgroup=${workgroup}&switch_id=${switch_id}`;
+    let url = '../' + baseUrl + `switch.cgi?method=get_switch_commands&workgroup=${workgroup}&switch_id=${switch_id}`;
     let response = await fetch(url, {method: 'get', credentials: 'include'});
 
     try {

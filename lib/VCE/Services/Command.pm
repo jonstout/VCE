@@ -432,10 +432,9 @@ sub add_command{
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-					       workgroup => $workgroup )){
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -457,7 +456,7 @@ sub modify_command{
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
 					       workgroup => $workgroup )){
@@ -487,10 +486,9 @@ sub delete_command{
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-					       workgroup => $workgroup )){
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
