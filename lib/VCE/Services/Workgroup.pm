@@ -179,13 +179,88 @@ sub _register_workgroup_functions {
     };
     undef $method;
 
+    $method = GRNOC::WebService::Method->new(
+        name => "get_workgroup_users",
+        description => "Method for removing a user from a workgroup",
+        callback => sub { return $self->_get_workgroup_users(@_); }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => "workgroup",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "user workgroup"
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "(user, workgroup) relationship ID"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    $method = GRNOC::WebService::Method->new(
+        name => "add_user_to_workgroup",
+        description => "Method for adding a user to a workgroup",
+        callback => sub { return $self->_add_user_to_workgroup(@_); }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => "workgroup",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "user workgroup"
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => "role",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Role of user in workgroup."
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'user_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ID of user to add."
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "ID of workgroup to join."
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
+    $method = GRNOC::WebService::Method->new(
+        name => "remove_user_from_workgroup",
+        description => "Method for removing a user from a workgroup",
+        callback => sub { return $self->_remove_user_from_workgroup(@_); }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => "workgroup",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "user workgroup"
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'user_workgroup_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "(user, workgroup) relationship ID"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
 }
 
 
 =head2 handle_request
-
 =cut
-
 sub handle_request{
     my $self = shift;
     $self->dispatcher->handle_request();
@@ -324,6 +399,95 @@ sub _delete_workgroup {
     }
 
     return { results => [ { value => $result } ] };
+}
+
+sub _add_user_to_workgroup {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $role = $params->{role}{value};
+    my $user_id = $params->{user_id}{value};
+    my $workgroup_id = $params->{workgroup_id}{value};
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method->set_error("Workgroup $workgroup is not authorized to delete workgroup $params->{id}{value}.");
+        return;
+    }
+    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
+        $method->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+
+    my ($user_workgroup_id, $err) = $self->db->add_user_to_workgroup($role, $user_id, $workgroup_id);
+    if (defined $err) {
+        $method->set_error("Couldn't remove user $user from workgroup $workgroup. $err");
+        return;
+    }
+
+    return { results => [ { id => $user_workgroup_id } ] };
+}
+
+sub _remove_user_from_workgroup {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $user_workgroup_id = $params->{user_workgroup_id}{value};
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method->set_error("Workgroup $workgroup is not authorized to delete workgroup $params->{id}{value}.");
+        return;
+    }
+    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
+        $method->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+
+    my $err = $self->db->remove_user_from_workgroup($params->{user_workgroup_id}{value});
+    if (defined $err) {
+        $method->set_error("Couldn't remove user $user from workgroup $workgroup. $err");
+        return;
+    }
+
+    return { results => [ { value => 1 } ] };
+}
+
+sub _get_workgroup_users {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $workgroup_id = $params->{workgroup_id}{value};
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method->set_error("Workgroup $workgroup is not authorized to delete workgroup $params->{id}{value}.");
+        return;
+    }
+    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
+        $method->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+
+    my ($workgroups, $err) = $self->db->get_users_by_workgroup_id($workgroup_id);
+    if (defined $err) {
+        $method->set_error("Couldn't get users of workgroup $workgroup. $err");
+        return;
+    }
+
+    return { results => $workgroups };
 }
 
 1;
