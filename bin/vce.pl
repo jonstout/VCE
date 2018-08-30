@@ -181,8 +181,9 @@ sub main {
 		return {success => 0};
 	    }
 	    
-	    make_switch_process( $switch, $creds );
+	    my $res = make_switch_process( $switch, $creds );
 
+	    return {success => 1};
 	},
         description => "adds a switch process"
 	);
