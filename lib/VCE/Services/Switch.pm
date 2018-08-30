@@ -356,9 +356,9 @@ sub _add_switch {
     }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup )){
-        #$method_ref->set_error("User $user not in specified workgroup $workgroup");
-        #return;
+					       workgroup => $workgroup )){
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
     }
 
     my ($id, $err) = $self->db->add_switch( $params->{name}{value},
