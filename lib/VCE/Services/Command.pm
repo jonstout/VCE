@@ -1,4 +1,3 @@
-
 #!/usr/bin/perl
 
 package VCE::Services::Command;
@@ -99,7 +98,7 @@ sub _register_methods{
 	description => "command_id to fetch");
 
     $dispatcher->register_method($method);
-    
+
     $method = GRNOC::WebService::Method->new( name => 'add_command',
 					      description => 'adds a new command to the list of commands',
 					      callback => sub { return $self->add_command(@_); }
@@ -141,19 +140,19 @@ sub _register_methods{
 	);
 
     $dispatcher->register_method($method);
-					
+
     $method = GRNOC::WebService::Method->new( name => 'modify_command',
                                               description => 'modifies and existing command',
 					      callback => sub { return $self->modify_command(@_); }
 	);
-    
+
     $method->add_input_parameter(
         required => 1,
         name => 'command_id',
         pattern => $GRNOC::WebService::Regex::NUMBER_ID,
         description => "ID of the command to be modified"
 	);
-    
+
     $method->add_input_parameter(
         required => 0,
         name => 'name',
@@ -180,7 +179,7 @@ sub _register_methods{
         name => 'type',
         pattern => "(interface|switch|vlan)",
         description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
-        );    
+        );
 
 
     $dispatcher->register_method($method);
@@ -195,10 +194,9 @@ sub _register_methods{
         name => 'command_id',
         pattern => $GRNOC::WebService::Regex::NUMBER_ID,
         description => "ID of the command to be deleted"
-        );    
-    
+        );
+
     $dispatcher->register_method($method);
-    
 }
 
 sub _register_commands{
@@ -410,58 +408,64 @@ return 1;
     }
 }
 
+=head2 get_commands
+
+=cut
 sub get_commands{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
-    
+
     my %params;
     if(defined($p_ref->{'command_id'}{'value'})){
-	$params{'command_id'} = $p_ref->{'command_id'}{'value'};
+        $params{'command_id'} = $p_ref->{'command_id'}{'value'};
     }
     if(defined($p_ref->{'type'}{'value'})){
-	$params{'type'} = $p_ref->{'type'}{'value'};
+        $params{'type'} = $p_ref->{'type'}{'value'};
     }
 
-    
     my $commands = $self->db->get_commands( %params );
     return {results => $commands };
-    
 }
 
+=head2 add_command
+
+=cut
 sub add_command{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
-    
+
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-					       workgroup => $workgroup )){
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
-    
+
     my $name = $p_ref->{'name'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
     my $operation = $p_ref->{'operation'}{'value'};
     my $type = $p_ref->{'type'}{'value'};
     my $template = $p_ref->{'template'}{'value'};
     my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
-    
+
     return {results => [{id => $res}]};
 }
 
+=head2 modify_command
+
+=cut
 sub modify_command{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
-    
+
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
 					       workgroup => $workgroup )){
@@ -478,23 +482,25 @@ sub modify_command{
 
     my $res = $self->db->modify_command( name => $name, description => $description, operation => $operation, type => $type, template => $template, command_id => $command_id );
     if($res eq "0E0"){
-	$method_ref->set_error("Update failed for command: " . $command_id);
-	return;
+        $method_ref->set_error("Update failed for command: " . $command_id);
+        return;
     }
     return {results => [{value => $res}]};
 }
 
+=head2 delete_command
+
+=cut
 sub delete_command{
     my $self = shift;
     my $method_ref = shift;
     my $p_ref = shift;
-    
+
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-					       workgroup => $workgroup )){
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -502,11 +508,9 @@ sub delete_command{
     my $res = $self->db->delete_command($p_ref->{'command_id'}{'value'});
     if($res eq "0E0"){
         $method_ref->set_error("Delete failed for command: " . $p_ref->{'command_id'}{'value'});
-	return;
+        return;
     }
     return {results => [{ value => $res}]};
-
 }
-
 
 1;

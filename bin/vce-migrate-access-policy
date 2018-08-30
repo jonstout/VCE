@@ -86,6 +86,14 @@ sub _process_command_config{
     foreach my $type ("system","port","vlan"){
         my %commands = %{$config->{$type}->[0]->{'command'}};
         foreach my $cmd (keys(%commands)){
+
+            if (defined $commands{$cmd}{context} && $commands{$cmd}{context} ne '') {
+                $commands{$cmd}{cmd}->[0] = $commands{$cmd}{context} . '; ' . $commands{$cmd}{cmd}->[0];
+            }
+            if (defined $commands{$cmd}{configure} && $commands{$cmd}{configure} eq 'true') {
+                $commands{$cmd}{cmd}->[0] = 'conf t; ' . $commands{$cmd}{cmd}->[0];
+            }
+
             my $val = {
                 name => $cmd,
                 method_name => $commands{$cmd}{'method_name'},

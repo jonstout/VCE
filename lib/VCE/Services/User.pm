@@ -160,6 +160,9 @@ sub _register_methods{
 
 }
 
+=head2 get_users
+
+=cut
 sub get_users{
     my $self = shift;
     my $m_ref = shift;
@@ -175,6 +178,9 @@ sub get_users{
     return {results => $res};
 }
 
+=head2 add_user
+
+=cut
 sub add_user{
     my $self = shift;
     my $m_ref = shift;
@@ -188,6 +194,9 @@ sub add_user{
     return {results => [{id => $res}]};
 }
 
+=head2 modify_user
+
+=cut
 sub modify_user{
     my $self = shift;
     my $m_ref = shift;
@@ -209,6 +218,9 @@ sub modify_user{
     return {results => [$res]};
 }
 
+=head2 delete_user
+
+=cut
 sub delete_user{
     my $self = shift;
     my $m_ref = shift;
@@ -229,7 +241,6 @@ sub delete_user{
 =head2 handle_request
 
 =cut
-
 sub handle_request{
     my $self = shift;
 

@@ -180,6 +180,8 @@ sub get_users {
     return $result;
 }
 
+=head2 delete_user
+=cut
 sub delete_user{
     my $self = shift;
     my $user_id = shift;

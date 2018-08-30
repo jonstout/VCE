@@ -75,88 +75,148 @@
       </div>
 
       <div class="grnoc-content">
-        <h1 class="title">Modify switch</h1>
+        <!--<h1 class="title">Modify switch</h1>-->
 
-        <form name="modify-switch" onsubmit="return modifySwitch(this)">
-          <input class="input" type="hidden" name="method" value="modify_switch" />
-          <input class="input" type="hidden" name="workgroup" required />
-          <input class="input" type="hidden" name="id" required />
-          <div class="field">
-            <label class="label">Hostname</label>
-            <div class="control">
-              <input class="input" type="text" name="name" required />
-            </div>
+        <div class="tabs is-boxed">
+          <ul>
+            <li id="switch-tab" class="is-active">
+              <a>Details</a>
+            </li>
+            <li id="command-tab" class="">
+              <a>Commands</a>
+            </li>
+          </ul>
+        </div>
+
+        <div id="command-tab-content" style="display: none;">
+          <h1 class="title is-4">Interface commands</h1>
+          <div class="command-list">
+            <table class="table is-striped is-fullwidth">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Template</th>
+                  <th>Role</th>
+                  <th>Operation</th>
+                </tr>
+              </thead>
+              <tbody id="interface-command-list">
+              </tbody>
+            </table>
           </div>
-          <div class="field">
-            <label class="label">Description</label>
-            <div class="control">
-              <input class="input" type="text" name="description" required />
-            </div>
+          <h1 class="title is-4">Switch commands</h1>
+          <div class="command-list">
+            <table class="table is-striped is-fullwidth">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Template</th>
+                  <th>Role</th>
+                  <th>Operation</th>
+                </tr>
+              </thead>
+              <tbody id="switch-command-list">
+              </tbody>
+            </table>
           </div>
-          <div class="field">
-            <label class="label">Management Address</label>
-            <div class="control">
-              <input class="input" type="text" name="ip" required />
-            </div>
+          <div class="command-list">
+            <h1 class="title is-4">VLANs commands</h1>
+            <table class="table is-striped is-fullwidth">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Template</th>
+                  <th>Role</th>
+                  <th>Operation</th>
+                </tr>
+              </thead>
+              <tbody id="vlan-command-list">
+              </tbody>
+            </table>
           </div>
-          <div class="field">
-            <label class="label">SSH Port</label>
-            <div class="control">
-              <input class="input" type="text" name="ssh" required />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">NetConf Port</label>
-            <div class="control">
-              <input class="input" type="text" name="netconf" required />
-            </div>
-          </div>
-          <div class="field">
-            <label class="label">Vendor</label>
-            <div class="control">
-              <div class="select">
-                <select name="vendor">
-                  <option>Brocade</option>
-                </select>
+        </div>
+
+        <div id="switch-tab-content">
+          <form name="modify-switch" onsubmit="return modifySwitch(this)">
+            <input class="input" type="hidden" name="method" value="modify_switch" />
+            <input class="input" type="hidden" name="workgroup" required />
+            <input class="input" type="hidden" name="id" required />
+            <div class="field">
+              <label class="label">Hostname</label>
+              <div class="control">
+                <input class="input" type="text" name="name" required />
               </div>
             </div>
-          </div>
-          <div class="field">
-            <label class="label">Model</label>
-            <div class="control">
-              <div class="select">
-                <select name="model">
-                  <option>MLXe</option>
-                </select>
+            <div class="field">
+              <label class="label">Description</label>
+              <div class="control">
+                <input class="input" type="text" name="description" required />
               </div>
             </div>
-          </div>
-          <div class="field">
-            <label class="label">Firmware Version</label>
-            <div class="control">
-              <div class="select">
-                <select name="version">
-                  <option>5.8.0</option>
-                </select>
+            <div class="field">
+              <label class="label">Management Address</label>
+              <div class="control">
+                <input class="input" type="text" name="ip" required />
               </div>
             </div>
-          </div>
-
-          <div class="field is-grouped">
-            <div class="control">
-              <button type="submit" class="button is-link">Modify Switch</button>
+            <div class="field">
+              <label class="label">SSH Port</label>
+              <div class="control">
+                <input class="input" type="text" name="ssh" required />
+              </div>
             </div>
-            <div class="control">
-              <button type="button" class="button is-danger is-outlined" onclick="return deleteSwitch()">
-                <span>Delete</span>
-                <span class="icon is-small">
-                  <i class="fas fa-times"></i>
-                </span>
-              </button>
+            <div class="field">
+              <label class="label">NetConf Port</label>
+              <div class="control">
+                <input class="input" type="text" name="netconf" required />
+              </div>
             </div>
-          </div>
+            <div class="field">
+              <label class="label">Vendor</label>
+              <div class="control">
+                <div class="select">
+                  <select name="vendor">
+                    <option>Brocade</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Model</label>
+              <div class="control">
+                <div class="select">
+                  <select name="model">
+                    <option>MLXe</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Firmware Version</label>
+              <div class="control">
+                <div class="select">
+                  <select name="version">
+                    <option>5.8.0</option>
+                  </select>
+                </div>
+              </div>
+            </div>
 
-        </form>
+            <div class="field is-grouped">
+              <div class="control">
+                <button type="submit" class="button is-link">Modify Switch</button>
+              </div>
+              <div class="control">
+                <button type="button" class="button is-danger is-outlined" onclick="return deleteSwitch()">
+                  <span>Delete</span>
+                  <span class="icon is-small">
+                    <i class="fas fa-times"></i>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
