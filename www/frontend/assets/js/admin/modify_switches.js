@@ -228,14 +228,98 @@ async function getCommands(switch_id) {
     }
 }
 
+async function addCommandToSwitch(command_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let params = new URLSearchParams(location.search);
+    let switch_id = params.get('switch_id');
+
+    let role = document.querySelector(`#command-${command_id}-role`).value;
+
+    let data = new FormData();
+    data.set('method', 'add_command_to_switch');
+    data.set('workgroup', workgroup);
+    data.set('command_id', command_id);
+    data.set('switch_id', switch_id);
+    data.set('role', role);
+
+    try {
+        const url = '../api/switch.cgi';
+        const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
+        const obj  = await resp.json();
+
+        if ('error_text' in obj) throw obj.error_text;
+
+        let cmd = document.querySelector(`#command-${command_id}`);
+        cmd.dataset.switchCommandId = obj.results[0].id;
+        let cmdRole = document.querySelector(`#command-${command_id}-role`);
+        cmdRole.dataset.switchCommandId = obj.results[0].id;
+        console.log('Command enabled.');
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
+async function removeCommandFromSwitch(command_id, switch_command_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let params = new URLSearchParams(location.search);
+    let switch_id = params.get('switch_id');
+
+    try {
+        const url = `../api/switch.cgi?method=remove_command_from_switch&workgroup=${workgroup}&id=${switch_command_id}`;
+        const resp = await fetch(url, {method: 'get', credentials: 'include'});
+        const obj  = await resp.json();
+
+        if ('error_text' in obj) throw obj.error_text;
+
+        let cmd = document.querySelector(`#command-${command_id}`);
+        cmd.dataset.switchCommandId = -1;
+        let cmdRole = document.querySelector(`#command-${command_id}-role`);
+        cmdRole.dataset.switchCommandId = -1;
+        console.log('Command disabled.');
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+}
+
 async function toggleCommand(e) {
-    console.log(e.checked);
-    console.log(e.dataset.id);
-    console.log(e.dataset.switchCommandId);
+    let command_id = e.dataset.id;
+    let switch_command_id = e.dataset.switchCommandId;
+
     if (e.checked) {
-        console.log('adding command to switch');
+        addCommandToSwitch(command_id);
     } else {
-        console.log('removing command from switch');
+        removeCommandFromSwitch(command_id, switch_command_id);
+    }
+}
+
+async function updateCommandRole(e) {
+    if (e.dataset.switchCommandId === 'null' || e.dataset.switchCommandId == -1) {
+        return false;
+    }
+
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let role = e.value;
+    let switch_command_id = e.dataset.switchCommandId;
+
+    try {
+        const url = `../api/switch.cgi?method=modify_switch_command&workgroup=${workgroup}&id=${switch_command_id}&role=${role}`;
+        const resp = await fetch(url, {method: 'get', credentials: 'include'});
+        const obj  = await resp.json();
+
+        if ('error_text' in obj) throw obj.error_text;
+
+        console.log('Command role updated.');
+    } catch (error) {
+        console.log(error);
+        return false;
     }
 }
 
@@ -248,12 +332,12 @@ async function renderCommands(cmds) {
         let row = `
 <tr>
   <td><label class="checkbox">
-    <input data-id="${cmd.id}" data-switch-command-id="${cmd.switch_command_id}" onclick="toggleCommand(this)" type="checkbox" ${cmd.switch_command_id != null ? 'checked' : ''}>
+    <input id="command-${cmd.id}" data-id="${cmd.id}" data-switch-command-id="${cmd.switch_command_id}" onclick="toggleCommand(this)" type="checkbox" ${cmd.switch_command_id != null ? 'checked' : ''}>
   </label></td>
   <td><div style="font-family: monospace">${cmd.template}</div></td>
   <td>
     <div class="select is-small">
-      <select>
+      <select id="command-${cmd.id}-role" data-switch-command-id="${cmd.switch_command_id}" onchange="updateCommandRole(this)">
         <option ${cmd.role == 'admin' ? 'selected' : ''}>admin</option>
         <option ${cmd.role == 'owner' ? 'selected' : ''}>owner</option>
         <option ${cmd.role == 'user' ? 'selected' : ''}>user</option>
