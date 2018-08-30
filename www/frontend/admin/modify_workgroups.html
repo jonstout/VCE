@@ -165,31 +165,62 @@
           </table>
         </div>
 
-        <div id="user-tab-content" style="display: block;">
+        <div id="user-tab-content" style="display: none;">
 
-            <div class="field">
-              <label class="label">User</label>
-              <div class="control">
-                <input class="input" type="text" id="user-input"/>
+          <form name="add-user-to-workgroup">
+            <div class="field is-horizontal">
+              <div class="field-body">
+
+                <div class="field is-grouped">
+                  <div class="control is-expanded">
+                    <label class="label">Username</label>
+                    <input class="input" type="text" name="username" id="user-input" autocomplete="off"/>
+                    <style>li { background-color: #fff; }</style>
+                    <div class="field" style="position: absolute; z-index: 1; width: 100%;">
+                      <div class="select is-multiple is-fullwidth" style="width: 100%;">
+                        <aside class="menu">
+                          <ul class="menu-list" id="user-input-autocomplete" style="display: none;">
+                          </ul>
+                        </aside>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="control">
+                    <label class="label">Role</label>
+                    <div class="select">
+                      <select name="role">
+                        <option value="admin">Admin</option>
+                        <option value="rw">Read-Write</option>
+                        <option value="ro">Read-Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="control">
+                    <label class="label">&nbsp;</label>
+                    <button class="button is-link">Add User</button>
+                  </div>
+                </div>
+
               </div>
             </div>
+          </form>
+          <hr/>
 
-            <div class="field">
-              <div class="select is-multiple is-fullwidth">
-                <aside class="menu">
-                  <ul class="menu-list" id="user-input-autocomplete" style="display: none;">
-                    <li><a onclick="setAutoCompleteValue('user1')">user1</a></li>
-                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
-                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
-                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
-                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
-                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
-                    <li><a onclick="setAutoCompleteValue('user2')">user2</a></li>
-                  </ul>
-                </aside>
-              </div>
-            </div>
-
+          <table class="table is-striped is-fullwidth">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Full name</th>
+                <th>Email address</th>
+                <th>Role</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="workgroup-user-list">
+            </tbody>
+          </table>
         </div>
 
       </div>

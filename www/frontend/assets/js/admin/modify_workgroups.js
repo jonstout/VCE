@@ -16,6 +16,10 @@ async function init() {
         renderInterfaceList(intfs);
     });
 
+    getUsers(workgroup_id).then(function(users) {
+        renderUserList(users);
+    });
+
     getSwitches().then(function(switches) {
         renderSwitchSelect(switches);
     });
@@ -240,8 +244,15 @@ async function renderWorkgroupList(workgroups) {
     let list = document.querySelector('#aside-list');
     let items = '';
 
+    let params = new URLSearchParams(location.search);
+    let workgroup_id = params.get('workgroup_id');
+
     workgroups.forEach(function(workgroup) {
-        items += `<li><a href="modify_workgroups.html?workgroup_id=${workgroup.id}">${workgroup.name}</a></li>`;
+        if (workgroup.id == workgroup_id) {
+            items += `<li><a class="is-active" href="modify_workgroups.html?workgroup_id=${workgroup.id}">${workgroup.name}</a></li>`;
+        } else {
+            items += `<li><a href="modify_workgroups.html?workgroup_id=${workgroup.id}">${workgroup.name}</a></li>`;
+        }
     });
 
     list.innerHTML = items;
@@ -349,13 +360,16 @@ function loadSwitchInterfaces(e) {
 }
 
 
-async function getUsers(workgroup_id, username) {
+async function getUsersForAutoComplete(username) {
     let cookie = Cookies.getJSON('vce');
     let workgroup = cookie.workgroup;
 
+    let params = new URLSearchParams(location.search);
+    let workgroup_id = params.get('workgroup_id');
+
     username = username === null ? '' : username;
 
-    let url = '../' + baseUrl + `user.cgi?method=get_users&workgroup=${workgroup}&workgroup_id=${workgroup_id}&username=${username}`;
+    let url = '../' + baseUrl + `user.cgi?method=get_users&workgroup=${workgroup}&username=${username}`;
     let response = await fetch(url, {method: 'get', credentials: 'include'});
 
     try {
@@ -387,8 +401,8 @@ function setupAutoComplete() {
     });
 
     input.addEventListener('input', function(e) {
-        if (e.target.value.length > 2) {
-            getUsers(e.target.value).then(function(users) {
+        if (e.target.value.length > 1) {
+            getUsersForAutoComplete(e.target.value).then(function(users) {
                 renderAutoCompleteSuggestions(users);
             });
             // loadAutoComplete(options);
@@ -413,4 +427,84 @@ async function renderAutoCompleteSuggestions(values) {
         options += `<li><a onclick="setAutoCompleteValue('${val.username}')">${val.username}</a></li>`
     });
     select.innerHTML = options;
+}
+
+async function getUsers(workgroup_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let url = '../' + baseUrl + `workgroup.cgi?method=get_workgroup_users&workgroup=${workgroup}&workgroup_id=${workgroup_id}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
+
+    try {
+        let data = await response.json();
+        if ('error_text' in data) {
+            console.log(data.error_text);
+            return null;
+        }
+        return data.results;
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+async function removeUserFromWorkgroup(user_workgroup_id) {
+    let ok = confirm('Are you sure you wish to remove the user this workgroup?');
+    if (!ok) {
+        return false;
+    }
+
+    let del = async function() {
+        let cookie = Cookies.getJSON('vce');
+        let workgroup = cookie.workgroup;
+
+        let params = new URLSearchParams(location.search);
+        let workgroup_id = params.get('workgroup_id');
+
+        try {
+            const url = `../api/workgroup.cgi?method=remove_user_from_workgroup&workgroup=${workgroup}&user_workgroup_id=${user_workgroup_id}`;
+            const resp = await fetch(url, {method: 'get', credentials: 'include'});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) {
+                console.log(obj.error_text);
+                return false;
+            }
+            window.location.href = `modify_workgroups.html?workgroup_id=${workgroup_id}`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    del();
+    return false;
+}
+
+async function renderUserList(users) {
+    let list = document.querySelector('#workgroup-user-list');
+    let items = '';
+
+    users.forEach(function(user) {
+console.log(user);
+        items += `
+<tr>
+  <td>${user.username}</td>
+  <td>${user.fullname}</td>
+  <td>${user.email}</td>
+  <td>
+    <div class="select is-small">
+    <select name="role">
+    <option value="admin">Admin</option>
+    <option value="rw">Read-Write</option>
+    <option value="ro">Read-Only</option>
+    </select>
+    </div>
+  </td>
+  <td><a class="delete" onclick="removeUserFromWorkgroup(${user.user_workgroup_id})"></a></td>
+</tr>`;
+    });
+
+    list.innerHTML = items;
 }
