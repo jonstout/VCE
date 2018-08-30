@@ -160,7 +160,6 @@ sub main {
     foreach my $switch (@$switches){
 	warn "Making Switch: " . Dumper($switch);
 	make_switch_process( $switch, $creds );
-
     }
 
     $d = GRNOC::RabbitMQ::Dispatcher->new( host     => $vce->rabbit_mq->{'host'},

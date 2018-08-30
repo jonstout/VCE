@@ -392,7 +392,18 @@ sub _add_switch {
 
     my $res = $client->add_switch(switch_id => $id);
     
-    return { results => [ { id => $id, status => $res } ] };
+    my $status = 1;
+    if(!defined($res->{'results'})){
+	$method_ref->set_error("Timeout occured talking to VCE process, please check the logs or check with the system administrator");
+	$status = 0;
+    }else{
+	if($res->{'results'}->{'success'} == 0){
+	    $method_ref->set_error("Error attempting to create switch process, was switch added to the database?");
+	    $status = 0;
+	}
+    }
+
+    return { results => [ { id => $id, status => $status } ] };
 
 }
 
