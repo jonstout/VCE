@@ -2,11 +2,10 @@ package VCE::Database::Switch;
 
 use strict;
 use warnings;
-use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch);
+our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch add_command_to_switch remove_command_from_switch modify_switch_command );
 
 
 =head1 Package VCE::Database::Switch
@@ -127,7 +126,6 @@ sub get_switches {
 sub modify_switch {
     my $self   = shift;
     my %params = @_;
-    # warn Dumper($params{name});
 
     return if (!defined $params{id});
 
@@ -173,10 +171,21 @@ sub modify_switch {
     my $values = join(', ', @$keys);
     push @$args, $params{id};
 
-    my $q = $self->{conn}->prepare(
-        "UPDATE switch  SET $values WHERE id=?"
-    );
-    return $q->execute(@$args);
+
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "update switch set $values where id=?"
+        );
+        $result = $q->execute(@$args);
+
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+    return $result;
 }
 
 =head2 delete_switch
@@ -184,21 +193,132 @@ sub modify_switch {
 =cut
 sub delete_switch {
     my $self   = shift;
-    my %params = @_;
+    my $switch_id = shift;
 
-    return if (!defined $params{id});
+    if (!defined $switch_id){
+        $self->{log}->error("Switch ID not specified");
+        return 0;
+    }
 
-    $self->{log}->debug("delete_switch($params{id}, ...)");
+    $self->{log}->debug("delete_switch($switch_id, ...)");
 
     my $keys = [];
     my $args = [];
 
-    push @$args, $params{id};
+    push @$args, $switch_id;
 
-    my $q = $self->{conn}->prepare(
-        "DELETE FROM switch WHERE id=?"
-    );
-    return $q->execute(@$args);
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "delete from switch where id=?"
+        );
+        $result = $q->execute(@$args);
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+
+    return $result;
+
 }
+
+=head2 add_command_to_switch
+
+=cut
+sub add_command_to_switch {
+    my ( $self, $command_id, $switch_id, $role ) = @_;
+
+    $self->{log}->debug("add_command_to_switch($command_id, $switch_id, $role)");
+
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into switch_command
+            (command_id, switch_id, role)
+            values (?, ?, ?)"
+        );
+        $q->execute($command_id, $switch_id, $role);
+
+    };
+
+    if ($@) {
+        return (undef,"$@");
+    }
+
+    my $id = $self->{conn}->last_insert_id("", "", "switch_command", "");
+    return ($id, undef);
+}
+
+=head2 remove_command_from_switch
+
+=cut
+sub remove_command_from_switch {
+    my $self   = shift;
+    my $switch_command_id = shift;
+
+    if (!defined $switch_command_id){
+        $self->{log}->error("Switch Command ID not specified");
+        return 0;
+    }
+
+    $self->{log}->debug("remove_command_from_switch($switch_command_id, ...)");
+    my $result;
+    eval {
+        my $query = $self->{conn}->prepare(
+            "delete from switch_command where id=?"
+        );
+       $result = $query->execute($switch_command_id);
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+
+    return $result;
+}
+
+=head2 modify_switch_command
+
+=cut
+sub  modify_switch_command {
+    my $self   = shift;
+    my $switch_command_id = shift;
+    my $role = shift;
+
+    if (!defined $switch_command_id){
+        $self->{log}->error("Switch Command ID not specified");
+        return 0;
+    }
+
+    $self->{log}->debug("remove_command_from_switch($switch_command_id, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $role) {
+        push @$keys, 'role=?';
+        push @$args, $role;
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $switch_command_id;
+
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "update switch_command set $values where id=?"
+        );
+        $result = $q->execute(@$args);
+
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+    return $result;
+}
+
 
 1;
