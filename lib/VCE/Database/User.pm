@@ -138,7 +138,7 @@ sub modify_user{
 sub get_users {
     my $self = shift;
     my %params = @_;
-    
+
     $self->{log}->debug("get_users()");
 
     my $keys = [];
@@ -150,15 +150,15 @@ sub get_users {
     }
     if (defined $params{fullname}) {
         push @$keys, 'user.fullname like ?';
-        push @$args, $params{type};
+        push @$args, '%' . $params{type} . '%';
     }
     if(defined($params{email})){
-        push @$keys, 'user.email like ?';
+        push @$keys, 'user.email=?';
         push @$args, $params{email};
     }
     if(defined($params{username})){
         push @$keys, 'user.username like ?';
-        push @$args, $params{username};
+        push @$args, '%' . $params{username} . '%';
     }
 
     my $values = join(' AND ', @$keys);
@@ -166,14 +166,14 @@ sub get_users {
 
     my $q;
     eval{
-	$q = $self->{conn}->prepare(
-	    "select * from user $where"
-	    );
-	$q->execute(@$args);
+        $q = $self->{conn}->prepare(
+            "select * from user $where"
+        );
+        $q->execute(@$args);
     };
     if($@){
-	$self->{log}->error("Error executing SQL: " . Dumper($@));
-	return;
+        $self->{log}->error("Error executing SQL: " . Dumper($@));
+        return;
     }
 
     my $result = $q->fetchall_arrayref({});
@@ -209,7 +209,8 @@ sub get_users_by_workgroup_id {
     my $w;
     eval{
 	$w = $self->{conn}->prepare(
-	    "select user.username from user
+	    "select user.*, user_workgroup.id as user_workgroup_id, user_workgroup.role, workgroup.id as workgroup_id, workgroup.name as workgroup_name
+         from user
          join user_workgroup on user_workgroup.user_id=user.id
          join workgroup on workgroup.id=user_workgroup.workgroup_id
          where workgroup.id=?"

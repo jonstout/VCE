@@ -10,7 +10,7 @@ our $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf');
 our $user_services;
 
 if(!defined($user_services)){
-    $user_services = VCE::Services::Switch->new( rabbit_mq => {
+    $user_services = VCE::Services::User->new( rabbit_mq => {
             user => 'guest',
             pass => 'guest',
             host => 'localhost',

@@ -5,11 +5,10 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup delete_workgroup );
+our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup delete_workgroup add_user_to_workgroup remove_user_from_workgroup );
 
 
 =head2 add_workgroup
-
 
 =cut
 sub add_workgroup {
@@ -31,7 +30,6 @@ sub add_workgroup {
 }
 
 =head2 get_workgroup
-
 
 =cut
 sub get_workgroup {
@@ -62,7 +60,6 @@ sub get_workgroup {
 }
 
 =head2 get_workgroups
-
 
 =cut
 sub get_workgroups {
@@ -127,6 +124,9 @@ sub get_workgroup_interfaces {
     return $result;
 }
 
+=head2 update_workgroup
+
+=cut
 sub update_workgroup {
     my $self   = shift;
     my %params = @_;
@@ -156,6 +156,9 @@ sub update_workgroup {
     return $q->execute(@$args);
 }
 
+=head2 delete_workgroup
+
+=cut
 sub delete_workgroup {
     my $self   = shift;
     my %params = @_;
@@ -173,6 +176,68 @@ sub delete_workgroup {
         "DELETE FROM workgroup WHERE id=?"
     );
     return $q->execute(@$args);
+}
+
+=head2 add_user_to_workgroup
+
+    my $role         = 'admin';
+    my $user_id      = 1;
+    my $workgroup_id = 1;
+
+    my ($id, $err) = add_user_to_workgroup($role, $user_id, $workgroup_id);
+    if (defined $err) {
+        warn $err;
+    }
+
+=cut
+sub add_user_to_workgroup {
+    my ( $self, $role, $user_id, $workgroup_id ) = @_;
+    $self->{log}->debug("add_user_to_workgroup($role, $user_id, $workgroup_id)");
+
+    eval {
+        my $q = $self->{conn}->prepare(
+            "insert into user_workgroup (role, user_id, workgroup_id) values (?, ?, ?)"
+        );
+        $q->execute($role, $user_id, $workgroup_id);
+    };
+    if ($@) {
+        return (undef, "$@")
+    }
+
+    return ($self->{conn}->last_insert_id("", "", "user_workgroup", ""), undef);
+}
+
+=head2 remove_user_from_workgroup
+
+    my $user_workgroup_id = 1;
+
+    my $err = remove_user_from_workgroup($user_workgroup_id);
+    if (defined $err) {
+        warn $err;
+    }
+
+=cut
+sub remove_user_from_workgroup {
+    my $self = shift;
+    my $user_workgroup_id = shift;
+    $self->{log}->debug("remove_user_from_workgroup($user_workgroup_id)");
+
+    return 'user_workgroup_id not defined.' if (!defined $user_workgroup_id);
+
+    eval {
+        my $query = $self->{conn}->prepare(
+            "delete from user_workgroup where id=?"
+        );
+        my $ok = $query->execute($user_workgroup_id);
+        if (!$ok) {
+            return "Something went wrong while removing (user, workgroup) relation $user_workgroup_id.";
+        }
+    };
+    if ($@) {
+        return "$@";
+    }
+
+    return;
 }
 
 return 1;

@@ -120,35 +120,35 @@
             <input class="input" type="hidden" name="workgroup" required />
             <input class="input" type="hidden" name="workgroup_id" required />
 
-            <div class="field">
-              <label class="label">Switch</label>
-              <div class="control">
-                <div class="select">
-                  <select name="switch" id="switch-select" onchange="loadSwitchInterfaces(this)">
-                  </select>
-                </div>
-              </div>
-            </div>
+            <div class="field is-horizontal">
+              <div class="field-body">
 
-            <div class="field">
-              <label class="label">Interface</label>
-              <div class="control">
-                <div class="select">
-                  <select name="id" id="interface-select">
-                  </select>
-                </div>
-              </div>
-            </div>
+                <div class="field is-grouped">
+                  <div class="control">
+                    <label class="label">Switch</label>
+                    <div class="select">
+                      <select name="switch" id="switch-select" onchange="loadSwitchInterfaces(this)"></select>
+                    </div>
+                  </div>
 
-            <div class="field is-grouped">
-              <div class="control">
-                <button type="submit" class="button is-link">Grant Ownership</button>
+                  <div class="control">
+                    <label class="label">Interface</label>
+                    <div class="select">
+                      <select name="id" id="interface-select">
+                      </select>
+                    </div>
+                  </div>
+
+
+                  <div class="control">
+                    <label class="label">&nbsp;</label>
+                    <button type="submit" class="button is-link">Make Owner</button>
+                  </div>
+                </div>
               </div>
             </div>
           </form>
-
           <hr/>
-          <h1 class="title is-4">Workgroup's Interfaces</h1>
 
           <table class="table is-striped is-fullwidth">
             <thead>
@@ -166,6 +166,62 @@
         </div>
 
         <div id="user-tab-content" style="display: none;">
+
+          <form name="add-user-to-workgroup" onsubmit="return addUserToWorkgroup(this)">
+            <input class="input" type="hidden" name="user_id" id="user-input-id"/>
+
+            <div class="field is-horizontal">
+              <div class="field-body">
+
+                <div class="field is-grouped">
+                  <div class="control">
+                    <label class="label">Username</label>
+                    <input class="input" type="text" id="user-input" autocomplete="off"/>
+                    <style>li { background-color: #fff; }</style>
+                    <div class="field" style="position: absolute; z-index: 1; width: 100%;">
+                      <div class="select is-multiple is-fullwidth" style="width: 100%;">
+                        <aside class="menu">
+                          <ul class="menu-list" id="user-input-autocomplete" style="display: none;">
+                          </ul>
+                        </aside>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="control">
+                    <label class="label">Role</label>
+                    <div class="select">
+                      <select name="role">
+                        <option value="admin">Admin</option>
+                        <option value="rw">Read-Write</option>
+                        <option value="ro">Read-Only</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="control">
+                    <label class="label">&nbsp;</label>
+                    <button type="submit" class="button is-link">Make User</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+          <hr/>
+
+          <table class="table is-striped is-fullwidth">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Full name</th>
+                <th>Email address</th>
+                <th>Role</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="workgroup-user-list">
+            </tbody>
+          </table>
         </div>
 
       </div>
