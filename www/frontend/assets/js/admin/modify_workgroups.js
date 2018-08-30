@@ -413,9 +413,11 @@ function setupAutoComplete() {
     });
 }
 
-function setAutoCompleteValue(value) {
+function setAutoCompleteValue(value, user_id) {
     let input = document.querySelector('#user-input');
     input.value = value;
+    let id = document.querySelector('#user-input-id');
+    id.value = user_id;
 }
 
 async function renderAutoCompleteSuggestions(values) {
@@ -424,7 +426,7 @@ async function renderAutoCompleteSuggestions(values) {
     let options = '';
 
     values.forEach(function(val) {
-        options += `<li><a onclick="setAutoCompleteValue('${val.username}')">${val.username}</a></li>`
+        options += `<li><a onclick="setAutoCompleteValue('${val.username}', ${val.id})">${val.username}</a></li>`
     });
     select.innerHTML = options;
 }
@@ -447,6 +449,36 @@ async function getUsers(workgroup_id) {
         console.log(error);
         return null;
     }
+}
+
+function addUserToWorkgroup(form) {
+    let func = async function(data) {
+        let cookie = Cookies.getJSON('vce');
+        let workgroup = cookie.workgroup;
+
+        let params = new URLSearchParams(location.search);
+        let workgroup_id = params.get('workgroup_id');
+
+        data.set('method', 'add_user_to_workgroup');
+        data.set('workgroup', workgroup);
+        data.set('workgroup_id', workgroup_id);
+
+        try {
+            const url = '../api/workgroup.cgi';
+            const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
+            const obj  = await resp.json();
+
+            if ('error_text' in obj) throw obj.error_text;
+
+            window.location.href = `modify_workgroups.html?workgroup_id=${workgroup_id}`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    func(new FormData(form));
+    return false;
 }
 
 async function removeUserFromWorkgroup(user_workgroup_id) {
@@ -487,7 +519,6 @@ async function renderUserList(users) {
     let items = '';
 
     users.forEach(function(user) {
-console.log(user);
         items += `
 <tr>
   <td>${user.username}</td>
@@ -496,9 +527,9 @@ console.log(user);
   <td>
     <div class="select is-small">
     <select name="role">
-    <option value="admin">Admin</option>
-    <option value="rw">Read-Write</option>
-    <option value="ro">Read-Only</option>
+    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+    <option value="rw" ${user.role === 'rw' ? 'selected' : ''}>Read-Write</option>
+    <option value="ro" ${user.role === 'ro' ? 'selected' : ''}>Read-Only</option>
     </select>
     </div>
   </td>
