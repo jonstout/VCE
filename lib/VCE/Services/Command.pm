@@ -349,13 +349,13 @@ warn 'VCE.Switch.' . $p_ref->{switch}{value};
                                                       command => $cmd_string,
                                                       # config => $command->{'configure'},
                                                       config => 0,
-                                                      cli_type => $command->{'role'} );
+                                                      cli_type => $command->{'operation'} );
     } else {
         $self->logger->debug("Running $cmd_string with no context: " . Dumper($command));
         $res = $self->rabbit_client->execute_command( command => $cmd_string,
                                                       # config => $command->{'configure'},
                                                       config => 0,
-                                                      cli_type => $command->{'role'} );
+                                                      cli_type => $command->{'operation'} );
     }
 warn Dumper($res);
     if ($res->{'results'}->{'error'}) {

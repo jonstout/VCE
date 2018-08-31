@@ -779,8 +779,6 @@ sub execute_command{
     my $success = $m_ref->{'success_callback'};
     my $error   = $m_ref->{'error_callback'};
 
-    $self->logger->error(Dumper(keys %{$p_ref}));
-
     if (!$self->device->connected) {
         return &$success({success => 0, error => 1, error_msg => 'Device is currently disconnected.'});
     }
@@ -800,7 +798,7 @@ sub execute_command{
     # request in an async method so the web user gets his response
     # immediately while the backend completes its query against the
     # device.
-    if (defined $p_ref->{'cli_type'}{'value'} && $p_ref->{'cli_type'}{'value'} eq 'action') {
+    if (defined $p_ref->{'cli_type'}{'value'} && $p_ref->{'cli_type'}{'value'} eq 'write') {
         $self->_gather_operational_status();
     }
 
