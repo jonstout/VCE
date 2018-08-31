@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( delete_user modify_user add_user add_user_to_workgroup get_user get_users get_user_by_name get_users_by_workgroup_id );
+our @EXPORT = qw( delete_user modify_user add_user get_user get_users get_user_by_name get_users_by_workgroup_id );
 
 
 =head2 add_user
@@ -22,23 +22,6 @@ sub add_user {
     $q->execute($username, $email, $fullname);
 
     return $self->{conn}->last_insert_id("", "", "user", "");
-}
-
-=head2 add_user_to_workgroup
-=cut
-sub add_user_to_workgroup {
-    my ( $self, $user_id, $workgroup_id, $role ) = @_;
-
-    $role = $role || 'admin';
-
-    $self->{log}->debug("add_user_to_workgroup($user_id, $workgroup_id, $role)");
-
-    my $q = $self->{conn}->prepare(
-        "insert into user_workgroup (user_id, workgroup_id, role) values (?, ?, ?)"
-    );
-    $q->execute($user_id, $workgroup_id, $role);
-
-    return $self->{conn}->last_insert_id("", "", "user_workgroup", "");
 }
 
 =head2 get_user

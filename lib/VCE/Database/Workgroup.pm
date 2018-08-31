@@ -240,7 +240,7 @@ sub remove_user_from_workgroup {
     return;
 }
 
-=head2 get_workgroups
+=head2 get_user_workgroups
 
 =cut
 sub get_user_workgroups {
