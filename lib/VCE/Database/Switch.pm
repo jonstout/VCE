@@ -239,9 +239,7 @@ sub add_command_to_switch {
             values (?, ?, ?)"
         );
         $q->execute($command_id, $switch_id, $role);
-
     };
-
     if ($@) {
         return (undef,"$@");
     }

@@ -123,6 +123,30 @@ sub _register_workgroup_functions {
     };
     undef $method;
 
+    #--- Registering add_workgroup method
+    $method = GRNOC::WebService::Method->new(
+        name => "get_user_workgroups",
+        description => "Method for getting workgroups",
+        callback => sub {
+            return $self->_get_user_workgroups(@_)
+        });
+    $method->add_input_parameter(
+        required => 1,
+        name => "workgroup",
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "check if user belonging to admin workgroup"
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => "user_id",
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "filter result on user_id"
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
     #--- Registering update workgroup method
     $method = GRNOC::WebService::Method->new( name => "update_workgroup",
         description => "Method for updating a workgroup",
@@ -329,6 +353,34 @@ sub _get_workgroups {
     }
 
     my $workgroups = $self->db->get_workgroups(workgroup_id => $workgroup_id);
+    return { results => $workgroups };
+}
+
+# --- get workgroups
+sub _get_user_workgroups {
+
+    warn Dumper("--- in add workgroup ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $user_id = $params->{user_id}{value};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method_ref->set_error("User $user not in specified workgroup $workgroup.");
+        return;
+    }
+
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to get workgroups.");
+        return;
+    }
+
+    my $workgroups = $self->db->get_user_workgroups(user_id => $user_id);
     return { results => $workgroups };
 }
 

@@ -154,7 +154,7 @@ sub load_users {
 
         foreach my $wg (@$u) {
             my $wg_id = $wg2id->{$wg};
-            my $u_wg_id = $db->add_user_to_workgroup($u_id, $wg_id, 'admin');
+            my $u_wg_id = $db->add_user_to_workgroup('admin', $u_id, $wg_id);
         }
     }
 

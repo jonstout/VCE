@@ -6,7 +6,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( delete_user modify_user add_user add_user_to_workgroup get_user get_users get_user_by_name get_users_by_workgroup_id );
+our @EXPORT = qw( delete_user modify_user add_user get_user get_users get_user_by_name get_users_by_workgroup_id );
 
 
 =head2 add_user
@@ -22,23 +22,6 @@ sub add_user {
     $q->execute($username, $email, $fullname);
 
     return $self->{conn}->last_insert_id("", "", "user", "");
-}
-
-=head2 add_user_to_workgroup
-=cut
-sub add_user_to_workgroup {
-    my ( $self, $user_id, $workgroup_id, $role ) = @_;
-
-    $role = $role || 'admin';
-
-    $self->{log}->debug("add_user_to_workgroup($user_id, $workgroup_id, $role)");
-
-    my $q = $self->{conn}->prepare(
-        "insert into user_workgroup (user_id, workgroup_id, role) values (?, ?, ?)"
-    );
-    $q->execute($user_id, $workgroup_id, $role);
-
-    return $self->{conn}->last_insert_id("", "", "user_workgroup", "");
 }
 
 =head2 get_user
@@ -106,31 +89,37 @@ sub get_user_by_name {
 sub modify_user{
     my $self = shift;
     my %params = @_;
+    return if (!defined $params{user_id});
 
-    $self->{log}->debug("modify_user()");
+    $self->{log}->debug("modify_user($params{user_id}, ...)");
 
-    my @args;
-    my $updates;
-    foreach my $key (keys %params){
-	next if $key eq 'user_id';
-	next if !defined($params{$key});
-    	$updates = join( ' , ', "$key = ?");
-    	push(@args, $params{$key});
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{email}) {
+        push @$keys, 'email=?';
+        push @$args, $params{email};
     }
-    #push our last arg on
-    push(@args, $params{'user_id'});
-    my $q;
-    my $res;
+    if (defined $params{fullname}) {
+        push @$keys, 'fullname=?';
+        push @$args, $params{fullname};
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $params{user_id};
+
+    my $result;
     eval{
-	$q = $self->{conn}->prepare( "update user set $updates where id = ?" );
-	$res = $q->execute(@args);
+        my $q = $self->{conn}->prepare(
+            "UPDATE user SET $values where id=?"
+        );
+        $result = $q->execute(@$args);
     };
     if($@){
-	$self->{log}->error("Error Executing SQL: " . Dumper($@));
-	return;
+        $self->{log}->error("$@");
+        return 0;
     }
-
-    return $res;
+    return $result;
 }
 
 =head2 get_users
@@ -167,7 +156,7 @@ sub get_users {
     my $q;
     eval{
         $q = $self->{conn}->prepare(
-            "select * from user $where"
+            "select * from user $where order by username asc"
         );
         $q->execute(@$args);
     };
