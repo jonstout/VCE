@@ -131,7 +131,10 @@ sub update_workgroup {
     my $self   = shift;
     my %params = @_;
 
-    return if (!defined $params{id});
+    if (!defined $params{id}) {
+        $self->{log}->error("No workgroup id specified");
+        return 0;
+    }
 
     $self->{log}->debug("modify_switch($params{id}, ...)");
 
@@ -149,11 +152,21 @@ sub update_workgroup {
 
     my $values = join(', ', @$keys);
     push @$args, $params{id};
+    my $result;
+    eval{
+        my $q = $self->{conn}->prepare(
+            "update workgroup set $values where id=?"
+        );
+        $result = $q->execute(@$args);
 
-    my $q = $self->{conn}->prepare(
-        "UPDATE workgroup SET $values WHERE id=?"
-    );
-    return $q->execute(@$args);
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+    return $result;
+
 }
 
 =head2 delete_workgroup
@@ -161,21 +174,34 @@ sub update_workgroup {
 =cut
 sub delete_workgroup {
     my $self   = shift;
-    my %params = @_;
+    my $workgroup_id = shift;
+    if (!defined $workgroup_id) {
+        $self->{log}->error("No workgroup id specified");
+        return 0;
+    }
 
-    return if (!defined $params{id});
-
-    $self->{log}->debug("delete_workgroup($params{id}, ...)");
+    $self->{log}->debug("delete_workgroup($workgroup_id, ...)");
 
     my $keys = [];
     my $args = [];
 
-    push @$args, $params{id};
+    push @$args, $workgroup_id;
 
-    my $q = $self->{conn}->prepare(
-        "DELETE FROM workgroup WHERE id=?"
-    );
-    return $q->execute(@$args);
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "delete from workgroup where id=?"
+        );
+        $result = $q->execute(@$args);
+    };
+
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+
+    return $result;
+
 }
 
 =head2 add_user_to_workgroup

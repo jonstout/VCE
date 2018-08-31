@@ -208,7 +208,7 @@ sub handle_request{
 }
 
 
-
+#--- Method to add an interface
 sub _add_interface {
 
     warn Dumper("--- in add interface ---");
@@ -237,7 +237,7 @@ sub _add_interface {
         mtu             =>  "",
         speed           =>  "",
     );
-    warn Dumper("ID: $id");
+    warn Dumper("add interface result id: $id");
     if (defined $err) {
         warn Dumper("Error: $err");
         $method_ref->set_error($err);
@@ -251,7 +251,7 @@ sub _add_interface {
 
 sub _get_interfaces {
 
-    warn Dumper("--- IN GET INTERFACES ---");
+    warn Dumper("--- in get interfaces ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
@@ -292,7 +292,7 @@ sub _get_interfaces {
     return { results => $interfaces };
 }
 
-
+#--- Method to update an interface
 sub _update_interface {
     warn Dumper("--- in update interface ---");
     my $self = shift;
@@ -300,8 +300,14 @@ sub _update_interface {
     my $params = shift;
     my $user = $ENV{'REMOTE_USER'};
 
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to update the interface.");
+        return;
+    }
 
-    my $workgroup = $params->{'workgroup'}{'value'};
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
@@ -312,15 +318,22 @@ sub _update_interface {
         id              => $params->{id}{value},
         workgroup_id    => $params->{workgroup_id}{value},
     );
-    warn Dumper("update result: $result");
+    warn Dumper("update interface result: $result");
     if ($result eq 0) {
 
-        $method_ref->set_error("Update failed for interface: $params->{id}{value}");
+        $result = "Update interface failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
         return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
     }
     return { results => [ { value => $result } ] }
 }
 
+#--- Method to delete the interface
 sub _delete_interface {
     warn Dumper("--- in delete interface ---");
     my $self = shift;
@@ -329,7 +342,13 @@ sub _delete_interface {
 
     my $user = $ENV{'REMOTE_USER'};
 
-    my $workgroup = $params->{'workgroup'}{'value'};
+    # Validation
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        return;
+    }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
             workgroup => $workgroup )){
@@ -340,12 +359,18 @@ sub _delete_interface {
     my $result = $self->db->delete_interface (
         $params->{id}{value}
     );
-    warn Dumper("delete result: $result");
+    warn Dumper("delete interface result: $result");
 
     if ($result eq 0) {
 
-        $method_ref->set_error("Delete failed for interface: $params->{id}{value}");
+        $result = "Delete interface failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
         return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
     }
 
     return { results => [ { value => $result } ] }

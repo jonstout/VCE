@@ -2,7 +2,6 @@ package VCE::Database::Interface;
 
 use strict;
 use warnings;
-use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
@@ -80,22 +79,23 @@ sub delete_interface {
 
     if (!defined $interface_id) {
         $self->{log}->error("No interface id specified");
-        return;
+        return 0;
     }
 
+    my $result;
     eval {
         my $query = $self->{conn}->prepare(
-            'DELETE FROM interface WHERE id=?'
+            'delete from interface where id=?'
         );
-        $query->execute($interface_id);
+        $result = $query->execute($interface_id);
     };
+
     if ($@) {
-        warn Dumper($@);
         $self->{log}->error("$@");
         return 0;
     }
 
-    return 1;
+    return $result;
 }
 
 =head2 get_interface
@@ -186,7 +186,10 @@ sub get_interfaces {
 sub update_interface {
     my $self   = shift;
     my %params = @_;
-    return if (!defined $params{id});
+    if (!defined $params{id}) {
+        $self->{log}->error("interface id not specified");
+        return 0;
+    }
 
     $self->{log}->debug("update_interface($params{id}, ...)");
 
@@ -235,7 +238,7 @@ sub update_interface {
     my $result;
     eval {
         my $q = $self->{conn}->prepare(
-            "UPDATE interface SET $values WHERE id=?"
+            "update interface set $values where id=?"
         );
 
         $result = $q->execute(@$args);
