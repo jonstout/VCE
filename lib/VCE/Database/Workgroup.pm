@@ -5,7 +5,7 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup delete_workgroup add_user_to_workgroup remove_user_from_workgroup );
+our @EXPORT = qw( add_workgroup get_workgroup get_workgroups get_workgroup_interfaces update_workgroup delete_workgroup add_user_to_workgroup remove_user_from_workgroup get_user_workgroups );
 
 
 =head2 add_workgroup
@@ -239,5 +239,39 @@ sub remove_user_from_workgroup {
 
     return;
 }
+
+=head2 get_workgroups
+
+=cut
+sub get_user_workgroups {
+    my $self = shift;
+    my %params = @_;
+
+    $self->{log}->debug("get_user_workgroups($params{user_id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{user_id}) {
+        push @$keys, 'user.id=?';
+        push @$args, $params{user_id};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
+    my $q = $self->{conn}->prepare(
+        "select workgroup.*, user_workgroup.id as user_workgroup_id, user_workgroup.role from workgroup
+         join user_workgroup on user_workgroup.workgroup_id=workgroup.id
+         join user on user.id=user_workgroup.user_id
+         $where
+         order by workgroup.name"
+    );
+    $q->execute(@$args);
+
+    my $result = $q->fetchall_arrayref({});
+    return $result;
+}
+
 
 return 1;
