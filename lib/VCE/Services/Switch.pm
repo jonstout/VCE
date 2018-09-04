@@ -394,7 +394,7 @@ sub _add_switch {
         $params->{model}{value},
         $params->{version}{value},
     );
-    warn Dumper("ID: $id");
+    warn Dumper("add switch result id: $id");
     if (defined $err) {
         warn Dumper("Error: $err");
         $method_ref->set_error($err);
@@ -449,9 +449,9 @@ sub _get_switches {
 }
 
 
-#--- Method to moddify switches
+#--- Method to modify switches
 sub _modify_switch {
-    warn Dumper("--- in modify switche ---");
+    warn Dumper("--- in modify switch ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
@@ -482,9 +482,8 @@ sub _modify_switch {
         model       => $params->{model}{value},
         version     => $params->{version}{value},
     );
-    warn Dumper("modify result: $result");
+    warn Dumper("modify switch result: $result");
     if ($result eq 0) {
-
         $result = "Update Switch failed for ID: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
@@ -524,7 +523,7 @@ sub _delete_switch {
     my $result = $self->db->delete_switch (
         $params->{id}{value}
     );
-    warn Dumper("delete result: $result");
+    warn Dumper("delete switch result: $result");
 
     if ($result eq 0) {
         $result = "Delete Switch failed for ID: $params->{id}{value}";

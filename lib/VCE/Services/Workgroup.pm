@@ -290,7 +290,7 @@ sub handle_request{
     $self->dispatcher->handle_request();
 }
 
-# --- add workgroup
+# --- Method to add workgroup
 sub _add_workgroup {
 
     warn Dumper("--- in add workgroup ---");
@@ -303,7 +303,6 @@ sub _add_workgroup {
     # Validations
     my $workgroup = $params->{'workgroup'}{'value'};
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
-
     if (!$is_admin) {
         $method_ref->set_error("Workgroup $workgroup is not authorized to add workgroup $params->{name}{value}");
         return;
@@ -318,7 +317,7 @@ sub _add_workgroup {
         $params->{name}{value},
         $params->{description}{value},
     );
-    warn Dumper("ID: $id");
+    warn Dumper("add workgroup result id: $id");
     if (defined $err) {
         warn Dumper("Error: $err");
         $method_ref->set_error($err);
@@ -331,7 +330,7 @@ sub _add_workgroup {
 # --- get workgroups
 sub _get_workgroups {
 
-    warn Dumper("--- in add workgroup ---");
+    warn Dumper("--- in get workgroup ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
@@ -359,7 +358,7 @@ sub _get_workgroups {
 # --- get workgroups
 sub _get_user_workgroups {
 
-    warn Dumper("--- in add workgroup ---");
+    warn Dumper("--- in get user workgroup ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
@@ -384,25 +383,26 @@ sub _get_user_workgroups {
     return { results => $workgroups };
 }
 
-# --- Update workgroup
+# --- Method to update workgroup
 sub _update_workgroup {
+
     warn Dumper("--- in update workgroup ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
-    my $user = $ENV{'REMOTE_USER'};
 
+    my $user = $ENV{'REMOTE_USER'};
 
     # Validations
     my $workgroup = $params->{'workgroup'}{'value'};
-
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
         $method_ref->set_error("Workgroup $workgroup is not authorized to update workgroup $params->{id}{value}");
         return;
     }
 
-    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
+    if(!$self->vce->access->user_in_workgroup(username => $user,
+            workgroup => $workgroup)){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -412,16 +412,26 @@ sub _update_workgroup {
         name            => $params->{name}{value},
         description     => $params->{description}{value},
     );
+    warn Dumper("update workgroup result: $result");
 
-    if ($result eq "0E0") {
-        $method_ref->set_error("Update failed for workgroup: $params->{id}{value}");
+    if ($result eq 0) {
+
+        $result = "Update workgroup failed for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
         return;
     }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
+    }
+
     return { results => [ { value => $result } ] };
 }
 
-# --- Delete workgroup
+# --- Method to delete workgroup
 sub _delete_workgroup {
+
     warn Dumper("--- in delete workgroup ---");
     my $self = shift;
     my $method_ref = shift;
@@ -436,18 +446,28 @@ sub _delete_workgroup {
         $method_ref->set_error("Workgroup $workgroup is not authorized to delete workgroup $params->{id}{value}");
         return;
     }
-    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)){
+
+    if(!$self->vce->access->user_in_workgroup(username => $user,
+            workgroup => $workgroup)){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
 
     my $result = $self->db->delete_workgroup (
-        id => $params->{id}{value}
+        $params->{id}{value}
     );
+    warn Dumper("delete workgroup result: $result");
 
-    if ($result eq "0E0") {
-        $method_ref->set_error("Delete failed for workgroup: $params->{id}{value}");
+    if ($result eq 0) {
+
+        $result = "Delete workgroup for ID: $params->{id}{value}";
+        $method_ref->set_error($result);
         return;
+    }
+
+    # 0E0 is success: 0 rows affected
+    if ($result eq "0E0") {
+        $result = 0;
     }
 
     return { results => [ { value => $result } ] };
@@ -485,6 +505,7 @@ sub _add_user_to_workgroup {
 }
 
 sub _remove_user_from_workgroup {
+
     my $self   = shift;
     my $method = shift;
     my $params = shift;

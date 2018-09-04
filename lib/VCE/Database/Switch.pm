@@ -38,8 +38,7 @@ sub add_switch {
         return (undef,"$@")
     }
 
-    my $id = $self->{conn}->last_insert_id("", "", "switch", "");
-    return ($id, undef);
+    return ($self->{conn}->last_insert_id("", "", "switch", ""), undef);
 }
 
 =head2 get_switch
@@ -127,7 +126,10 @@ sub modify_switch {
     my $self   = shift;
     my %params = @_;
 
-    return if (!defined $params{id});
+    if (!defined $params{id}){
+        $self->{log}->error("Switch ID not specified");
+        return 0;
+    }
 
     $self->{log}->debug("modify_switch($params{id}, ...)");
 
@@ -244,8 +246,7 @@ sub add_command_to_switch {
         return (undef,"$@");
     }
 
-    my $id = $self->{conn}->last_insert_id("", "", "switch_command", "");
-    return ($id, undef);
+    return ($self->{conn}->last_insert_id("", "", "switch_command", ""), undef);
 }
 
 =head2 remove_command_from_switch

@@ -30,10 +30,7 @@ sub add_acl {
         return (undef,"$@");
     }
 
-    my $id = $self->{conn}->last_insert_id("", "", "acl", "");
-    return ($id, undef);
-
-    # return $self->{conn}->last_insert_id("", "", "interface_workgroup_acl", "");
+    return ($self->{conn}->last_insert_id("", "", "acl", ""), undef);
 }
 
 =head2 get_acls
@@ -66,7 +63,10 @@ sub get_acls {
 sub modify_acl {
     my $self   = shift;
     my %params = @_;
-    return if (!defined $params{id});
+    if (!defined $params{id}) {
+        $self->{log}->error("ACL ID not specified");
+        return 0;
+    }
 
     $self->{log}->debug("modify_acl($params{id}, ...)");
 
@@ -87,7 +87,7 @@ sub modify_acl {
     my $result;
     eval {
         my $q = $self->{conn}->prepare(
-            "UPDATE acl SET $values WHERE id=?"
+            "update acl set $values where id=?"
         );
 
         $result = $q->execute(@$args);
@@ -106,18 +106,18 @@ sub delete_acl {
     my $self = shift;
     my $acl_id = shift;
 
-    $self->{log}->debug("Calling delete_acl");
 
     if (!defined $acl_id) {
-        $self->{log}->error("No acl id specified");
-        return;
+        $self->{log}->error("ACL ID not specified");
+        return 0;
     }
 
+    $self->{log}->debug("Calling delete_acl");
 
     my $result;
     eval {
         my $query = $self->{conn}->prepare(
-            'DELETE FROM acl WHERE id=?'
+            'delete from acl where id=?'
         );
        $result = $query->execute($acl_id);
     };

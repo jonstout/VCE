@@ -176,8 +176,7 @@ sub handle_request{
     $self->dispatcher->handle_request();
 }
 
-
-
+#--- Method to add acl
 sub _add_acl {
 
     warn Dumper("--- in add acl ---");
@@ -207,7 +206,7 @@ sub _add_acl {
         $params->{low}{value},
         $params->{high}{value},
     );
-    warn Dumper("ID: $id");
+    warn Dumper("add acl result id: $id");
     if (defined $err) {
         warn Dumper("Error: $err");
         $method_ref->set_error($err);
@@ -218,7 +217,7 @@ sub _add_acl {
 
 }
 
-
+#--- Method to modify acl
 sub _modify_acl {
     warn Dumper("--- in modify acl ---");
     my $self = shift;
@@ -246,9 +245,8 @@ sub _modify_acl {
         low         => $params->{low}{value},
         high        => $params->{high}{value},
     );
-    warn Dumper("modify result: $result");
+    warn Dumper("modify acl result: $result");
     if ($result eq 0) {
-
         $result = "Update ACL failed for ID: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
@@ -261,6 +259,7 @@ sub _modify_acl {
     return { results => [ { value => $result } ] }
 }
 
+#--- Method to delete ACL
 sub _delete_acl {
     warn Dumper("--- in delete acl ---");
     my $self = shift;
@@ -287,10 +286,9 @@ sub _delete_acl {
     my $result = $self->db->delete_acl (
         $params->{id}{value}
     );
-    warn Dumper("delete result: $result");
+    warn Dumper("delete acl result: $result");
 
     if ($result eq 0) {
-
         $result = "Delete ACL failed for ID: $params->{id}{value}";
         $method_ref->set_error($result);
         return;
