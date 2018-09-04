@@ -18,8 +18,9 @@ CREATE TABLE IF NOT EXISTS user_workgroup(
     role         STRING CHECK (role in ("admin", "rw", "ro")),
     user_id      TEXT,
     workgroup_id INTEGER,
-    FOREIGN KEY(user_id) REFERENCES user(id),
-    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE
+    FOREIGN KEY(user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE,
+    CONSTRAINT user_id_workgroup_id UNIQUE (user_id, workgroup_id)
 );
 
 CREATE TABLE IF NOT EXISTS switch(
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS interface(
     workgroup_id INTEGER,
     switch_id INTEGER,
     FOREIGN KEY(workgroup_id) REFERENCES workgroup(id),
-    FOREIGN KEY(switch_id) REFERENCES switch(id)
+    FOREIGN KEY(switch_id) REFERENCES switch(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS vlan(
@@ -60,7 +61,7 @@ CREATE TABLE IF NOT EXISTS vlan(
     switch_id INTEGER,
     workgroup_id INTEGER,
     FOREIGN KEY(created_by) REFERENCES user(id),
-    FOREIGN KEY(switch_id) REFERENCES switch(id),
+    FOREIGN KEY(switch_id) REFERENCES switch(id) ON DELETE CASCADE,
     FOREIGN KEY(workgroup_id) REFERENCES workgroup(id),
     CONSTRAINT number_switch_id UNIQUE (number, switch_id)
 );
@@ -70,7 +71,7 @@ CREATE TABLE IF NOT EXISTS tag(
     interface_id INTEGER,
     mode TEXT,
     vlan_id INTEGER,
-    FOREIGN KEY(interface_id) REFERENCES interface(id),
+    FOREIGN KEY(interface_id) REFERENCES interface(id) ON DELETE CASCADE,
     FOREIGN KEY(vlan_id) REFERENCES vlan(id) ON DELETE CASCADE
 );
 
@@ -80,7 +81,7 @@ CREATE TABLE IF NOT EXISTS acl(
     workgroup_id INTEGER,
     low          INTEGER CHECK (low > 0 AND low <= high),
     high         INTEGER CHECK (high < 4095 AND high >= low),
-    FOREIGN KEY(interface_id) REFERENCES interface(id),
+    FOREIGN KEY(interface_id) REFERENCES interface(id) ON DELETE CASCADE,
     FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE CASCADE
 );
 
@@ -98,8 +99,9 @@ CREATE TABLE IF NOT EXISTS switch_command(
     command_id INTEGER,
     switch_id INTEGER,
     role STRING CHECK (role in ("admin", "owner", "user")),
-    FOREIGN KEY(switch_id) REFERENCES switch(id),
-    FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE
+    FOREIGN KEY(switch_id) REFERENCES switch(id) ON DELETE CASCADE,
+    FOREIGN KEY(command_id) REFERENCES command(id) ON DELETE CASCADE,
+    CONSTRAINT switch_id_command_id UNIQUE (switch_id, command_id)
 );
 
 CREATE TABLE IF NOT EXISTS parameter(
