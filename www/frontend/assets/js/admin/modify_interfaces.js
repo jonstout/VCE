@@ -16,71 +16,57 @@ async function init() {
     getInterface(interface_id).then(function(intf) {
         renderInterface(intf);
     });
+
+    document.querySelector('#interface-tab').addEventListener('click', function(e) {
+        document.querySelector('#acl-tab').classList.remove("is-active");
+        document.querySelector('#acl-tab-content').style.display = 'none';
+        document.querySelector('#interface-tab-content').style.display = 'block';
+        e.target.parentElement.classList.add("is-active");
+    });
+    document.querySelector('#acl-tab').addEventListener('click', function(e) {
+        document.querySelector('#interface-tab').classList.remove("is-active");
+        document.querySelector('#interface-tab-content').style.display = 'none';
+        document.querySelector('#acl-tab-content').style.display = 'block';
+        e.target.parentElement.classList.add("is-active");
+    });
+
+    // workgroups is required to render acl menus
+    let workgroups = await getWorkgroups();
+    let cookie = Cookies.getJSON('vce');
+    cookie.workgroups = workgroups;
+    Cookies.set('vce', cookie);
+    renderWorkgroupSelection(workgroups);
+
+    getACLs(interface_id).then(function(acls) {
+        renderACLList(acls);
+    });
 };
 
-function modifySwitch(form) {
+async function renderWorkgroupSelection(workgroups) {
+    let options = '';
+    workgroups.forEach(function(workgroup) {
+        options += `<option value="${workgroup.id}">${workgroup.name}</option>`;
+    });
+
+    document.querySelector('#workgroup-add-select').innerHTML = options;
+}
+
+async function getWorkgroups() {
     let cookie = Cookies.getJSON('vce');
     let workgroup = cookie.workgroup;
 
-    let post = async function(data) {
-        let id = data.get('id');
+    let url = '../' + baseUrl + `workgroup.cgi?method=get_workgroups&workgroup=${workgroup}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
 
-        try {
-            const url = '../api/switch.cgi';
-            const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
-            const obj = await resp.json();
+    try {
+        let data = await response.json();
+        if ('error_text' in data) throw data.error_text;
 
-            if ('error_text' in obj) {
-                console.log(obj.error_text);
-                return false;
-            }
-            window.location.href = `modify_switches.html?switch_id=${id}`;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    };
-
-    form.workgroup.value = workgroup;
-
-    let data = new FormData(form);
-    post(data);
-    return false;
-}
-
-function deleteSwitch() {
-    let ok = confirm('Are you sure you wish to delete this device?');
-    if (!ok) {
-        return false;
+        return data.results;
+    } catch(error) {
+        console.log(error);
+        return null;
     }
-
-    let del = async function(data) {
-        let cookie = Cookies.getJSON('vce');
-        let wg = cookie.workgroup;
-
-        let id = data.get('id');
-        let method = 'delete_switch';
-
-        try {
-            const url = `../api/switch.cgi?method=${method}&id=${id}&workgroup=${wg}`;
-            const resp = await fetch(url, {method: 'get', credentials: 'include'});
-            const obj = await resp.json();
-
-            if ('error_text' in obj) {
-                console.log(obj.error_text);
-                return false;
-            }
-            window.location.href = `switches.html`;
-        } catch (error) {
-            console.log(error);
-            return false;
-        }
-    };
-
-    let form = document.forms['modify-switch'];
-    let data = new FormData(form);
-    del(data);
-    return false;
 }
 
 async function getSwitch(switch_id) {
@@ -124,15 +110,12 @@ async function getInterface(interface_id) {
 }
 
 async function renderInterface(intf) {
-    if (intf.description === '') { intf.description = '&nbsp;'; }
-
-    document.querySelector('#name').innerHTML = `<b>Name:</b> ${intf.name}`;
-    document.querySelector('#description').innerHTML = `<b>Description:</b> ${intf.description}`;
-
-    document.querySelector('#hardware_type').innerHTML = `<b>Hardware:</b> ${intf.hardware_type}`;
-    document.querySelector('#mac_addr').innerHTML = `<b>MAC Address:</b> ${intf.mac_addr}`;
-    document.querySelector('#speed').innerHTML = `<b>Speed:</b> ${intf.speed}`;
-    document.querySelector('#mtu').innerHTML = `<b>MTU:</b> ${intf.mtu}`;
+    document.querySelector('#name').value = intf.name;
+    document.querySelector('#description').value = intf.description;
+    document.querySelector('#hardware_type').value = intf.hardware_type;
+    document.querySelector('#mac_addr').value = intf.mac_addr;
+    document.querySelector('#speed').value = intf.speed;
+    document.querySelector('#mtu').value = intf.mtu;
 }
 
 async function getSwitches() {
@@ -213,5 +196,176 @@ async function renderInterfaceList(interfaces) {
     if (interfaces.length === 0) {
         items += `<li><a>No interfaces</a></li>`;
     }
+    list.innerHTML = items;
+}
+
+function addACL(form) {
+    let func = async function(data) {
+        let cookie = Cookies.getJSON('vce');
+        let workgroup = cookie.workgroup;
+
+        let params = new URLSearchParams(location.search);
+        let switch_id = params.get('switch_id');
+        let interface_id = params.get('interface_id');
+
+        data.set('method', 'add_acl');
+        data.set('workgroup', workgroup);
+        data.set('interface_id', interface_id);
+
+        try {
+            const url = '../api/acl.cgi';
+            const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) throw obj.error_text;
+
+            window.location.href = `modify_interfaces.html?switch_id=${switch_id}&interface_id=${interface_id}`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    func(new FormData(form));
+    return false;
+
+}
+
+async function getACLs(interface_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let url = '../' + baseUrl + `acl.cgi?method=get_acls&workgroup=${workgroup}&interface_id=${interface_id}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
+
+    try {
+        let data = await response.json();
+        if ('error_text' in data) {
+            console.log(data.error_text);
+            return null;
+        }
+        return data.results;
+    } catch(error) {
+        console.log(error);
+        return null;
+    }
+}
+
+function modifyACL(form) {
+    let func = async function(data) {
+        let cookie = Cookies.getJSON('vce');
+        let workgroup = cookie.workgroup;
+
+        let params = new URLSearchParams(location.search);
+        let switch_id = params.get('switch_id');
+        let interface_id = params.get('interface_id');
+
+        data.set('method', 'modify_acl');
+        data.set('workgroup', workgroup);
+
+        try {
+            const url = '../api/acl.cgi';
+            const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) throw obj.error_text;
+
+            window.location.href = `modify_interfaces.html?switch_id=${switch_id}&interface_id=${interface_id}`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    func(new FormData(form));
+    return false;
+}
+
+function deleteACL(id) {
+    let ok = confirm('Are you sure you wish to delete this acl?');
+    if (!ok) {
+        return false;
+    }
+
+    let func = async function(data) {
+        let cookie = Cookies.getJSON('vce');
+        let workgroup = cookie.workgroup;
+
+        let params = new URLSearchParams(location.search);
+        let switch_id = params.get('switch_id');
+        let interface_id = params.get('interface_id');
+
+        try {
+            const url = `../api/acl.cgi?method=delete_acl&workgroup=${workgroup}&id=${id}`;
+            const resp = await fetch(url, {method: 'get', credentials: 'include'});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) throw obj.error_text;
+
+            window.location.href = `modify_interfaces.html?switch_id=${switch_id}&interface_id=${interface_id}`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    func(new FormData());
+    return false;
+}
+
+async function renderACLList(acls) {
+    let list = document.querySelector('#acl-list');
+    let cookie = Cookies.getJSON('vce');
+
+    let items = '';
+
+    acls.forEach(function(acl) {
+        let options = '';
+        cookie.workgroups.forEach(function(workgroup) {
+            if (workgroup.id == acl.workgroup_id) {
+                options += `<option value="${workgroup.id}" selected>${workgroup.name}</option>`;
+            } else {
+                options += `<option value="${workgroup.id}">${workgroup.name}</option>`;
+            }
+        });
+
+        items += `
+<form name="modify-acl-${acl.id}" onsubmit="return modifyACL(this)">
+  <input class="input" type="hidden" name="id" value="${acl.id}" />
+
+  <div class="field is-horizontal">
+    <div class="field-body">
+      <div class="field is-grouped">
+        <div class="control">
+          <input class="input" type="text" placeholder="2" name="low" required value="${acl.low}" />
+        </div>
+        <div class="control">
+          <input class="input" type="text" placeholder="4095" name="high" requried value="${acl.high}"/>
+        </div>
+        <div class="control is-expanded" >
+          <!-- width: 100% is a hack to expand select box -->
+          <div class="select" style="width: 100%">
+            <select name="workgroup_id" style="width: 100%" value="${acl.workgroup_id}">
+              ${options}
+            </select>
+          </div>
+        </div>
+        <div class="control">
+          <button type="submit" class="button is-link">Modify ACL</button>
+          <button type="button" class="button is-danger is-outlined" onclick="return deleteACL(${acl.id})">
+            <span>Delete</span>
+            <span class="icon is-small">
+              <i class="fas fa-times"></i>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+`;
+    });
+
     list.innerHTML = items;
 }

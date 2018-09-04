@@ -3,12 +3,13 @@ package VCE::Database::ACL;
 use strict;
 use warnings;
 use Exporter;
-# use Data::Dumper;
+
 our @ISA = qw( Exporter );
 our @EXPORT = qw( add_acl get_acls modify_acl delete_acl);
 
 
 =head2 add_acl
+
 =cut
 sub add_acl {
     my ( $self, $workgroup_id, $interface_id, $low, $high ) = @_;
@@ -34,30 +35,42 @@ sub add_acl {
 }
 
 =head2 get_acls
+
 =cut
 sub get_acls {
-    my ( $self, $workgroup_id, $interface_id ) = @_;
+    my $self = shift;
+    my %params = @_;
 
-    $self->{log}->debug("get_acls($self->{conn}, $workgroup_id, $interface_id)");
+    $self->{log}->debug("get_acls( )");
 
-    my $q = $self->{conn}->prepare(
-        "select * from acl
-        where acl.workgroup_id=? and acl.interface_id=?"
-    );
-    $q->execute($workgroup_id, $interface_id);
+    my $keys = [];
+    my $args = [];
 
-    my $acls = $q->fetchall_arrayref({});
-    my $result = [];
-
-    foreach my $acl (@$acls) {
-        push @$result, { high => $acl->{high}, low  => $acl->{low} };
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'acl.workgroup_id=?';
+        push @$args, $params{workgroup_id};
+    }
+    if (defined $params{interface_id}) {
+        push @$keys, 'acl.interface_id=?';
+        push @$args, $params{interface_id};
     }
 
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
+    my $q = $self->{conn}->prepare(
+        "select acl.*, workgroup.name as workgroup_name, workgroup.id as workgroup_id from acl
+         join workgroup on workgroup.id=acl.workgroup_id
+         $where
+         order by acl.low asc"
+    );
+    $q->execute(@$args);
+
+    my $result = $q->fetchall_arrayref({});
     return $result;
 }
 
 =head2 modify_acl
-
 
 =cut
 sub modify_acl {
@@ -80,6 +93,10 @@ sub modify_acl {
     if (defined $params{high}) {
         push @$keys, 'high=?';
         push @$args, $params{high};
+    }
+    if (defined $params{workgroup_id}) {
+        push @$keys, 'workgroup_id=?';
+        push @$args, $params{workgroup_id};
     }
 
     my $values = join(', ', @$keys);

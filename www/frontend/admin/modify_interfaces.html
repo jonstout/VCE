@@ -75,140 +75,91 @@
       </div>
 
       <div class="grnoc-content">
-        <h1 class="title is-3">Modify interface</h1>
-        <ul>
-          <li id="name"><b>Name:</b></li>
-          <li id="description"><b>Description:</b></li>
-        </ul>
-        <br/>
-        <ul>
-          <li id="hardware_type"><b>Hardware:</b></li>
-          <li id="mac_addr"><b>MAC Address:</b></li>
-          <li id="speed"><b>Speed:</b></li>
-          <li id="mtu"><b>MTU:</b></li>
-        </ul>
-        <br/>
-        <hr/>
 
-        <form name="add_acl" onsubmit="return addACL(this)">
-          <input class="input" type="hidden" name="method" value="add_acl" />
-          <input class="input" type="hidden" name="workgroup" required />
-          <input class="input" type="hidden" name="interface_id" required />
+        <div class="tabs is-boxed">
+          <ul>
+            <li id="interface-tab" class="is-active">
+              <a>Details</a>
+            </li>
+            <li id="acl-tab" class="">
+              <a>ACLs</a>
+            </li>
+          </ul>
+        </div>
 
+        <div id="interface-tab-content">
           <div class="field is-horizontal">
-            <div class="field-label is-normal">
-              <label class="label">Range</label>
-            </div>
-            <div class="field-body">
-              <div class="field">
-                <p class="control is-expanded">
-                  <input class="input" type="text" placeholder="2" name="low" required>
-                </p>
-              </div>
-              <div class="field">
-                <p class="control is-expanded">
-                  <input class="input" type="text" placeholder="4095" name="high" requried>
-                </p>
-              </div>
-            </div>
+            <div class="field-label is-normal"><label class="label">Name</label></div>
+            <div class="field-body"><div class="field">
+                <p class="control"><input id="name" class="input is-static" type="text" readonly/></p>
+            </div></div>
           </div>
-
           <div class="field is-horizontal">
-            <div class="field-label is-normal">
-              <label class="label">Workgroup</label>
-            </div>
-            <div class="field-body">
-              <div class="field">
-                <p class="control is-expanded">
-                  <div class="select is-fullwidth">
-                    <select name="workgroup">
-                      <option>admin</option>
-                      <option>testlab</option>
-                    </select>
+            <div class="field-label is-normal"><label class="label">Description</label></div>
+            <div class="field-body"><div class="field">
+                <p class="control"><input id="description" class="input is-static" type="text" readonly/></p>
+            </div></div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal"><label class="label">Hardware</label></div>
+            <div class="field-body"><div class="field">
+                <p class="control"><input id="hardware_type" class="input is-static" type="text" readonly/></p>
+            </div></div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal"><label class="label">MAC Address</label></div>
+            <div class="field-body"><div class="field">
+                <p class="control"><input id="mac_addr" class="input is-static" type="text" readonly/></p>
+            </div></div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal"><label class="label">Speed</label></div>
+            <div class="field-body"><div class="field">
+                <p class="control"><input id="speed" class="input is-static" type="text" readonly/></p>
+            </div></div>
+          </div>
+          <div class="field is-horizontal">
+            <div class="field-label is-normal"><label class="label">MTU</label></div>
+            <div class="field-body"><div class="field">
+                <p class="control"><input id="mtu" class="input is-static" type="text" readonly/></p>
+            </div></div>
+          </div>
+        </div>
+
+        <div id="acl-tab-content" style="display: none;">
+          <form name="add-acl" onsubmit="return addACL(this)">
+            <div class="field is-horizontal">
+              <div class="field-body">
+                <div class="field is-grouped">
+                  <div class="control">
+                    <label class="label">Low</label>
+                    <input class="input" type="text" placeholder="2" name="low" required>
                   </div>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="field is-horizontal">
-            <div class="field-label">
-              <!-- Left empty for spacing -->
-            </div>
-            <div class="field-body">
-              <div class="field">
-                <div class="control">
-                  <button type="submit" class="button is-link">Add ACL</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-        <hr/>
-
-        <form name="modify_acl" onsubmit="return modifyACL(this)">
-          <input class="input" type="hidden" name="method" value="modify_acl" />
-          <input class="input" type="hidden" name="workgroup" required />
-          <input class="input" type="hidden" name="acl_id" required />
-
-          <div class="field is-horizontal">
-            <div class="field-label is-normal">
-              <label class="label">Range</label>
-            </div>
-            <div class="field-body">
-              <div class="field">
-                <p class="control is-expanded">
-                  <input class="input" type="text" placeholder="2" name="low" required>
-                </p>
-              </div>
-              <div class="field">
-                <p class="control is-expanded">
-                  <input class="input" type="text" placeholder="4095" name="high" requried>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="field is-horizontal">
-            <div class="field-label is-normal">
-              <label class="label">Workgroup</label>
-            </div>
-            <div class="field-body">
-              <div class="field">
-                <p class="control is-expanded">
-                  <div class="select is-fullwidth">
-                    <select name="workgroup">
-                      <option>admin</option>
-                      <option>testlab</option>
-                    </select>
+                  <div class="control">
+                    <label class="label">High</label>
+                    <input class="input" type="text" placeholder="4095" name="high" requried>
                   </div>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="field is-horizontal">
-            <div class="field-label">
-              <!-- Left empty for spacing -->
-            </div>
-            <div class="field-body">
-
-              <div class="field is-grouped">
-                <div class="control">
-                  <button type="submit" class="button is-link">Modify ACL</button>
-                </div>
-                <div class="control">
-                  <button type="button" class="button is-danger is-outlined" onclick="return deleteACL()">
-                    <span>Delete</span>
-                    <span class="icon is-small">
-                      <i class="fas fa-times"></i>
-                    </span>
-                  </button>
+                  <div class="control is-expanded" >
+                    <label class="label">Workgroup</label>
+                    <!-- width: 100% is a hack to expand select box -->
+                    <div class="select" style="width: 100%">
+                      <select id="workgroup-add-select" name="workgroup_id" style="width: 100%">
+                      </select>
+                    </div>
+                  </div>
+                  <div class="control">
+                    <label class="label">&nbsp;</label>
+                    <button type="submit" class="button is-link">Add ACL</button>
+                  </div>
                 </div>
               </div>
             </div>
+          </form>
+          <hr/>
+
+          <div id="acl-list">
           </div>
-        </form>
+        </div>
 
       </div>
     </div>
