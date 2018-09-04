@@ -109,6 +109,36 @@ sub _register_acl_functions {
     };
     undef $method;
 
+    my $method = GRNOC::WebService::Method->new(
+        name => "get_acls",
+        description => "Method for adding an acl",
+        callback => sub {
+            return $self->_get_acls(@_)
+        }
+    );
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "Workgroup that the user belongs to."
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'interface_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Interface id of the acl."
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'workgroup_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Workgroup id of the acl."
+    );
+    eval {
+        $d->register_method($method);
+    };
+    undef $method;
+
     #--- Registering modify acl method
     $method = GRNOC::WebService::Method->new( name => "modify_acl",
         description => "Method for modifying an acl",
@@ -122,15 +152,20 @@ sub _register_acl_functions {
         pattern => $GRNOC::WebService::Regex::INTEGER,
         description => "id of the acl to be modified" );
 
-    $method->add_input_parameter( required => 1,
+    $method->add_input_parameter( required => 0,
         name => 'low',
         pattern => $GRNOC::WebService::Regex::INTEGER,
         description => "low value" );
 
-    $method->add_input_parameter( required => 1,
+    $method->add_input_parameter( required => 0,
         name => 'high',
         pattern => $GRNOC::WebService::Regex::INTEGER,
         description => "high value" );
+
+    $method->add_input_parameter( required => 0,
+        name => 'workgroup_id',
+        pattern => $GRNOC::WebService::Regex::INTEGER,
+        description => "Workgroup that the user belongs to." );
 
     $method->add_input_parameter( required => 1,
         name => 'workgroup',
@@ -170,15 +205,12 @@ sub _register_acl_functions {
 =head2 handle_request
 
 =cut
-
 sub handle_request{
     my $self = shift;
     $self->dispatcher->handle_request();
 }
 
-#--- Method to add acl
 sub _add_acl {
-
     warn Dumper("--- in add acl ---");
     my $self = shift;
     my $method_ref = shift;
@@ -217,7 +249,33 @@ sub _add_acl {
 
 }
 
-#--- Method to modify acl
+sub _get_acls {
+    warn Dumper("--- in get acl ---");
+    my $self = shift;
+    my $method_ref = shift;
+    my $params = shift;
+
+    my $user = $ENV{'REMOTE_USER'};
+
+    my $workgroup = $params->{workgroup}{value};
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to add ACL.");
+        return;
+    }
+    if(!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        return;
+    }
+
+    my $acls = $self->db->get_acls(
+        workgroup_id => $params->{workgroup_id}{value},
+        interface_id => $params->{interface_id}{value}
+    );
+
+    return { results => $acls }
+}
+
 sub _modify_acl {
     warn Dumper("--- in modify acl ---");
     my $self = shift;
@@ -241,9 +299,10 @@ sub _modify_acl {
     }
 
     my $result = $self->db->modify_acl(
-        id          => $params->{id}{value},
-        low         => $params->{low}{value},
-        high        => $params->{high}{value},
+        id           => $params->{id}{value},
+        low          => $params->{low}{value},
+        high         => $params->{high}{value},
+        workgroup_id => $params->{workgroup_id}{value}
     );
     warn Dumper("modify acl result: $result");
     if ($result eq 0) {
@@ -259,7 +318,6 @@ sub _modify_acl {
     return { results => [ { value => $result } ] }
 }
 
-#--- Method to delete ACL
 sub _delete_acl {
     warn Dumper("--- in delete acl ---");
     my $self = shift;
