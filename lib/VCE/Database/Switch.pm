@@ -5,7 +5,7 @@ use warnings;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch add_command_to_switch remove_command_from_switch modify_switch_command );
+our @EXPORT = qw( add_switch get_switch get_switches modify_switch delete_switch add_command_to_switch remove_command_from_switch get_switch_commands modify_switch_command );
 
 
 =head1 Package VCE::Database::Switch
@@ -274,6 +274,45 @@ sub remove_command_from_switch {
         return 0;
     }
 
+    return $result;
+}
+
+=head2 get_switch_commands
+
+=cut
+sub get_switch_commands {
+    my $self = shift;
+    my %params = @_;
+
+    $self->{log}->debug("get_commands()");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{switch_id}) {
+        push @$keys, 'switch_command.switch_id=?';
+        push @$args, $params{switch_id};
+    }
+    if (defined $params{type}) {
+        push @$keys, 'command.type=?';
+        push @$args, $params{type};
+    }
+    if(defined($params{command_id})){
+        push @$keys, 'command.id=?';
+        push @$args, $params{command_id};
+    }
+
+    my $values = join(' AND ', @$keys);
+    my $where = scalar(@$keys) > 0 ? "WHERE $values" : "";
+
+    my $q = $self->{conn}->prepare(
+        "select * from command
+         join switch_command on switch_command.command_id=command.id
+         $where"
+    );
+    $q->execute(@$args);
+
+    my $result = $q->fetchall_arrayref({});
     return $result;
 }
 

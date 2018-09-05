@@ -65,11 +65,34 @@ async function renderCommandList(commands) {
     let list = document.querySelector('#aside-list');
     let items = '';
 
+    let intfs = '';
+    let switches = '';
+    let vlans = '';
+
     commands.forEach(function(command) {
-        items += `<li><a href="modify_commands.html?command_id=${command.id}">${command.name}</a></li>`;
+        if (command.type === 'interface') {
+            intfs += `<li><a href="modify_commands.html?command_id=${command.id}">${command.name}</a></li>`;
+        } else if (command.type === 'switch') {
+            switches += `<li><a href="modify_commands.html?command_id=${command.id}">${command.name}</a></li>`;
+        } else {
+            vlans += `<li><a href="modify_commands.html?command_id=${command.id}">${command.name}</a></li>`;
+        }
     });
 
-    list.innerHTML = items;
+    list.innerHTML = `
+<p class="menu-label">Interface</p>
+<ul class="menu-list">
+  ${intfs}
+</ul>
+<p class="menu-label">Switch</p>
+<ul class="menu-list">
+  ${switches}
+</ul>
+<p class="menu-label">VLAN</p>
+<ul class="menu-list">
+  ${vlans}
+</ul>
+`;
 }
 
 async function loadDefaultParameters() {

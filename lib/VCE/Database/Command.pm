@@ -77,10 +77,6 @@ sub get_commands {
     my $keys = [];
     my $args = [];
 
-    if (defined $params{switch_id}) {
-        push @$keys, 'switch_command.switch_id=?';
-        push @$args, $params{switch_id};
-    }
     if (defined $params{type}) {
         push @$keys, 'command.type=?';
         push @$args, $params{type};
@@ -95,8 +91,8 @@ sub get_commands {
 
     my $q = $self->{conn}->prepare(
         "select * from command
-         left join switch_command on switch_command.command_id=command.id
-         $where"
+         $where
+         order by name"
     );
     $q->execute(@$args);
 
