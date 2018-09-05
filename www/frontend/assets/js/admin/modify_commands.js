@@ -1,11 +1,15 @@
 window.onload = init;
 
 async function init() {
-    await loadDefaultParameters();
-    renderParameterList();
+    let params = new URLSearchParams(location.search);
+    let command_id = params.get('command_id');
 
     getCommands().then(function(commands) {
         renderCommandList(commands);
+    });
+
+    getCommand(command_id).then(function(command) {
+        renderCommand(command);
     });
 };
 
@@ -40,6 +44,68 @@ function addCommand(form) {
     };
 
     func(new FormData(form));
+    return false;
+}
+
+async function getCommand(command_id) {
+    let cookie = Cookies.getJSON('vce');
+    let workgroup = cookie.workgroup;
+
+    let url = '../' + baseUrl + `command.cgi?method=get_command&workgroup=${workgroup}&command_id=${command_id}`;
+    let response = await fetch(url, {method: 'get', credentials: 'include'});
+
+    try {
+        let data = await response.json();
+        if ('error_text' in data) throw data.error_text;
+        return data.results[0];
+    } catch(error) {
+        console.log(error);
+        return [];
+    }
+}
+
+async function renderCommand(command) {
+    let cookie = Cookies.getJSON('vce');
+
+console.log(command);
+console.log(cookie);
+
+    let form = document.forms['modify-command'];
+    form.elements['id'].value = command.id;
+    form.elements['name'].value = command.name;
+    form.elements['description'].value = command.description;
+    form.elements['template'].value = command.template;
+
+    form.elements['operation'].value = command.operation;
+    form.elements['type'].value = command.type;
+    if (command.type === 'interface') {
+        cookie.parameters = [{
+            name: 'interface',
+            description: 'The interface name',
+            regex: '^[A-Za-z]+$',
+            type: 'input',
+            disabled: true
+        }];
+    } else if (command.type === 'vlan') {
+        cookie.parameters = [{
+            name: 'tag',
+            description: 'The VLAN number',
+            regex: '^[0-9]+$',
+            type: 'input',
+            disabled: true
+        }];
+    } else {
+        cookie.parameters = [];
+    }
+    Cookies.set('vce', cookie);
+    renderParameterList();
+
+    command.parameters.forEach(function(param) {
+        addParameter(param.name, param.description, param.regex, param.type, param.disabled);
+    });
+}
+
+function modifyCommand(form) {
     return false;
 }
 
@@ -107,14 +173,14 @@ async function loadDefaultParameters() {
     return true;
 }
 
-async function addParameter() {
+async function addParameter(name='', description='', regex='', type='input', disabled=false) {
     let cookie = Cookies.getJSON('vce');
     cookie.parameters.push({
-        name: '',
-        description: '',
-        regex: '',
-        type: 'input',
-        disabled: false
+        name: name,
+        description: description,
+        regex: regex,
+        type: type,
+        disabled: disabled
     });
     Cookies.set('vce', cookie);
     renderParameterList();

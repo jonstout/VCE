@@ -104,7 +104,25 @@ sub _register_methods{
         pattern => $GRNOC::WebService::Regex::NUMBER_ID,
         description => "command_id to fetch"
     );
+    $dispatcher->register_method($method);
 
+    $method = GRNOC::WebService::Method->new(
+        name => 'get_command',
+        description => 'get a list of commands and the details of those commands',
+        callback => sub { return $self->get_command(@_); }
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'command_id',
+        pattern => $GRNOC::WebService::Regex::NUMBER_ID,
+        description => "command_id to fetch"
+    );
     $dispatcher->register_method($method);
 
     $method = GRNOC::WebService::Method->new(
@@ -456,6 +474,37 @@ sub get_commands{
     my $commands = $self->db->get_commands( %params );
     return {results => $commands };
 }
+
+=head2 get_command
+
+=cut
+sub get_command {
+    my $self = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $user       = $ENV{REMOTE_USER};
+    my $workgroup  = $params->{workgroup}{value};
+    my $command_id = $params->{command_id}{value};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        return;
+    }
+
+    my $commands = $self->db->get_commands(command_id => $command_id);
+    my $parameters = $self->db->get_parameters(command_id => $command_id);
+
+    $commands->[0]->{parameters} = $parameters;
+
+    return { results => $commands };
+}
+
 
 =head2 add_command
 
