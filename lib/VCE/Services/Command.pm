@@ -12,6 +12,7 @@ use GRNOC::WebService::Dispatcher;
 use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
 
+use JSON;
 use VCE::Access;
 use VCE::Database::Connection;
 use Template;
@@ -99,46 +100,54 @@ sub _register_methods{
 
     $dispatcher->register_method($method);
 
-    $method = GRNOC::WebService::Method->new( name => 'add_command',
-					      description => 'adds a new command to the list of commands',
-					      callback => sub { return $self->add_command(@_); }
+    $method = GRNOC::WebService::Method->new(
+        name => 'add_command',
+        description => 'adds a new command to the list of commands',
+        callback => sub { return $self->add_command(@_); }
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'name',
-	pattern => $GRNOC::WebService::Regex::NAME_ID,
-	description => "name of the command to be added"
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'description',
-	pattern => $GRNOC::WebService::Regex::TEXT,
-	description => "friendly description of the command"
+        required => 1,
+        name => 'name',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of the command to be added"
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'operation',
-	pattern => "(read|write)",
-	description => "What type of operation is this 'read' or 'write'"
+        required => 1,
+        name => 'description',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "friendly description of the command"
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'type',
-	pattern => "(interface|switch|vlan)",
-	description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
+        required => 1,
+        name => 'operation',
+        pattern => "(read|write)",
+        description => "What type of operation is this 'read' or 'write'"
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'template',
-	pattern => $GRNOC::WebService::Regex::TEXT,
-	description => "workgroup to run the command as"
+        required => 1,
+        name => 'type',
+        pattern => "(interface|switch|vlan)",
+        description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
 	);
-
+    $method->add_input_parameter(
+        required => 1,
+        name => 'template',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "workgroup to run the command as"
+	);
+    $method->add_input_parameter(
+        required => 0,
+        name => 'parameters',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => 'parameters as a json string',
+        default => '[]'
+	);
     $dispatcher->register_method($method);
 
     $method = GRNOC::WebService::Method->new( name => 'modify_command',
@@ -450,9 +459,33 @@ sub add_command{
     my $operation = $p_ref->{'operation'}{'value'};
     my $type = $p_ref->{'type'}{'value'};
     my $template = $p_ref->{'template'}{'value'};
-    my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
+    my $parameters = decode_json($p_ref->{'parameters'}{'value'});
 
-    return {results => [{id => $res}]};
+    my $command_id = -1;
+    eval {
+        $self->db->{conn}->begin_work();
+
+        $command_id = $self->db->add_command($name, $description, $operation, $type, $template);
+
+        foreach my $param (@$parameters) {
+            if (!defined $param->{name}) { die "Parameter is missing 'name'."; }
+            if (!defined $param->{description}) { die "Parameter is missing 'description'."; }
+            if (!defined $param->{regex}) { die "Parameter is missing 'regex'."; }
+            if (!defined $param->{type}) { die "Parameter is missing 'type'."; }
+
+            my $id = $self->db->add_parameter($command_id, $param->{name}, $param->{description}, $param->{regex}, $param->{type});
+        }
+
+        $self->db->{conn}->commit();
+    };
+    if ($@) {
+        $self->db->{conn}->rollback();
+
+        $method_ref->set_error("Could not create command. $@");
+        return;
+    }
+
+    return {results => [{id => $command_id}]};
 }
 
 =head2 modify_command
