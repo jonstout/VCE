@@ -786,7 +786,7 @@ sub execute_command{
     # We are now ready to send our command and get the results! The
     # regex prompt matches on the end of a line followed by text that
     # ends with a hash.
-    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, /\n.*\#$/);
+    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*\#$/);
     if (defined $err) {
         return &$success({success => 0, error => 1, error_msg => $err});
     }

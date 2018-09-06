@@ -356,6 +356,7 @@ warn "authorized";
     my $cmd_string;
     my $context_string;
     my $vars = {};
+
     foreach my $var (keys %{$p_ref}){
         $vars->{$var} = $p_ref->{$var}{'value'};
 
@@ -366,7 +367,7 @@ warn "authorized";
             $vars->{'vlan_id'} = $vlan->{'vlan'};
         }
     }
-warn 'checked for vlan_id';
+
     if(defined($command->{'context'})){
         #some commands might not have context
         my $text = $command->{'context'};
@@ -379,7 +380,6 @@ warn 'checked for vlan_id';
     # Old template->process failure handler
     # or warn "Error creating template string: " . Dumper($self->template->error());
     $self->template->process(\$text, $vars, \$cmd_string) or $self->logger->error("Error creating command template: " . Dumper($self->template->error()));
-warn "made template $cmd_string";
     if(!defined($cmd_string)){
         return {results => [], error => {msg => "Error processing command"}};
     }
@@ -392,8 +392,7 @@ warn "made template $cmd_string";
 
     $self->logger->debug("Running $cmd_string with params: " . Dumper($vars));
     $self->rabbit_client->{topic} = 'VCE.Switch.' . $p_ref->{switch}{value};
-warn 'sending command to switch';
-warn 'VCE.Switch.' . $p_ref->{switch}{value};
+
     my $res;
     if (defined $context_string) {
         $self->logger->debug("Running $cmd_string in context $context_string: " . Dumper($command));
@@ -409,11 +408,13 @@ warn 'VCE.Switch.' . $p_ref->{switch}{value};
                                                       config => 0,
                                                       cli_type => $command->{'operation'} );
     }
-warn Dumper($res);
+
     if ($res->{'results'}->{'error'}) {
         return {success => 0, error => {msg => $res->{'results'}->{'error_message'}}};
     } else {
-        return { success => 1, raw => $res->{'results'}->{'raw'}};
+        my $raw = $res->{'results'}->{'raw'};
+        $raw = $raw eq '' ? 'ok' : $raw; # Provide 'OK' to user on empty success.
+        return { success => 1, raw => $raw };
     }
 }
 
