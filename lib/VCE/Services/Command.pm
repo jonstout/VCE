@@ -12,6 +12,7 @@ use GRNOC::WebService::Dispatcher;
 use GRNOC::WebService::Method;
 use GRNOC::WebService::Regex;
 
+use JSON;
 use VCE::Access;
 use VCE::Database::Connection;
 use Template;
@@ -86,116 +87,167 @@ sub _register_methods{
     my $self = shift;
     my $dispatcher = shift;
 
-    my $method = GRNOC::WebService::Method->new( name => 'get_commands',
-						 description => 'get a list of commands and the details of those commands',
-						 callback => sub { return $self->get_commands(@_); }
+    my $method = GRNOC::WebService::Method->new(
+        name => 'get_commands',
+        description => 'get a list of commands and the details of those commands',
+        callback => sub { return $self->get_commands(@_); }
 	);
-
     $method->add_input_parameter(
-	required => 0,
-	name => 'command_id',
-	pattern => $GRNOC::WebService::Regex::NUMBER_ID,
-	description => "command_id to fetch");
-
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
+	);
+    $method->add_input_parameter(
+        required => 0,
+        name => 'command_id',
+        pattern => $GRNOC::WebService::Regex::NUMBER_ID,
+        description => "command_id to fetch"
+    );
     $dispatcher->register_method($method);
 
-    $method = GRNOC::WebService::Method->new( name => 'add_command',
-					      description => 'adds a new command to the list of commands',
-					      callback => sub { return $self->add_command(@_); }
+    $method = GRNOC::WebService::Method->new(
+        name => 'get_command',
+        description => 'get a list of commands and the details of those commands',
+        callback => sub { return $self->get_command(@_); }
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'name',
-	pattern => $GRNOC::WebService::Regex::NAME_ID,
-	description => "name of the command to be added"
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
 	);
-
     $method->add_input_parameter(
-	required => 1,
-	name => 'description',
-	pattern => $GRNOC::WebService::Regex::TEXT,
-	description => "friendly description of the command"
-	);
-
-    $method->add_input_parameter(
-	required => 1,
-	name => 'operation',
-	pattern => "(read|write)",
-	description => "What type of operation is this 'read' or 'write'"
-	);
-
-    $method->add_input_parameter(
-	required => 1,
-	name => 'type',
-	pattern => "(interface|switch|vlan)",
-	description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
-	);
-
-    $method->add_input_parameter(
-	required => 1,
-	name => 'template',
-	pattern => $GRNOC::WebService::Regex::TEXT,
-	description => "workgroup to run the command as"
-	);
-
+        required => 1,
+        name => 'command_id',
+        pattern => $GRNOC::WebService::Regex::NUMBER_ID,
+        description => "command_id to fetch"
+    );
     $dispatcher->register_method($method);
 
-    $method = GRNOC::WebService::Method->new( name => 'modify_command',
-                                              description => 'modifies and existing command',
-					      callback => sub { return $self->modify_command(@_); }
+    $method = GRNOC::WebService::Method->new(
+        name => 'add_command',
+        description => 'adds a new command to the list of commands',
+        callback => sub { return $self->add_command(@_); }
 	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'name',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of the command to be added"
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'description',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "friendly description of the command"
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'operation',
+        pattern => "(read|write)",
+        description => "What type of operation is this 'read' or 'write'"
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'type',
+        pattern => "(interface|switch|vlan)",
+        description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
+	);
+    $method->add_input_parameter(
+        required => 1,
+        name => 'template',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "workgroup to run the command as"
+	);
+    $method->add_input_parameter(
+        required => 0,
+        name => 'parameters',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => 'parameters as a json string',
+        default => '[]'
+	);
+    $dispatcher->register_method($method);
 
+    $method = GRNOC::WebService::Method->new(
+        name => 'modify_command',
+        description => 'modifies and existing command',
+        callback => sub { return $self->modify_command(@_); }
+	);
     $method->add_input_parameter(
         required => 1,
         name => 'command_id',
         pattern => $GRNOC::WebService::Regex::NUMBER_ID,
         description => "ID of the command to be modified"
 	);
-
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
+	);
     $method->add_input_parameter(
         required => 0,
         name => 'name',
         pattern => $GRNOC::WebService::Regex::NAME_ID,
         description => "name of the command to be modified"
-        );
-
+    );
     $method->add_input_parameter(
         required => 0,
         name => 'description',
         pattern => $GRNOC::WebService::Regex::TEXT,
         description => "description of the command"
-        );
-
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'template',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => "command template"
+    );
     $method->add_input_parameter(
         required => 0,
         name => 'operation',
         pattern => "(read|write)",
         description => "Operation type 'read' or 'write'"
-        );
-
+    );
     $method->add_input_parameter(
         required => 0,
         name => 'type',
         pattern => "(interface|switch|vlan)",
         description => "which class of VCE type is this command acting on 'interface', 'switch', or 'vlan'"
-        );
-
-
+    );
+    $method->add_input_parameter(
+        required => 0,
+        name => 'parameters',
+        pattern => $GRNOC::WebService::Regex::TEXT,
+        description => 'parameters as a json string',
+        default => '[]'
+	);
     $dispatcher->register_method($method);
 
-    $method = GRNOC::WebService::Method->new( name => 'delete_command',
-                                              description => 'deletes and existing command',
-					      callback => sub { return $self->delete_command(@_); }
+    $method = GRNOC::WebService::Method->new(
+        name => 'delete_command',
+        description => 'deletes and existing command',
+        callback => sub { return $self->delete_command(@_); }
 	);
-
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
+	);
     $method->add_input_parameter(
         required => 1,
         name => 'command_id',
         pattern => $GRNOC::WebService::Regex::NUMBER_ID,
         description => "ID of the command to be deleted"
-        );
-
+    );
     $dispatcher->register_method($method);
 }
 
@@ -416,6 +468,19 @@ sub get_commands{
     my $method_ref = shift;
     my $p_ref = shift;
 
+    my $user = $ENV{'REMOTE_USER'};
+    my $workgroup = $p_ref->{'workgroup'}{'value'};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
+        $method_ref->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        return;
+    }
+
     my %params;
     if(defined($p_ref->{'command_id'}{'value'})){
         $params{'command_id'} = $p_ref->{'command_id'}{'value'};
@@ -428,6 +493,37 @@ sub get_commands{
     return {results => $commands };
 }
 
+=head2 get_command
+
+=cut
+sub get_command {
+    my $self = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $user       = $ENV{REMOTE_USER};
+    my $workgroup  = $params->{workgroup}{value};
+    my $command_id = $params->{command_id}{value};
+
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup)) {
+        $method->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        return;
+    }
+
+    my $commands = $self->db->get_commands(command_id => $command_id);
+    my $parameters = $self->db->get_parameters(command_id => $command_id);
+
+    $commands->[0]->{parameters} = $parameters;
+
+    return { results => $commands };
+}
+
+
 =head2 add_command
 
 =cut
@@ -437,11 +533,15 @@ sub add_command{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
-        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        $method_ref->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
         return;
     }
 
@@ -450,9 +550,39 @@ sub add_command{
     my $operation = $p_ref->{'operation'}{'value'};
     my $type = $p_ref->{'type'}{'value'};
     my $template = $p_ref->{'template'}{'value'};
-    my $res = $self->db->add_command( $name, $description, $operation, $type, $template );
+    my $parameters = decode_json($p_ref->{'parameters'}{'value'});
 
-    return {results => [{id => $res}]};
+    my $command_id;
+    eval {
+        $self->db->{conn}->begin_work();
+
+        $command_id = $self->db->add_command($name, $description, $operation, $type, $template);
+        if (!$command_id) {
+            die "Command couldn't be added to database.";
+        }
+
+        foreach my $param (@$parameters) {
+            if (!defined $param->{name}) { die "Parameter is missing 'name'."; }
+            if (!defined $param->{description}) { die "Parameter is missing 'description'."; }
+            if (!defined $param->{regex}) { die "Parameter is missing 'regex'."; }
+            if (!defined $param->{type}) { die "Parameter is missing 'type'."; }
+
+            my $id = $self->db->add_parameter($command_id, $param->{name}, $param->{description}, $param->{regex}, $param->{type});
+            if (!$id) {
+                die "Command couldn't be added to database. Failed while adding parameters.";
+            }
+        }
+
+        $self->db->{conn}->commit();
+    };
+    if ($@) {
+        $self->db->{conn}->rollback();
+
+        $method_ref->set_error("Could not create command. $@");
+        return;
+    }
+
+    return {results => [{id => $command_id}]};
 }
 
 =head2 modify_command
@@ -464,28 +594,60 @@ sub modify_command{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
-    if(!$self->vce->access->user_in_workgroup( username => $user,
-					       workgroup => $workgroup )){
-        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+    if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
+        $method_ref->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
         return;
     }
 
+    my $command_id = $p_ref->{'command_id'}{'value'};
     my $name = $p_ref->{'name'}{'value'};
     my $description = $p_ref->{'description'}{'value'};
     my $operation = $p_ref->{'operation'}{'value'};
     my $type = $p_ref->{'type'}{'value'};
     my $template = $p_ref->{'template'}{'value'};
-    my $command_id = $p_ref->{'command_id'}{'value'};
+    my $parameters = decode_json($p_ref->{'parameters'}{'value'});
 
-    my $res = $self->db->modify_command( name => $name, description => $description, operation => $operation, type => $type, template => $template, command_id => $command_id );
-    if($res eq "0E0"){
-        $method_ref->set_error("Update failed for command: " . $command_id);
+    eval {
+        $self->db->{conn}->begin_work();
+
+        my $ok = $self->db->modify_command(name => $name, description => $description, operation => $operation, type => $type, template => $template, id => $command_id);
+        if (!$ok) {
+            die "Database couldn't be updated.";
+        }
+
+        foreach my $param (@$parameters) {
+            if (!defined $param->{id}) { die "Parameter is missing 'id'."; }
+
+            $ok = $self->db->update_parameter(
+                id   => $param->{id},
+                name => $param->{name},
+                description => $param->{description},
+                regex => $param->{regex},
+                type  => $param->{type}
+            );
+            if (!$ok) {
+                die "Database couldn't be updated. Failed while updating parameters.";
+            }
+        }
+
+        $self->db->{conn}->commit();
+    };
+    if ($@) {
+        $self->db->{conn}->rollback();
+
+        $method_ref->set_error("Couldn't modify command. $@");
         return;
     }
-    return {results => [{value => $res}]};
+
+
+    return {results => [{value => 1}]};
 }
 
 =head2 delete_command
@@ -497,11 +659,15 @@ sub delete_command{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
-        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        $method_ref->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
         return;
     }
 

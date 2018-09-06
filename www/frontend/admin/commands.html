@@ -1,0 +1,142 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="../assets/css/admin/base.css">
+    <title>React App</title>
+  </head>
+
+  <body>
+    <nav class="navbar is-dark">
+      <div class="navbar-brand">
+        <h3 class="navbar-item title is-4">VCE</h3>
+      </div>
+
+      <div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item">Home</a>
+        </div>
+
+        <div class="navbar-end">
+          <a class="navbar-item">Admin</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="grnoc-aside">
+        <aside class="menu" id="aside-list" style="padding-left: 15px; padding-top: 15px;">
+          <ul class="menu-list">
+            <li><a>Loading...</a></li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="grnoc-tabs">
+        <div class="tabs is-centered">
+          <ul>
+            <li class="is-active">
+              <a href="commands.html">
+                <span class="icon is-small"><i class="fa fa-terminal" aria-hidden="true"></i></span>
+                <span>Commands</span>
+              </a>
+            </li>
+            <li>
+              <a href="switches.html">
+                <span class="icon is-small"><i class="fa fa-server" aria-hidden="true"></i></span>
+                <span>Switches</span>
+              </a>
+            </li>
+            <li>
+              <a href="users.html">
+                <span class="icon is-small"><i class="fa fa-user" aria-hidden="true"></i></span>
+                <span>Users</span>
+              </a>
+            </li>
+            <li>
+              <a href="workgroups.html">
+                <span class="icon is-small"><i class="fa fa-users" aria-hidden="true"></i></span>
+                <span>Workgroups</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grnoc-content">
+        <h1 class="title">Create a new command</h1>
+
+        <form name="add-command" onsubmit="return addCommand(this)">
+          <div class="field">
+            <label class="label">Name</label>
+            <div class="control">
+              <input class="input" type="text" name="name" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Description</label>
+            <div class="control">
+              <input class="input" type="text" name="description" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Template</label>
+            <div class="control">
+              <input class="input" type="text" name="template" required />
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Operation</label>
+            <label class="radio">
+              <input type="radio" name="operation" value="read" checked>
+              Read
+            </label>
+            <label class="radio">
+              <input type="radio" name="operation" value="write">
+              Write
+            </label>
+          </div>
+          <div class="field">
+            <label class="label">Command Type</label>
+            <label class="radio">
+              <input type="radio" name="type" value="interface" onclick="updateCommandType(this)" checked>
+              Interface
+            </label>
+            <label class="radio">
+              <input type="radio" name="type" value="switch" onclick="updateCommandType(this)">
+              Switch
+            </label>
+            <label class="radio">
+              <input type="radio" name="type" value="vlan" onclick="updateCommandType(this)">
+              VLAN
+            </label>
+          </div>
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" class="button is-link">Create Command</button>
+            </div>
+            <div class="field">
+              <div class="control">
+                <button type="button" class="button is-link" onclick="addParameter()">Create Parameter</button>
+              </div>
+            </div>
+          </div>
+          <hr/>
+
+          <div id="add-parameter">
+          </div>
+        </form>
+
+        <div id="parameters-list">
+        </div>
+
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="../assets/js/aconst.js"></script>
+    <script type="text/javascript" src="../assets/js/admin/commands.js"></script>
+  </body>
+</html>
