@@ -319,8 +319,7 @@ sub get_switch_commands{
     }
 
     my $switch_commands = $self->vce->access->get_switch_commands( switch => $switch );
-    warn Dumper($switch);
-    warn Dumper($switch_commands);
+
     my @results;
     foreach my $cmd (@$switch_commands){
         my $is_admin = ($workgroup eq 'admin') ? 1 : 0;

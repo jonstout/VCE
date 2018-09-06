@@ -724,9 +724,7 @@ sub get_visible_vlans {
         for (my $i = 1; $i < 4095; $i++) {
             $result->{$i} = 1;
         }
-        my @r = keys $result;
-        return \@r;
-
+        return $result;
     }
 
     foreach my $acl (@$acls) {
