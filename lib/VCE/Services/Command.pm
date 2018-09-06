@@ -304,7 +304,7 @@ sub _register_commands{
                 );
             }
 
-            my $params = $self->db->get_parameters(command_id => $command->{command_id});
+            my $params = $self->db->get_parameters(command_id => $command->{id});
             foreach my $param (@$params) {
                 $method->add_input_parameter(
                     required => 1,
