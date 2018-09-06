@@ -7,7 +7,7 @@ use Data::Dumper;
 use Exporter;
 
 our @ISA = qw( Exporter );
-our @EXPORT = qw( add_parameter get_parameters );
+our @EXPORT = qw( add_parameter get_parameters update_parameter );
 
 =head2 add_parameter
 
@@ -59,6 +59,56 @@ sub get_parameters {
     $q->execute(@$args);
 
     my $result = $q->fetchall_arrayref({});
+    return $result;
+}
+
+=head2 update_parameter
+
+=cut
+sub update_parameter {
+    my $self   = shift;
+    my %params = @_;
+
+    if (!defined $params{id}) {
+        $self->{log}->error("Parameter id not specified.");
+        return 0;
+    }
+    $self->{log}->debug("update_parameter($params{id}, ...)");
+
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{description}) {
+        push @$keys, 'description=?';
+        push @$args, $params{description};
+    }
+    if (defined $params{regex}) {
+        push @$keys, 'regex=?';
+        push @$args, $params{regex};
+    }
+    if (defined $params{type}) {
+        push @$keys, 'type=?';
+        push @$args, $params{type};
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $params{id};
+    my $result;
+
+    eval {
+        my $q = $self->{conn}->prepare(
+            "update parameter set $values where id=?"
+        );
+        $result = $q->execute(@$args);
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
     return $result;
 }
 

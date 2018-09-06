@@ -31,20 +31,52 @@ sub modify_command{
     my $self = shift;
     my %params = @_;
 
-    my @args;
-    my $updates;
-    foreach my $key (keys %params){
-        next if $key eq 'command_id';
-        next if !defined($params{$key});
-        $updates = join( ' , ', "$key = ?");
-        push(@args, $params{$key});
+    if (!defined $params{id}) {
+        $self->{log}->error("Command ID not specified.");
+        return 0;
     }
-    #push our last arg on
-    push(@args, $params{'command_id'});
 
-    my $q = $self->{conn}->prepare( "update command set $updates where id = ?" );
+    $self->{log}->debug("modify_command($params{id}, ...)");
 
-    return $q->execute(@args);
+    my $keys = [];
+    my $args = [];
+
+    if (defined $params{name}) {
+        push @$keys, 'name=?';
+        push @$args, $params{name};
+    }
+    if (defined $params{description}) {
+        push @$keys, 'description=?';
+        push @$args, $params{description};
+    }
+    if (defined $params{operation}) {
+        push @$keys, 'operation=?';
+        push @$args, $params{operation};
+    }
+    if (defined $params{type}) {
+        push @$keys, 'type=?';
+        push @$args, $params{type};
+    }
+    if (defined $params{template}) {
+        push @$keys, 'template=?';
+        push @$args, $params{template};
+    }
+
+    my $values = join(', ', @$keys);
+    push @$args, $params{id};
+    my $result;
+    eval {
+        my $q = $self->{conn}->prepare(
+            "update command set $values where id=?"
+        );
+
+        $result = $q->execute(@$args);
+    };
+    if ($@) {
+        $self->{log}->error("$@");
+        return 0;
+    }
+    return $result;
 }
 
 =head2 add_command

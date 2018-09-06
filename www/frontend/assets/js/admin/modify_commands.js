@@ -99,11 +99,8 @@ function deleteCommand() {
 async function renderCommand(command) {
     let cookie = Cookies.getJSON('vce');
 
-console.log(command);
-console.log(cookie);
-
     let form = document.forms['modify-command'];
-    form.elements['id'].value = command.id;
+    form.elements['command_id'].value = command.id;
     form.elements['name'].value = command.name;
     form.elements['description'].value = command.description;
     form.elements['template'].value = command.template;
@@ -133,11 +130,42 @@ console.log(cookie);
     renderParameterList();
 
     command.parameters.forEach(function(param) {
-        addParameter(param.name, param.description, param.regex, param.type, param.disabled);
+        addParameter(param.name, param.description, param.regex, param.type, param.disabled, param.id);
     });
 }
 
 function modifyCommand(form) {
+    let func = async function(data) {
+        let cookie = Cookies.getJSON('vce');
+        let workgroup = cookie.workgroup;
+        let parameters = cookie.parameters;
+
+        let params = new URLSearchParams(location.search);
+        let command_id = params.get('command_id');
+
+        let ptype = data.get('type');
+        if (ptype === 'interface' || ptype === 'vlan') {
+            parameters.splice(0, 1);
+        }
+
+        data.set('method', 'modify_command');
+        data.set('parameters', JSON.stringify(parameters));
+        data.set('workgroup', workgroup);
+
+        try {
+            const url = '../api/command.cgi';
+            const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) throw obj.error_text;
+            window.location.href = `modify_commands.html?command_id=${command_id}`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    func(new FormData(form));
     return false;
 }
 
@@ -205,14 +233,15 @@ async function loadDefaultParameters() {
     return true;
 }
 
-async function addParameter(name='', description='', regex='', type='input', disabled=false) {
+async function addParameter(name='', description='', regex='', type='input', disabled=false, id=-1) {
     let cookie = Cookies.getJSON('vce');
     cookie.parameters.push({
         name: name,
         description: description,
         regex: regex,
         type: type,
-        disabled: disabled
+        disabled: disabled,
+        id: id
     });
     Cookies.set('vce', cookie);
     renderParameterList();
