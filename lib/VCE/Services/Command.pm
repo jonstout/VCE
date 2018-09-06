@@ -218,18 +218,23 @@ sub _register_methods{
 
     $dispatcher->register_method($method);
 
-    $method = GRNOC::WebService::Method->new( name => 'delete_command',
-                                              description => 'deletes and existing command',
-					      callback => sub { return $self->delete_command(@_); }
+    $method = GRNOC::WebService::Method->new(
+        name => 'delete_command',
+        description => 'deletes and existing command',
+        callback => sub { return $self->delete_command(@_); }
 	);
-
+    $method->add_input_parameter(
+        required => 1,
+        name => 'workgroup',
+        pattern => $GRNOC::WebService::Regex::NAME_ID,
+        description => "name of current users workgroup"
+	);
     $method->add_input_parameter(
         required => 1,
         name => 'command_id',
         pattern => $GRNOC::WebService::Regex::NUMBER_ID,
         description => "ID of the command to be deleted"
-        );
-
+    );
     $dispatcher->register_method($method);
 }
 
@@ -603,11 +608,15 @@ sub delete_command{
     my $p_ref = shift;
 
     my $user = $ENV{'REMOTE_USER'};
-
     my $workgroup = $p_ref->{'workgroup'}{'value'};
 
     if (!$self->vce->access->user_in_workgroup(username => $user, workgroup => $workgroup )) {
-        $method_ref->set_error("User $user not in specified workgroup $workgroup");
+        $method_ref->set_error("User $user not in workgroup $workgroup.");
+        return;
+    }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
         return;
     }
 

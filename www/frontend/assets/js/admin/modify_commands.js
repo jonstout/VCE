@@ -64,6 +64,38 @@ async function getCommand(command_id) {
     }
 }
 
+function deleteCommand() {
+    let ok = confirm('Are you sure you wish to delete this command?');
+    if (!ok) {
+        return false;
+    }
+
+    let del = async function() {
+        let cookie = Cookies.getJSON('vce');
+        let wg = cookie.workgroup;
+
+        let params = new URLSearchParams(location.search);
+        let id = params.get('command_id');
+
+        let method = 'delete_command';
+
+        try {
+            const url = `../api/command.cgi?method=${method}&command_id=${id}&workgroup=${wg}`;
+            const resp = await fetch(url, {method: 'get', credentials: 'include'});
+            const obj = await resp.json();
+
+            if ('error_text' in obj) throw obj.error_text;
+            window.location.href = `commands.html`;
+        } catch (error) {
+            console.log(error);
+            return false;
+        }
+    };
+
+    del();
+    return false;
+}
+
 async function renderCommand(command) {
     let cookie = Cookies.getJSON('vce');
 

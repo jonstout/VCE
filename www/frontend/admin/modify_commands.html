@@ -66,7 +66,7 @@
       </div>
 
       <div class="grnoc-content">
-        <h1 class="title">Create a new command</h1>
+        <h1 class="title">Modify command</h1>
 
         <form name="modify-command" onsubmit="return modifyCommand(this)">
           <input class="input" type="hidden" name="id" required />
@@ -117,12 +117,18 @@
           </div>
           <div class="field is-grouped">
             <div class="control">
-              <button type="submit" class="button is-link">Create Command</button>
+              <button type="submit" class="button is-link">Modify Command</button>
             </div>
-            <div class="field">
-              <div class="control">
-                <button type="button" class="button is-link" onclick="addParameter()">Create Parameter</button>
-              </div>
+            <div class="control">
+              <button type="button" class="button is-link" onclick="addParameter()">Create Parameter</button>
+            </div>
+            <div class="control">
+              <button type="button" class="button is-danger is-outlined" onclick="deleteCommand()">
+                <span>Delete</span>
+                <span class="icon is-small">
+                  <i class="fas fa-times"></i>
+                </span>
+              </button>
             </div>
           </div>
           <hr/>
