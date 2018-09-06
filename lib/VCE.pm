@@ -389,7 +389,7 @@ sub get_switches{
     }
 
     my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
-    my $switches = $self->access->get_workgroup_switches(workgroup => $params{'workgroup'});
+    my $switches = $self->access->get_workgroup_switches(workgroup => $params{'workgroup'}, admin => $is_admin);
 
     my @res;
     foreach my $switch (@$switches){
@@ -688,12 +688,13 @@ sub get_workgroup_details{
     }
 
     my $workgroup = $params{'workgroup'};
+    my $is_admin = $self->access->get_admin_workgroup()->{name} eq $params{workgroup} ? 1 : 0;
 
     my $obj = {};
     $obj->{'name'} = $workgroup;
-    $obj->{'description'} = $self->access->get_workgroup_description( workgroup => $workgroup);
-    $obj->{'users'} = $self->access->get_workgroup_users( workgroup => $workgroup);
-    $obj->{'switches'} = $self->access->get_workgroup_switches( workgroup => $workgroup);
+    $obj->{'description'} = $self->access->get_workgroup_description(workgroup => $workgroup);
+    $obj->{'users'} = $self->access->get_workgroup_users(workgroup => $workgroup);
+    $obj->{'switches'} = $self->access->get_workgroup_switches(workgroup => $workgroup, admin => $is_admin);
 
     return $obj;
 }

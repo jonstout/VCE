@@ -396,13 +396,21 @@ sub get_workgroup_switches{
         $self->logger->error("get_workgroup_switches: workgroup not specified");
         return;
     }
+    if (!defined $params{admin}) {
+        $params{admin} = 0;
+    }
     my $result = [];
 
     my $workgroup = $self->db->get_workgroup(name => $params{workgroup});
     if (!defined $workgroup) {
         return $result;
     }
-    my $switches = $self->db->get_switches(workgroup_id => $workgroup->{id});
+    my $switches = [];
+    if ($params{admin}) {
+        $switches = $self->db->get_switches();
+    } else {
+        $switches = $self->db->get_switches(workgroup_id => $workgroup->{id});
+    }
 
     foreach my $switch (@$switches) {
         push @$result, $switch->{name};
