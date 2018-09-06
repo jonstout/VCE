@@ -980,10 +980,9 @@ sub issue_command{
     # Consider running C<conf t>, C<vlan 218>, C<spanning-tree>. To
     # exit to the main menu, exit should be run twice: One less than
     # the number of statements executed.
-
     for (my $i = 0; $i < $statements_run - 1; $i++) {
         my $ok = $self->comm->issue_command('exit', $prompt);
-        if (!$ok) {
+        if (!defined $ok) {
             # Failing to exit to the main menu isn't ideal, but also
             # not a deal breaker because we got the result of the
             # actual command.
