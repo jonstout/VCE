@@ -3,28 +3,35 @@
 use strict;
 use warnings;
 
+use GRNOC::Config;
 use GRNOC::Log;
+
 use VCE::Services::Provisioning;
 
-our $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf');
-our $provisioning_services;
 
-if($ENV{'TESTING'}){
-    $provisioning_services = VCE::Services::Provisioning->new( config_file => $ENV{'CONFIG_FILE'},
-                                                               network_model_file => $ENV{'NETWORK_MODEL_FILE'},
-                                                               rabbit_mq => { user => 'guest',
-                                                                              pass => 'guest',
-                                                                              host => 'localhost',
-                                                                              port => '5672'} );
-}else{
-    $provisioning_services = VCE::Services::Provisioning->new( config_file => '/etc/vce/access_policy.xml',
-                                                               network_model_file => '/var/lib/vce/database.sqlite',
-                                                               rabbit_mq => { user => 'guest',
-                                                                              pass => 'guest',
-                                                                              host => 'localhost',
-                                                                              port => '5672'});
+if (!$ENV{TESTING}) {
+    $ENV{CONFIG_FILE} = '/etc/vce/access_policy.xml';
+    $ENV{NETWORK_MODEL_FILE} = '/var/lib/vce/database.sqlite';
 }
 
 
-$provisioning_services->handle_request();
+my $config = GRNOC::Config->new(
+    config_file => $ENV{CONFIG_FILE},
+    force_array => 1,
+    schema      => '/etc/vce/config.xsd'
+);
 
+my $ok = $config->validate();
+if (!$ok) {
+    die $config->get_error()->{'backtrace'}->{'message'};
+}
+
+
+our $logger = GRNOC::Log->new(config => '/etc/vce/logging.conf');
+our $handler = VCE::Services::Provisioning->new(
+    config_file => $ENV{CONFIG_FILE},
+    network_model_file => $ENV{NETWORK_MODEL_FILE},
+    rabbit_mq => $config->get('/accessPolicy/rabbit')->[0]
+);
+
+$handler->handle_request();
