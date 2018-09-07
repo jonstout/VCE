@@ -45,9 +45,9 @@ CREATE TABLE IF NOT EXISTS interface(
     speed TEXT,
     description TEXT,
     link_up BOOLEAN CHECK (link_up in (0, 1)),
-    workgroup_id INTEGER,
+    workgroup_id INTEGER DEFAULT 1,
     switch_id INTEGER,
-    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id),
+    FOREIGN KEY(workgroup_id) REFERENCES workgroup(id) ON DELETE SET DEFAULT,
     FOREIGN KEY(switch_id) REFERENCES switch(id) ON DELETE CASCADE
 );
 
