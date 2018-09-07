@@ -115,8 +115,9 @@ sub get_workgroup_interfaces {
         "select interface.*, switch.name as switch_name, acl.workgroup_id, acl.low, acl.high from workgroup
          join interface on workgroup.id=interface.workgroup_id
          join switch on interface.switch_id=switch.id
-         join acl on interface.id=acl.interface_id
-         where interface.workgroup_id=? OR acl.workgroup_id=?"
+         left join acl on interface.id=acl.interface_id
+         where interface.workgroup_id=? OR acl.workgroup_id=?
+         order by interface.name"
     );
     $q->execute($workgroup_id, $workgroup_id);
 
