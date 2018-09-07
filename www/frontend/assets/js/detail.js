@@ -168,7 +168,7 @@ function getPortCommands() {
                 opt.innerHTML = cmds[i].name;
                 opt.setAttribute('value', `form-${cmds[i].command_id}`);
 
-                if (cmds[i].type == "show") {
+                if (cmds[i].operation == "read") {
                     document.getElementById("port_show_commands").appendChild(opt);
                 } else {
                     document.getElementById("port_action_commands").appendChild(opt);
@@ -327,7 +327,7 @@ function getVlanCommands() {
                 opt.innerHTML = cmds[i].name;
                 opt.setAttribute('value', `form-${cmds[i].command_id}`);
                 
-                if (cmds[i].type == "show") {
+                if (cmds[i].operation == "read") {
                     document.getElementById("vlan_show_commands").appendChild(opt);
                 } else {
                     console.log('Could not add command: ' + String(opt));
@@ -377,7 +377,7 @@ function loadSwitchCommands() {
                 opt.innerHTML = cmds[i].name;
                 opt.setAttribute('value', `form-${cmds[i].command_id}`);
                 
-                if (cmds[i].type == "show") {
+                if (cmds[i].operation == "read") {
                     document.getElementById("switch_show_commands").appendChild(opt);
                 } else {
                     document.getElementById("switch_action_commands").appendChild(opt);
