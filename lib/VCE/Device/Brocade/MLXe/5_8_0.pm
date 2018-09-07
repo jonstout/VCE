@@ -382,6 +382,7 @@ sub get_interfaces {
     my ($ints, $err) = $self->get_interfaces_state();
     if (defined $err) {
         $self->logger->error($err);
+        return;
     }
 
     my %interfaces;
