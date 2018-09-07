@@ -343,7 +343,10 @@ sub get_switch_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'name'};
+        my $name = "$cmd->{command_id}_$cmd->{name}";
+        $name =~ tr/- /__/;
+        $obj->{'command_id'} = $cmd->{'id'};
+        $obj->{'method_name'} = $name;
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
@@ -462,7 +465,10 @@ sub get_port_commands{
                 }
 
                 $command->{parameters} = $params;
-                $command->{method_name} = $command->{name};
+                my $name = "$command->{command_id}_$command->{name}";
+                $name =~ tr/- /__/;
+
+                $command->{method_name} = $name;
                 delete $command->{params};
                 delete $command->{interaction};
                 delete $command->{description};
@@ -531,7 +537,10 @@ sub get_vlan_commands{
         }
 
         my $obj = {};
-        $obj->{'method_name'} = $cmd->{'name'};
+        my $name = "$cmd->{command_id}_$cmd->{name}";
+        $name =~ tr/- /__/;
+
+        $obj->{'method_name'} = $name;
         $obj->{'name'} = $cmd->{'name'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
