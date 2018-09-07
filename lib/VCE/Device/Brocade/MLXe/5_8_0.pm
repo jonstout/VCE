@@ -997,7 +997,13 @@ sub issue_command{
     $self->_set_context('');
     $self->_set_in_configure(0);
 
-    $result =~ s/\A\s+//gm; # Strip any leading whitespace
+    # Strip any leading whitespace including newlines.
+    $result =~ s/\A\s+//gm;
+    # Responses that end with n have the last character removed. I
+    # don't know why, but this fixes the result for a known case. This
+    # can be revisted if more issues arise.
+    $result =~ s/vla\z/vlan/gm;
+
     return ($result, undef);
 }
 
