@@ -393,12 +393,12 @@ sub _add_switch {
     my $res = $client->add_switch(switch_id => $id);
     
     my $status = 1;
-    if(!defined($res->{'results'})){
-	$method_ref->set_error("Timeout occured talking to VCE process, please check the logs or check with the system administrator");
+    if(!defined($res) || !defined($res->{'success'})){
+	$method_ref->set_error("Timeout occured talking to VCE process, please check the logs or check with the system administrator. " . $res->{'error'});
 	$status = 0;
     }else{
-	if($res->{'results'}->{'success'} == 0){
-	    $method_ref->set_error("Error attempting to create switch process, was switch added to the database?");
+	if($res->{'success'} == 0){
+	    $method_ref->set_error("Error attempting to create switch process, was switch added to the database?" . $res->{'error'});
 	    $status = 0;
 	}
     }

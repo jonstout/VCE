@@ -135,6 +135,12 @@ sub make_switch_process{
                 $s->start();
             }
         }')->send_arg( %args  )->run("run");
+
+    if(!defined($proc)){
+	return 0;
+    }
+
+    return 1;
 }
 
 sub main {
@@ -177,13 +183,15 @@ sub main {
 	    my %params = @_;
 	    my $switch = $db->get_switch(switch_id => $params{'switch_id'}{'value'} );
 	    if(!defined($switch)){
-		return {success => 0};
+		return {success => 0, error => "Unable to find switch with id: " . $params{'switch_id'}{'value'}};
 	    }
 	    
 	    my $res = make_switch_process( $switch, $creds );
-
-	    return {success => 1};
-	},
+	    if($res){
+		return {success => 1};
+	    }else{
+		return {success => 0, error => "Unable to create child process"};
+	    }},
         description => "adds a switch process"
 	);
 
