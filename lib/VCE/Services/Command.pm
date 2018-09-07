@@ -265,8 +265,9 @@ sub _register_commands{
         foreach my $command (@$commands) {
             $command->{'cli_type'} = 'action';
             my $type = $command->{type};
-            my $name = $command->{name};
-            $name =~ tr/ //ds;
+            my $name = "$command->{id}_$command->{name}";
+            $name =~ tr/- /__/;
+            # my $name = "$name-$command->{id}";
 
             my $method = GRNOC::WebService::Method->new(
                 name => $name,
