@@ -27,7 +27,7 @@ Requires: perl-Moo
 Requires: perl-Parallel-ForkManager
 Requires: perl-Test-Deep
 Requires: perl-Type-Tiny
-
+Requires: perl-AnyEvent-Fork
 Requires: rabbitmq-server
 Requires: httpd
 Requires: sqlite

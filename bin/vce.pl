@@ -13,8 +13,11 @@ use VCE::Switch;
 use GRNOC::Log;
 use Types::Standard qw( Str Bool );
 
-use Parallel::ForkManager;
 use Proc::Daemon;
+
+use GRNOC::RabbitMQ::Dispatcher;
+use GRNOC::RabbitMQ::Method;
+use AnyEvent::Fork;
 
 use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
 # use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
@@ -25,6 +28,7 @@ use Data::Dumper;
 
 my @children;
 my $vce;
+my $d;
 sub usage {
     print "Usage: $0 [--config <file path>] [--model <file path>]\n";
     exit( 1 );
@@ -32,6 +36,7 @@ sub usage {
 
 # setup signal handlers
 $SIG{'TERM'} = sub {
+    $d->stop();
     stop();
 };
 
@@ -40,6 +45,7 @@ $SIG{'HUP'} = sub {
 };
 
 sub stop {
+    
     return kill( 'TERM', @children);
 }
 
@@ -76,6 +82,67 @@ sub get_credentials {
     return decode_json($data);
 }
 
+sub make_switch_process{
+    my $switch = shift;
+    my $creds = shift;
+    
+    my %args;
+    foreach my $key (keys (%{$switch})){
+	$args{$key} = $switch->{$key};
+    }
+
+    foreach my $key (keys (%{$vce->rabbit_mq})){
+        $args{$key} = $vce->rabbit_mq->{$key};
+    }
+
+    foreach my $key (keys (%{$creds->{$switch->{'name'}}})){
+        $args{$key} = $creds->{$switch->{'name'}}->{$key};
+    }
+
+    my $proc = AnyEvent::Fork->new->require("GRNOC::Log","VCE::Switch")->eval('
+        use strict;
+        use warnings;
+        use Data::Dumper;
+        GRNOC::Log->new(config => "/etc/vce/logging.conf");
+        my $logger = GRNOC::Log->get_logger("CHILD");
+        $logger->debug("Creating switch");
+	
+        sub run{
+            my $fh = shift;
+	    my %args = @_;
+	    
+	    my $rabbit_mq = { host => $args{"host"}, 
+			      port => $args{"port"}, 
+			      user => $args{"user"}, 
+			      pass => $args{"pass"}};
+	    
+            my $s = VCE::Switch->new(
+                username => $args{"username"},
+                password => $args{"password"},
+                hostname => $args{"ipv4"},
+                port => $args{"ssh"},
+                vendor => $args{"vendor"},
+                type => $args{"model"},
+                version => $args{"version"},
+                name => $args{"name"},
+                rabbit_mq => $rabbit_mq,
+                id => $args{"id"}
+                );
+
+            $logger->info("Switch $args{\"name\"} created.");
+
+            if (defined $s) {
+                $s->start();
+            }
+        }')->send_arg( %args  )->run("run");
+
+    if(!defined($proc)){
+	return 0;
+    }
+
+    return 1;
+}
+
 sub main {
     my $config_file = shift;
     my $model_file = shift;
@@ -96,47 +163,50 @@ sub main {
     my $switches = $db->get_switches();
     my $creds    = get_credentials($password_file);
 
-    my $forker = Parallel::ForkManager->new(scalar($switches));
-    $forker->run_on_start(
-        sub {
-            my ($pid) = @_;
-            $log->debug( "Child worker process $pid created." );
-
-            push( @children, $pid );
-        }
-    );
-
     foreach my $switch (@$switches){
-        $forker->start() and next;
-
-        GRNOC::Log->new(config => '/etc/vce/logging.conf');
-        my $logger = GRNOC::Log->get_logger("CHILD");
-
-        $logger->debug("Creating switch $switch->{name}.");
-
-        my $s = VCE::Switch->new(
-            username => $creds->{$switch->{'name'}}->{'username'},
-            password => $creds->{$switch->{'name'}}->{'password'},
-            hostname => $switch->{'ipv4'},
-            port => $switch->{'ssh'},
-            vendor => $switch->{'vendor'},
-            type => $switch->{'model'},
-            version => $switch->{'version'},
-            name => $switch->{'name'},
-            rabbit_mq => $vce->rabbit_mq,
-            id => $switch->{'id'}
-        );
-
-        $logger->info("Switch $switch->{name} created.");
-
-        if (defined $s) {
-            $s->start();
-        }
-
-        $forker->finish();
+	warn "Making Switch: " . Dumper($switch);
+	make_switch_process( $switch, $creds );
     }
 
-    $forker->wait_all_children();
+    $d = GRNOC::RabbitMQ::Dispatcher->new( host     => $vce->rabbit_mq->{'host'},
+					      port     => $vce->rabbit_mq->{'port'},
+					      user     => $vce->rabbit_mq->{'user'},
+					      pass     => $vce->rabbit_mq->{'pass'},
+					      exchange => 'VCE',
+					      queue    => 'VCE-Main',
+					      topic    => 'VCE'
+	);
+    
+    my $method = GRNOC::RabbitMQ::Method->new(
+        name => "add_switch",
+        callback => sub { 
+	    my %params = @_;
+	    my $switch = $db->get_switch(switch_id => $params{'switch_id'}{'value'} );
+	    if(!defined($switch)){
+		return {success => 0, error => "Unable to find switch with id: " . $params{'switch_id'}{'value'}};
+	    }
+	    
+	    my $res = make_switch_process( $switch, $creds );
+	    if($res){
+		return {success => 1};
+	    }else{
+		return {success => 0, error => "Unable to create child process"};
+	    }},
+        description => "adds a switch process"
+	);
+
+    $method->add_input_parameter(
+        name => "switch_id",
+        description => "ID of the switch to start a process for",
+        required => 1,
+        multiple => 0,
+        pattern => $GRNOC::WebService::Regex::NUMBER_ID
+	);
+    $d->register_method($method);
+
+    $d->start_consuming();
+
+    return;
 }
 
 my $config_file = DEFAULT_CONFIG_FILE;

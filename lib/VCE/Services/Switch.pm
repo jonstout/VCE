@@ -22,7 +22,7 @@ has logger => (is => 'rwp');
 has dispatcher => (is => 'rwp');
 has template => (is => 'rwp');
 has db => (is => 'rwp');
-
+has rabbit_mq => (is => 'rwp');
 =head2 BUILD
 
 =over 4
@@ -380,7 +380,7 @@ sub _add_switch {
     }
 
     if(!$self->vce->access->user_in_workgroup( username => $user,
-            workgroup => $workgroup )){
+					       workgroup => $workgroup )){
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
@@ -401,7 +401,33 @@ sub _add_switch {
         return;
     }
 
-    return { results => [ { id => $id } ] };
+
+
+    #build rabbitmq client
+    my $client = GRNOC::RabbitMQ::Client->new(
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        host     => $self->rabbit_mq->{'host'},
+        timeout  => 30,
+        port     => $self->rabbit_mq->{'port'},
+        exchange => 'VCE',
+        topic    => 'VCE'
+	);    
+
+    my $res = $client->add_switch(switch_id => $id);
+    
+    my $status = 1;
+    if(!defined($res) || !defined($res->{'success'})){
+	$method_ref->set_error("Timeout occured talking to VCE process, please check the logs or check with the system administrator. " . $res->{'error'});
+	$status = 0;
+    }else{
+	if($res->{'success'} == 0){
+	    $method_ref->set_error("Error attempting to create switch process, was switch added to the database?" . $res->{'error'});
+	    $status = 0;
+	}
+    }
+
+    return { results => [ { id => $id, status => $status } ] };
 
 }
 
@@ -520,6 +546,8 @@ sub _delete_switch {
         return;
     }
 
+    my $switch = $self->db->get_switch( $params->{id}{value} );
+
     my $result = $self->db->delete_switch (
         $params->{id}{value}
     );
@@ -535,6 +563,18 @@ sub _delete_switch {
     if ($result eq "0E0") {
         $result = 0;
     }
+
+
+    #build rabbitmq client
+    my $client = GRNOC::RabbitMQ::Client->new(
+        user     => $self->rabbit_mq->{'user'},
+        pass     => $self->rabbit_mq->{'pass'},
+        host     => $self->rabbit_mq->{'host'},
+        timeout  => 30,
+        port     => $self->rabbit_mq->{'port'},
+        exchange => 'VCE',
+        topic    => "VCE.Switch." . $switch->{'name'}
+        ); 
 
     return { results => [ { value => $result } ] };
 }
