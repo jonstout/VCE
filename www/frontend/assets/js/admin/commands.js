@@ -97,7 +97,7 @@ async function renderCommandList(commands) {
 async function loadDefaultParameters() {
     let cookie = Cookies.getJSON('vce');
     cookie.parameters = [{
-        name: 'interface',
+        name: 'port',
         description: 'The interface name',
         regex: '^[A-Za-z]+$',
         type: 'input',
@@ -126,7 +126,7 @@ function updateCommandType(radio) {
     if (cookie.parameters.length == 0) {
         if (radio.value === 'interface') {
             cookie.parameters.splice(0, 1, {
-                name: 'interface',
+                name: 'port',
                 description: 'The interface name',
                 regex: '^[A-Za-z]+$',
                 type: 'input',
@@ -135,7 +135,7 @@ function updateCommandType(radio) {
         }
         if (radio.value === 'vlan') {
             cookie.parameters.splice(0, 1, {
-                name: 'tag',
+                name: 'vlan_id',
                 description: 'The VLAN number',
                 regex: '^[0-9]+$',
                 type: 'input',
@@ -149,17 +149,17 @@ function updateCommandType(radio) {
     let name = cookie.parameters[0].name;
 
     if (radio.value === 'interface') {
-        if (name === 'interface') {
+        if (name === 'port') {
             // do nothing
-        } else if (name === 'tag') {
-            cookie.parameters[0].name = 'interface';
+        } else if (name === 'vlan_id') {
+            cookie.parameters[0].name = 'port';
             cookie.parameters[0].description = 'The interface name';
             cookie.parameters[0].regex = '^[A-Za-z]+$';
             cookie.parameters[0].type = 'input';
             cookie.parameters[0].disabled = true;
         } else {
             cookie.parameters.splice(0, 0, {
-                name: 'interface',
+                name: 'port',
                 description: 'The interface name',
                 regex: '^[A-Za-z]+$',
                 type: 'input',
@@ -169,23 +169,23 @@ function updateCommandType(radio) {
     } else if (radio.value === 'switch') {
         if (name === 'switch') {
             // do nothing
-        } else if (name === 'tag') {
+        } else if (name === 'vlan_id') {
             cookie.parameters.splice(0, 1);
-        } else if (name === 'interface') {
+        } else if (name === 'port') {
             cookie.parameters.splice(0, 1);
         }
     } else if (radio.value === 'vlan') {
-        if (name === 'tag') {
+        if (name === 'vlan_id') {
             // do nothing
-        } else if (name === 'interface') {
-            cookie.parameters[0].name = 'tag';
+        } else if (name === 'port') {
+            cookie.parameters[0].name = 'vlan_id';
             cookie.parameters[0].description = 'The VLAN number';
             cookie.parameters[0].regex = '^[0-9]+$';
             cookie.parameters[0].type = 'input';
             cookie.parameters[0].disabled = true;
         } else {
             cookie.parameters.splice(0, 0, {
-                name: 'tag',
+                name: 'vlan_id',
                 description: 'The VLAN number',
                 regex: '^[0-9]+$',
                 type: 'input',
