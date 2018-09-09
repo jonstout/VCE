@@ -95,12 +95,7 @@ function loadVlanDropdown() {
 
             // Loads valid endpoints
             for (var i = 0; i < ports.length; i++) {
-
                 portTags[ports[i].name] = ports[i].tags;
-                // temp_arry = [];
-                // for (var j = 0; j < ports[i].tags.length; j++) {
-                //     console.log(ports[i].tags[j]);
-                // }
             }
             console.log(portTags);
         });
@@ -143,9 +138,86 @@ function createEndpointSelector() {
     return select;
 }
 
+function filterVlansDrop() {
+    // var container = document.getElementById('endpoint-container');
+    var endpoints = document.forms[1].endpoint;
+
+    if(typeof endpoints !== 'undefined') {
+        if (endpoints.value === '') {
+            var epNames = [];
+            for (var i = 0; i < endpoints.length; i++) {
+                epNames.push(endpoints[i].value);
+            }
+            endpoints = epNames;
+        } else {
+            endpoints = [endpoints.value];
+        }
+
+    }
+
+    var dropd = document.getElementById("vlan_optgroup");
+    dropd.innerHTML = '';
+    var opt = document.createElement('option');
+    opt.innerHTML = "Add and select an endpoint to filter VLANS";
+    // opt.setAttribute('value', vlanIds[i]);
+    dropd.appendChild(opt);
+
+    // Loads valid VLANS
+    var low   = 1;
+    var high  = 0;
+
+
+    var vlanIds = [];
+    for (var i = 0; i < endpoints.length; i++) {
+        for (var j = 0; j < portTags[endpoints[i]].length; j++) {
+            console.log(portTags[endpoints[i]][j]);
+            // if (ports[0].tags.length > 0) {
+            var parts = portTags[endpoints[i]][j].split("-").map(Number);
+
+            var temp_low   = parts[0];
+            var temp_high  = parts[0];
+
+            if (parts.length > 1) {
+                temp_high = parts[1];
+            }
+
+            if (temp_low > low) {
+                low = temp_low;
+            }
+            if (temp_high < high) {
+                high = temp_high;
+            }
+            // }
+
+
+        }
+
+    }
+
+
+    console.log(endpoints);
+
+    console.log("Final range: " + low + "-" + high);
+
+    // for (var k = low; k <= high; k++) {
+    //     if (vlanIds.includes(k)) {
+    //                 continue;
+    //     }
+    //     // console.log("Pushing: " + k);
+    //     vlanIds.push(k);
+    // }
+
+    // console.log(portTags);
+
+
+}
+
 function configureButtons() {
     var createEndpoint = document.getElementById('create_endpoint_button');
     createEndpoint.addEventListener("click", createEndpointSelector, false);
+
+    var filterVlans= document.getElementById('filter_vlans');
+    filterVlans.addEventListener("click", filterVlansDrop, false);
 
     var create = document.getElementById('create_button');
     create.addEventListener("click", createVlan, false);
