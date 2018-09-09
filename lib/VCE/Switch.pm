@@ -642,13 +642,23 @@ sub _gather_operational_status{
     }
 
     my $interfaces = $self->db->get_interfaces(switch_id => $self->id);
+
     my $ifaces = {};
     foreach my $intf (@{$interfaces}) {
         $ifaces->{$intf->{name}} = $intf;
     }
 
     my $interfaces_state = $self->device->get_interfaces();
+    if (!defined $interfaces_state) {
+        $self->logger->error("Couldn't gather interface data from device.");
+        return undef;
+    }
+
     $interfaces_state = $interfaces_state->{'interfaces'};
+    if (!%{$interfaces_state}) {
+        $self->logger->error("Got back zero interfaces from device; This is likely an error. Skipping diff for now.");
+        return undef;
+    }
 
     foreach my $name (keys %{$interfaces_state}) {
         if (defined $ifaces->{$name}) {
