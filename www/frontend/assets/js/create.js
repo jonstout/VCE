@@ -165,47 +165,79 @@ function filterVlansDrop() {
     // Loads valid VLANS
     var low   = 1;
     var high  = 0;
-
+    var first_time = 0;
 
     var vlanIds = [];
     for (var i = 0; i < endpoints.length; i++) {
         for (var j = 0; j < portTags[endpoints[i]].length; j++) {
-            console.log(portTags[endpoints[i]][j]);
-            // if (ports[0].tags.length > 0) {
+            // console.log("Performing on range: " + portTags[endpoints[i]][j]);
             var parts = portTags[endpoints[i]][j].split("-").map(Number);
 
-            var temp_low   = parts[0];
-            var temp_high  = parts[0];
+            if (endpoints.length != 1) {
+                if (first_time == 0) {
+                    var low   = parts[0];
+                    var high  = parts[0];
 
-            if (parts.length > 1) {
-                temp_high = parts[1];
+                    if (parts.length > 1) {
+                        high = parts[1];
+                    }
+                    first_time = 1;
+                } else {
+                    if (!(high < parts[0] && low > parts[1] )) {
+
+                        if ( parts[0] > low && high > parts[0] ) {
+                            low = parts[0];
+                        }
+                        if (high < parts[1] && high > parts[0] ) {
+                            high = parts[1];
+                        }
+                    } else {
+                        low = 1;
+                        high = 0;
+                    }
+                }
+
+                console.log("Intermediate range: " + low + "-" + high);
+            } else {
+                var low   = parts[0];
+                var high  = parts[0];
+
+                if (parts.length > 1) {
+                    high = parts[1];
+                }
+
+
+                for (var k = low; k <= high; k++) {
+                    if (vlanIds.includes(k)) {
+                        continue;
+                    }
+                    vlanIds.push(k);
+                }
             }
+        }
+    }
 
-            if (temp_low > low) {
-                low = temp_low;
-            }
-            if (temp_high < high) {
-                high = temp_high;
-            }
-            // }
+    if (endpoints.length != 1) {
+        console.log("Pushing range: " + low + "-" + high);
 
-
+        for (var k = low; k <= high; k++) {
+            // console.log("Pushing: " + k);
+            vlanIds.push(k);
         }
 
     }
 
+    for (var i = 0; i < vlanIds.length; i++) {
+        // if (vlanIds[i] in provisionedVlans) {
+        //     continue;
+        // }
 
-    console.log(endpoints);
+        var opt = document.createElement('option');
+        opt.innerHTML = vlanIds[i];
+        opt.setAttribute('value', vlanIds[i]);
+        dropd.appendChild(opt);
+    }
 
-    console.log("Final range: " + low + "-" + high);
-
-    // for (var k = low; k <= high; k++) {
-    //     if (vlanIds.includes(k)) {
-    //                 continue;
-    //     }
-    //     // console.log("Pushing: " + k);
-    //     vlanIds.push(k);
-    // }
 
     // console.log(portTags);
 
