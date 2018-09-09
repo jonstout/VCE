@@ -23,6 +23,7 @@ has dispatcher => (is => 'rwp');
 has template => (is => 'rwp');
 has db => (is => 'rwp');
 has rabbit_mq => (is => 'rwp');
+
 =head2 BUILD
 
 =over 4
@@ -355,7 +356,6 @@ sub _register_switch_functions {
 =head2 handle_request
 
 =cut
-
 sub handle_request{
     my $self = shift;
     $self->dispatcher->handle_request();
