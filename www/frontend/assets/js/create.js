@@ -68,6 +68,8 @@ function loadVlanDropdown() {
                         provisionedVlans[_vlans[i]['vlan']] = true;
                     }
 
+
+                    vlanIds.sort(function(a, b){return a - b});
                     for (var i = 0; i < vlanIds.length; i++) {
                         if (vlanIds[i] in provisionedVlans) {
                             continue;
@@ -97,6 +99,9 @@ function loadVlanDropdown() {
 
 function createEndpointSelector() {
     var container = document.getElementById('endpoint-container');
+    container.addEventListener('change', function() {
+        filterVlansDrop();
+    } );
 
     var formGroup = document.createElement('div');
     formGroup.setAttribute('class', 'form-group endpoint');
@@ -106,12 +111,14 @@ function createEndpointSelector() {
     select.setAttribute('name', 'endpoint');
     select.setAttribute('style', 'min-width:360px;width:90%;');
 
+
     var button = document.createElement('button');
     button.setAttribute('class', 'btn btn-danger')
     button.setAttribute('type', 'button');
     button.setAttribute('style', 'margin:0px 5px;');
     button.addEventListener('click', function(e) {
         formGroup.remove();
+        filterVlansDrop();
     });
 
     var i = document.createElement('i');
@@ -259,9 +266,6 @@ function filterVlansDrop() {
 function configureButtons() {
     var createEndpoint = document.getElementById('create_endpoint_button');
     createEndpoint.addEventListener("click", createEndpointSelector, false);
-
-    var filterVlans= document.getElementById('filter_vlans');
-    filterVlans.addEventListener("click", filterVlansDrop, false);
 
     var create = document.getElementById('create_button');
     create.addEventListener("click", createVlan, false);
