@@ -19,7 +19,6 @@ function loadVlanDropdown() {
 
             var ports = data.results[0].ports;
 
-            console.log(ports);
             var dropd = document.getElementById("vlan_optgroup");
             dropd.innerHTML = '';
             var opt = document.createElement('option');
@@ -50,29 +49,24 @@ function loadVlanDropdown() {
                         if (vlanIds.includes(k)) {
                             continue;
                         }
-                        // console.log("Pushing: " + k);
                         vlanIds.push(k);
                     }
                 }
             }
-            // console.log(vlanIds);
             var url = baseUrl + 'access.cgi?method=get_vlans';
             url += '&workgroup=' + cookie.workgroup;
             url += '&switch=' + name;
             fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
                 response.json().then(function(data) {
                     if (typeof data.error !== 'undefined') {
-                        // console.log(data);
                         return displayError(data.error.msg);
                     }
-                    // console.log(data);
 
                     var _vlans = data.results[0]['vlans'];
                     var provisionedVlans = {};
                     for (var i = 0; i < _vlans.length; i++) {
                         provisionedVlans[_vlans[i]['vlan']] = true;
                     }
-                    // console.log(provisionedVlans);
 
                     for (var i = 0; i < vlanIds.length; i++) {
                         if (vlanIds[i] in provisionedVlans) {
@@ -97,7 +91,6 @@ function loadVlanDropdown() {
             for (var i = 0; i < ports.length; i++) {
                 portTags[ports[i].name] = ports[i].tags;
             }
-            console.log(portTags);
         });
     });
 }
@@ -157,24 +150,20 @@ function intersect_safe(a, b)
     return result;
 }
 function filterVlansDrop() {
-    // var container = document.getElementById('endpoint-container');
     var endpoints = document.forms[1].endpoint;
 
     var dropd = document.getElementById("vlan_optgroup");
     dropd.innerHTML = '';
     var opt = document.createElement('option');
     opt.innerHTML = "Add and select an endpoint to filter VLANS";
-    // opt.setAttribute('value', vlanIds[i]);
     dropd.appendChild(opt);
 
-    // Loads valid VLANS
     var low   = 1;
     var high  = 0;
     var first_time = 0;
 
     var vlanIds = [];
     var intermediate= [];
-    console.log(typeof endpoints);
     if(typeof endpoints !== 'undefined') {
         if (endpoints.value === '') {
             var epNames = [];
@@ -185,73 +174,6 @@ function filterVlansDrop() {
         } else {
             endpoints = [endpoints.value];
         }
-
-        // for (var i = 0; i < endpoints.length; i++) {
-        //     for (var j = 0; j < portTags[endpoints[i]].length; j++) {
-        //         var parts = portTags[endpoints[i]][j].split("-").map(Number);
-        //         var low   = parts[0];
-        //         var high  = parts[0];
-
-        //         if (parts.length > 1) {
-        //             high = parts[1];
-        //         }
-
-        //         if (endpoints.length != 1) {
-        //             if (i == 0) {
-        //                 //PUSH LOGIC
-        //                 for (var k = low; k <= high; k++) {
-        //                     vlanIds.push(k);
-        //                 }
-        //             } else {
-        //                 // if ( parts[0] > high || low > parts[1] ) {
-        //                 //     low = 1;
-        //                 //     high = 0;
-        //                 // } else {
-        //                 //     if (parts[0] > low ) {
-        //                 //         low = parts[0];
-        //                 //     }
-        //                 //     if (parts[1] < high ) {
-        //                 //         high = parts[1];
-        //                 //     }
-        //                 // }
-        //                 //
-        //                 //PUSH LOGIC
-        //                 for (var k = low; k <= high; k++) {
-        //                     // console.log("Pushing: " + k);
-        //                     intermediate.push(k);
-        //                 }
-        //                 intermediate.sort(function(a, b){return a - b})
-        //                 vlanIds.sort(function(a, b){return a - b})
-        //                 vlanIds = intersect_safe(intermediate, vlanIds);
-        //             }
-
-
-
-        //             // console.log("Intermediate range: " + low + "-" + high);
-        //         } else {
-        //             for (var k = low; k <= high; k++) {
-        //                 if (vlanIds.includes(k)) {
-        //                     continue;
-        //                 }
-        //                 vlanIds.push(k);
-        //             }
-        //         }
-        //     }
-        // }
-
-        // if (endpoints.length != 1) {
-        //     console.log("Pushing range: " + low + "-" + high);
-
-        //     for (var k = low; k <= high; k++) {
-        //         // console.log("Pushing: " + k);
-        //         vlanIds.push(k);
-        //     }
-
-        // }
-        //
-        //
-        //
-        //
 
         for (var i = 0; i < endpoints.length; i++) {
 
@@ -299,11 +221,9 @@ function filterVlansDrop() {
                 }
             }
         }
-
     } else {
-         console.log(portTags); 
+
         for (var key in portTags) {
-            console.log(portTags[key]);
             for (var j = 0; j < portTags[key].length; j++) {
                 var parts = portTags[key][j].split("-").map(Number);
                 low   = parts[0];
@@ -321,13 +241,16 @@ function filterVlansDrop() {
                 }
             }
         }
-    } 
+    }
 
     vlanIds.sort(function(a, b){return a - b});
     for (var i = 0; i < vlanIds.length; i++) {
         var opt = document.createElement('option');
         opt.innerHTML = vlanIds[i];
         opt.setAttribute('value', vlanIds[i]);
+        if (i == 0 && typeof endpoints !== 'undefined') {
+            opt.setAttribute('selected', vlanIds[i]);
+        }
         dropd.appendChild(opt);
     }
 
@@ -375,10 +298,6 @@ function createVlan(e) {
     }
     var vlan_id = vlan.options[vlan.selectedIndex].value;
 
-    // console.log(text);
-    // console.log(vlan_id);
-    // console.log(endpoints);
-
     var url = baseUrl + 'provisioning.cgi?method=add_vlan';
     url += '&workgroup=' + workgroup;
     url += '&description=' + text;
@@ -390,7 +309,6 @@ function createVlan(e) {
 
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
-            // console.log(data);
             if (typeof data.error_text !== 'undefined') {
                 return displayError(data.error_text);
             }
