@@ -32,8 +32,16 @@
                             </li>
                         </ul>
                         <form class="navbar-form navbar-left" target="_self">
-                            <div class="form-group"><label class="control-label" for="search-field"></label></div>
                         </form>
+                        <div class="navbar-form navbar-right" style="display: none;" id="admin-button">
+                          <a href="admin/switches.html"><button class="btn btn-default btn-sm col-xs-12 cold-md-4" aria-expanded="false" type="button" style="margin-top: 6px;">Admin</button></a>
+                        </div>
+                        <div class="navbar-form navbar-right">
+                          <div class="dropdown">
+                            <button class="btn btn-default btn-sm dropdown-toggle col-xs-12 cold-md-4" data-toggle="dropdown" aria-expanded="false" type="button" id="workgroup-selector" style="margin-top: 6px;"></button>
+                            <ul class="dropdown-menu" role="menu" id="workgroup-selector-options"></ul>
+                          </div>
+                        </div>
                 </div>
         </div>
         </nav>

@@ -93,7 +93,12 @@ sub _register_methods{
 
     $dispatcher->register_method($method);
 
-    
+    $method = GRNOC::WebService::Method->new(
+        name => 'get_current',
+        description => 'get user details',
+        callback => sub { return $self->get_current(@_); }
+	);
+    $dispatcher->register_method($method);
 
     $method = GRNOC::WebService::Method->new( name => 'add_user',
 					      description => 'get a list of commands and the details of those commands',
@@ -158,6 +163,20 @@ sub _register_methods{
 
     $dispatcher->register_method($method);
 
+}
+
+=head2 get_current
+
+=cut
+sub get_current {
+    my $self   = shift;
+    my $method = shift;
+    my $params = shift;
+
+    my $workgroup = $params->{workgroup}{value};
+
+    my $details = $self->db->get_user_by_name($ENV{REMOTE_USER});
+    return { results => $details };
 }
 
 =head2 get_users
