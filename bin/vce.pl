@@ -36,7 +36,7 @@ sub usage {
 
 # setup signal handlers
 $SIG{'TERM'} = sub {
-    $d->stop();
+    $d->stop_consuming();
     stop();
 };
 
