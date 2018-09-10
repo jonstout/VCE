@@ -137,23 +137,28 @@ function createEndpointSelector() {
     }
     return select;
 }
+function intersect_safe(a, b)
+{
+    var ai=0, bi=0;
+    var result = [];
 
+    while( ai < a.length && bi < b.length )
+    {
+        if      (a[ai] < b[bi] ){ ai++; }
+        else if (a[ai] > b[bi] ){ bi++; }
+        else /* they're equal */
+        {
+            result.push(a[ai]);
+            ai++;
+            bi++;
+        }
+    }
+
+    return result;
+}
 function filterVlansDrop() {
     // var container = document.getElementById('endpoint-container');
     var endpoints = document.forms[1].endpoint;
-
-    if(typeof endpoints !== 'undefined') {
-        if (endpoints.value === '') {
-            var epNames = [];
-            for (var i = 0; i < endpoints.length; i++) {
-                epNames.push(endpoints[i].value);
-            }
-            endpoints = epNames;
-        } else {
-            endpoints = [endpoints.value];
-        }
-
-    }
 
     var dropd = document.getElementById("vlan_optgroup");
     dropd.innerHTML = '';
@@ -168,44 +173,145 @@ function filterVlansDrop() {
     var first_time = 0;
 
     var vlanIds = [];
-    for (var i = 0; i < endpoints.length; i++) {
-        for (var j = 0; j < portTags[endpoints[i]].length; j++) {
-            // console.log("Performing on range: " + portTags[endpoints[i]][j]);
-            var parts = portTags[endpoints[i]][j].split("-").map(Number);
+    var intermediate= [];
+    console.log(typeof endpoints);
+    if(typeof endpoints !== 'undefined') {
+        if (endpoints.value === '') {
+            var epNames = [];
+            for (var i = 0; i < endpoints.length; i++) {
+                epNames.push(endpoints[i].value);
+            }
+            endpoints = epNames;
+        } else {
+            endpoints = [endpoints.value];
+        }
+
+        // for (var i = 0; i < endpoints.length; i++) {
+        //     for (var j = 0; j < portTags[endpoints[i]].length; j++) {
+        //         var parts = portTags[endpoints[i]][j].split("-").map(Number);
+        //         var low   = parts[0];
+        //         var high  = parts[0];
+
+        //         if (parts.length > 1) {
+        //             high = parts[1];
+        //         }
+
+        //         if (endpoints.length != 1) {
+        //             if (i == 0) {
+        //                 //PUSH LOGIC
+        //                 for (var k = low; k <= high; k++) {
+        //                     vlanIds.push(k);
+        //                 }
+        //             } else {
+        //                 // if ( parts[0] > high || low > parts[1] ) {
+        //                 //     low = 1;
+        //                 //     high = 0;
+        //                 // } else {
+        //                 //     if (parts[0] > low ) {
+        //                 //         low = parts[0];
+        //                 //     }
+        //                 //     if (parts[1] < high ) {
+        //                 //         high = parts[1];
+        //                 //     }
+        //                 // }
+        //                 //
+        //                 //PUSH LOGIC
+        //                 for (var k = low; k <= high; k++) {
+        //                     // console.log("Pushing: " + k);
+        //                     intermediate.push(k);
+        //                 }
+        //                 intermediate.sort(function(a, b){return a - b})
+        //                 vlanIds.sort(function(a, b){return a - b})
+        //                 vlanIds = intersect_safe(intermediate, vlanIds);
+        //             }
+
+
+
+        //             // console.log("Intermediate range: " + low + "-" + high);
+        //         } else {
+        //             for (var k = low; k <= high; k++) {
+        //                 if (vlanIds.includes(k)) {
+        //                     continue;
+        //                 }
+        //                 vlanIds.push(k);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // if (endpoints.length != 1) {
+        //     console.log("Pushing range: " + low + "-" + high);
+
+        //     for (var k = low; k <= high; k++) {
+        //         // console.log("Pushing: " + k);
+        //         vlanIds.push(k);
+        //     }
+
+        // }
+        //
+        //
+        //
+        //
+
+        for (var i = 0; i < endpoints.length; i++) {
 
             if (endpoints.length != 1) {
-                if (first_time == 0) {
+
+                for (var j = 0; j < portTags[endpoints[i]].length; j++) {
+                    var parts = portTags[endpoints[i]][j].split("-").map(Number);
                     var low   = parts[0];
                     var high  = parts[0];
 
                     if (parts.length > 1) {
                         high = parts[1];
                     }
-                    first_time = 1;
-                } else {
-                    if (!(high < parts[0] && low > parts[1] )) {
-
-                        if ( parts[0] > low && high > parts[0] ) {
-                            low = parts[0];
-                        }
-                        if (high < parts[1] && high > parts[0] ) {
-                            high = parts[1];
-                        }
-                    } else {
-                        low = 1;
-                        high = 0;
+                    for (var k = low; k <= high; k++) {
+                        intermediate.push(k);
                     }
                 }
+                if (first_time == 0 ) {
+                    vlanIds = intermediate;
+                    first_time = 1;
+                } else {
+                    intermediate.sort(function(a, b){return a - b});
+                    vlanIds.sort(function(a, b){return a - b});
+                    vlanIds = intersect_safe(intermediate, vlanIds);
+                }
 
-                console.log("Intermediate range: " + low + "-" + high);
+                intermediate = [];
+
             } else {
-                var low   = parts[0];
-                var high  = parts[0];
+
+                for (var j = 0; j < portTags[endpoints[i]].length; j++) {
+                    var parts = portTags[endpoints[i]][j].split("-").map(Number);
+                    var low   = parts[0];
+                    var high  = parts[0];
+
+                    if (parts.length > 1) {
+                        high = parts[1];
+                    }
+                    for (var k = low; k <= high; k++) {
+                        if (vlanIds.includes(k)) {
+                            continue;
+                        }
+                        vlanIds.push(k);
+                    }
+                }
+            }
+        }
+
+    } else {
+         console.log(portTags); 
+        for (var key in portTags) {
+            console.log(portTags[key]);
+            for (var j = 0; j < portTags[key].length; j++) {
+                var parts = portTags[key][j].split("-").map(Number);
+                low   = parts[0];
+                high  = parts[0];
 
                 if (parts.length > 1) {
                     high = parts[1];
                 }
-
 
                 for (var k = low; k <= high; k++) {
                     if (vlanIds.includes(k)) {
@@ -215,32 +321,15 @@ function filterVlansDrop() {
                 }
             }
         }
-    }
+    } 
 
-    if (endpoints.length != 1) {
-        console.log("Pushing range: " + low + "-" + high);
-
-        for (var k = low; k <= high; k++) {
-            // console.log("Pushing: " + k);
-            vlanIds.push(k);
-        }
-
-    }
-
+    vlanIds.sort(function(a, b){return a - b});
     for (var i = 0; i < vlanIds.length; i++) {
-        // if (vlanIds[i] in provisionedVlans) {
-        //     continue;
-        // }
-
         var opt = document.createElement('option');
         opt.innerHTML = vlanIds[i];
         opt.setAttribute('value', vlanIds[i]);
         dropd.appendChild(opt);
     }
-
-
-    // console.log(portTags);
-
 
 }
 
