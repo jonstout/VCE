@@ -32,8 +32,16 @@
                             </li>
                         </ul>
                         <form class="navbar-form navbar-left" target="_self">
-                            <div class="form-group"><label class="control-label" for="search-field"><i class="glyphicon glyphicon-search"></i></label><input class="form-control search-field" type="search" name="search" id="search-field"></div>
                         </form>
+                        <div class="navbar-form navbar-right" style="display: none;" id="admin-button">
+                          <a href="admin/switches.html"><button class="btn btn-default btn-sm col-xs-12 cold-md-4" aria-expanded="false" type="button" style="margin-top: 6px;">Admin</button></a>
+                        </div>
+                        <div class="navbar-form navbar-right">
+                          <div class="dropdown">
+                            <button class="btn btn-default btn-sm dropdown-toggle col-xs-12 cold-md-4" data-toggle="dropdown" aria-expanded="false" type="button" id="workgroup-selector" style="margin-top: 6px;"></button>
+                            <ul class="dropdown-menu" role="menu" id="workgroup-selector-options"></ul>
+                          </div>
+                        </div>
                 </div>
         </div>
         </nav>
@@ -50,9 +58,6 @@
                 <div class="alert alert-danger" role="alert" id="error" style="display:none;"><span id="error_text"> </span><button class="btn btn-danger" type="button" id="error_exit" style="background-color:rgb(231, 76, 60);padding:0px 5px;float:right;"><i class="glyphicon glyphicon-remove"></i></button></div>
             </div>
             <div class="col-md-4">
-                <div class="dropdown"><button class="btn btn-default btn-xs dropdown-toggle col-xs-12 cold-md-4" data-toggle="dropdown" aria-expanded="false" type="button" id="workgroup_select"> </button>
-                    <ul class="dropdown-menu" role="menu" id="workgroup_select_list"></ul>
-                </div>
             </div>
         </div>
         <div class="row">
