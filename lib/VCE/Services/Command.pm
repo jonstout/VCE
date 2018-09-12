@@ -479,7 +479,7 @@ sub get_commands{
     }
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
-        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        $method_ref->set_error("Workgroup $workgroup is not authorized to get commands.");
         return;
     }
 
@@ -513,7 +513,7 @@ sub get_command {
     }
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
-        $method->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        $method->set_error("Workgroup $workgroup is not authorized to get a command.");
         return;
     }
 
@@ -543,7 +543,7 @@ sub add_command{
     }
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
-        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        $method_ref->set_error("Workgroup $workgroup is not authorized to create new commands.");
         return;
     }
 
@@ -604,7 +604,7 @@ sub modify_command{
     }
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
-        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        $method_ref->set_error("Workgroup $workgroup is not authorized to modify commands.");
         return;
     }
 
@@ -669,7 +669,7 @@ sub delete_command{
     }
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
     if (!$is_admin) {
-        $method_ref->set_error("Workgroup $workgroup is not authorized to delete the interface.");
+        $method_ref->set_error("Workgroup $workgroup is not authorized to delete commands.");
         return;
     }
 
