@@ -449,6 +449,12 @@ sub _get_switches {
         $method_ref->set_error("User $user not in specified workgroup $workgroup");
         return;
     }
+    my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    if (!$is_admin) {
+        $method_ref->set_error("Workgroup $workgroup is not authorized to get switches.");
+        return;
+    }
+
     my $switches = [];
 
     my $wg = $self->db->get_workgroups(name => $workgroup)->[0];
