@@ -119,7 +119,7 @@ cmp_deeply($vlan_details,{
         {
             'circuit' => {
                 'workgroup' => 'ajco',
-                'status' => 'Active',
+                'status' => 'Impacted',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',
@@ -185,7 +185,7 @@ cmp_deeply($vlan_details2,{
         {
             'circuit' => {
                 'workgroup' => 'ajco',
-                'status' => 'Active',
+                'status' => 'Impacted',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',
@@ -253,7 +253,7 @@ cmp_deeply($vlan_details3,{
         {
             'circuit' => {
                 'workgroup' => 'ajco',
-                'status' => 'Active',
+                'status' => 'Impacted',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '105',
