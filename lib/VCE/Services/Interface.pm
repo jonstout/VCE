@@ -251,7 +251,7 @@ sub _add_interface {
 
 sub _get_interfaces {
 
-    warn Dumper("--- in get interfaces ---");
+    # warn Dumper("--- in get interfaces ---");
     my $self = shift;
     my $method_ref = shift;
     my $params = shift;
@@ -277,6 +277,7 @@ sub _get_interfaces {
     }
 
     my $is_admin = $self->vce->access->get_admin_workgroup()->{name} eq $workgroup ? 1 : 0;
+    
     if ($is_admin) {
         $interfaces = $self->db->get_interfaces(workgroup_id => $workgroup_id, interface_id => $interface_id, switch_id => $switch_id);
     } else {
