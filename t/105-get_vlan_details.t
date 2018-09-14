@@ -24,7 +24,7 @@ ok(defined($vlan), "vlan result was defined for AJ");
 cmp_deeply($vlan->{results}->[0], {
     'circuit' => {
         'workgroup' => 'ajco',
-        'status' => 'Active',
+        'status' => 'Impacted',
         'create_time' => 1479158369,
         'description' => 'test',
         'switch' => 'foobar',
@@ -51,7 +51,7 @@ cmp_deeply($vlan, {
         {
             'circuit' => {
                 'workgroup' => 'ajco',
-                'status' => 'Active',
+                'status' => 'Impacted',
                 'create_time' => 1479153788,
                 'description' => 'test',
                 'switch' => 'foobar',
@@ -94,7 +94,7 @@ cmp_deeply($vlan, {
         {
             'circuit' => {
                 'workgroup' => 'edco',
-                'status' => 'Active',
+                'status' => 'Impacted',
                 'create_time' => 1479158359,
                 'description' => 'test',
                 'vlan_id' => 1,

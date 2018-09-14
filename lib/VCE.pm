@@ -461,7 +461,6 @@ sub get_interfaces_operational_state {
 sub get_switches_operational_state{
     my $self = shift;
     my %params = @_;
-
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_tags_on_port: Workgroup not specified");
         return;
@@ -473,6 +472,7 @@ sub get_switches_operational_state{
         $switch->{'status'} = $self->_get_switch_status(switch => $switch->{name});
 
         my $interface_list = $self->network_model->get_interfaces(switch => $switch->{name});
+
         my $interfaces = {};
         foreach my $intf (@{$interface_list}) {
             $interfaces->{$intf->{name}} = $intf;
@@ -480,14 +480,23 @@ sub get_switches_operational_state{
 
         my $up_ports = 0;
         my @ports;
+
         foreach my $port (@{$switch->{'ports'}}) {
             my $obj = {};
             $obj->{'name'}   = $port;
             $obj->{'status'} = 'Up';
 
             my $intf  = $interfaces->{$port};
+
+
             my $state = 1;
-            if (!defined $intf || $intf->{status} == 0 || $intf->{admin_status} == 0) {
+            # if (!defined $intf || $intf->{status} == 0 || $intf->{admin_status} == 0) {
+
+            #     $state = 0;
+            #     $obj->{'status'} = 'Down';
+            # }
+
+			if (!$intf->{admin_up} == 1 || !$intf->{link_up} == 1) {
                 $state = 0;
                 $obj->{'status'} = 'Down';
             }
@@ -499,24 +508,26 @@ sub get_switches_operational_state{
 
             push(@ports, $obj);
         }
-
         $switch->{'up_ports'} = $up_ports;
         $switch->{'total_ports'} = scalar(@ports);
         $switch->{'ports'} = \@ports;
         my @vlans;
         my $up_vlans=0;
         foreach my $vlan (@{$switch->{'vlans'}}){
+
             my $is_up = 1;
             my $vlan = $self->network_model->get_vlan_details( vlan_id => $vlan );
+
             foreach my $interface (@{$vlan->{'endpoints'}}){
                 if (!$int_state{$interface->{port}}) {
                     $is_up = 0;
                 }
             }
 
+
             push(@vlans, { vlan => $vlan, status => $is_up, endpoints => $vlan->{'endpoints'}});
 
-            if($is_up){
+            if($vlan->{status} eq "Active"){
                 $up_vlans++;
             }
         }
@@ -681,7 +692,7 @@ get a workgroups details and return them
 sub get_workgroup_details{
     my $self = shift;
     my %params = @_;
-    
+
     if(!defined($params{'workgroup'})){
         $self->logger->error("get_workgroup_details: workgroup not specified");
         return;

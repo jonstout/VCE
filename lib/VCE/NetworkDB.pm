@@ -288,7 +288,7 @@ sub get_interfaces {
     }
 
     my $interfaces = $self->db2->get_interfaces(
-        workgroup_id => $wg->{id},
+        # workgroup_id => $wg->{id},
         switch_id => $sw->{id}
     );
     return $interfaces;
@@ -507,6 +507,10 @@ sub get_vlans_state {
         my $info = {
             port => $endpoint->{interface}
         };
+
+        if (!$endpoint->{admin_up} || !$endpoint->{link_up} ) {
+            $vlan->{status} = "Impacted";
+        }
         push(@{$vlan->{endpoints}}, $info);
     }
 
@@ -564,6 +568,10 @@ sub get_vlan_details{
         my $info = {
             port => $endpoint->{name}
         };
+        if (!$endpoint->{admin_up} || !$endpoint->{link_up} ) {
+            $result->{status} = "Impacted";
+        }
+
         push(@{$result->{endpoints}}, $info);
     }
 
