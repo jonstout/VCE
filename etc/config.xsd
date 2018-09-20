@@ -114,7 +114,7 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element name="rabbit" type="rabbit" minOccurs="1" maxOccurs="1"/>
-        <xs:element name="network_model" type="network_model" minOccurs="1" maxOccurs="1"/>
+        <xs:element name="network_model" type="network_model" minOccurs="0" maxOccurs="1"/>
         <xs:element name="switch" type="switch" minOccurs="0" maxOccurs="unbounded"/>
         <xs:element name="workgroup" type="workgroup" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
