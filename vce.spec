@@ -1,6 +1,6 @@
 Summary: Virtual Customer Equipment
 Name: vce
-Version: 0.3.5
+Version: 0.3.6
 Release: 1%{?dist}
 License: Apache
 Group: GRNOC
