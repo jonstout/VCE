@@ -104,6 +104,10 @@ www/assets/bootstrap/fonts/glyphicons-halflings-regular.ttf
 www/assets/bootstrap/fonts/glyphicons-halflings-regular.woff
 www/assets/bootstrap/fonts/glyphicons-halflings-regular.woff2
 www/assets/bootstrap/js/bootstrap.min.js
+www/assets/css/admin/base.css
+www/assets/css/admin/modify_interfaces.css
+www/assets/css/admin/modify_switches.css
+www/assets/css/admin/modify_workgroups.css
 www/assets/css/Footer-Clean.css
 www/assets/css/Footer-Dark.css
 www/assets/css/Header-Dark.css
