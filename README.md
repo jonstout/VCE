@@ -4,6 +4,8 @@ Virtual Customer Equipment
 ## Installation
 The following installation assumes a Centos7 machine. It also assumes that rabbitmq is installed and running. See [here](https://www.rabbitmq.com/install-rpm.html) for RabbitMQ installation instructions.
 
+### New installations
+
 1. Edit `/etc/yum.repos.d/grnoc-public.repo` to install the GlobalNOC's Centos7 RPM repository.
 ```
 [grnoc-public]
@@ -21,6 +23,26 @@ Assuming the previous steps finished successfully, VCE is now installed. Continu
 ```
 sudo systemctl start vce
 ```
+
+### Upgrading to a newer version
+
+1. Execute `sudo systemctl stop httpd`
+0. Execute `sudo systemctl stop vce`
+
+Ensure that `/etc/vce/access_policy.xml` contains the following
+`network_model` tag. Verify the path is set to
+`/var/lib/vce/database.sqlite`. An example config can be
+found
+[here](https://github.com/GlobalNOC/VCE/blob/master/etc/access_policy.xml#L3).
+
+```
+<network_model path="/var/lib/vce/database.sqlite"/>
+```
+
+0. Execute `sudo yum install vce`
+0. Execute `sudo /bin/vce-update-db`
+0. Execute `sudo systemctl start vce`
+0. Execute `sudo systemctl start httpd`
 
 ## Configuration
 
