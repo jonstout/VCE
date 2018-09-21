@@ -81,7 +81,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Services/Provisioning.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{__install} lib/VCE/Services/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Switch.pm
 %{__install} lib/VCE/Services/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Workgroup.pm
-%{__install} lib/VCE/Services/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Services/User.pm
+%{__install} lib/VCE/Services/User.pm %{buildroot}%{perl_vendorlib}/VCE/Services/User.pm
 
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
