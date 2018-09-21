@@ -1,7 +1,7 @@
 Summary: Virtual Customer Equipment
 Name: vce
 Version: 0.3.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: Apache
 Group: GRNOC
 URL: http://globalnoc.iu.edu
@@ -81,6 +81,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Services/Provisioning.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{__install} lib/VCE/Services/Switch.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Switch.pm
 %{__install} lib/VCE/Services/Workgroup.pm %{buildroot}%{perl_vendorlib}/VCE/Services/Workgroup.pm
+%{__install} lib/VCE/Services/User.pm %{buildroot}%{perl_vendorlib}/VCE/Services/User.pm
 
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
@@ -96,6 +97,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} www/services/provisioning.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/switch.cgi %{buildroot}%{_datadir}/vce/www/api
 %{__install} www/services/workgroup.cgi %{buildroot}%{_datadir}/vce/www/api
+%{__install} www/services/user.cgi %{buildroot}%{_datadir}/vce/www/api
 
 cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 
