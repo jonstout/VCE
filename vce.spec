@@ -163,6 +163,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Services/Provisioning.pm
 %{perl_vendorlib}/VCE/Services/Switch.pm
 %{perl_vendorlib}/VCE/Services/Workgroup.pm
+%{perl_vendorlib}/VCE/Services/User.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
 
 %{_datadir}/vce/www/api/acl.cgi
@@ -173,6 +174,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/vce/www/api/provisioning.cgi
 %{_datadir}/vce/www/api/switch.cgi
 %{_datadir}/vce/www/api/workgroup.cgi
+%{_datadir}/vce/www/api/user.cgi
 %{_datadir}/vce/www/frontend/
 
 %{_bindir}/vce
