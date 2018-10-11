@@ -1,7 +1,9 @@
 .container {
     margin: 0px;
+    min-width: 100%;
+
     display: grid;
-    grid-template-columns: 25vw 15vw 60vw;
+    grid-template-columns: minmax(200px, max-content) minmax(200px, max-content) 1fr;
     grid-template-rows: auto auto;
 }
 
