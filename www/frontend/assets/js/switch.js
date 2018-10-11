@@ -50,9 +50,14 @@ function loadSwitches() {
             for (var i = 0; i < switches.length; i++) {
                 var row = table.insertRow(0);
 
+                var link = document.createElement("a");
+                link.innerHTML = switches[i].name;
+                link.setAttribute('href', 'details.html');
+                link.addEventListener("click", selectSwitch, false);
+
                 var sw = row.insertCell(0);
                 sw.id = switches[i].name;
-                sw.innerHTML = switches[i].name;
+                sw.appendChild(link);
                 switchNames.push(switches[i].name);
                 
                 var status = row.insertCell(1);
