@@ -1,0 +1,9 @@
+.vce-body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.vce-content {
+    flex: 1;
+}
