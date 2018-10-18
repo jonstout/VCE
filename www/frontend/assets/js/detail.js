@@ -123,8 +123,12 @@ function loadPorts() {
             $('#port_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
 
+                let row = $(this)[0];
+                let name = row.id;
+                let description = row.childNodes[1].innerHTML;
+
                 var cookie = Cookies.getJSON('vce');
-                cookie.port = $(this)[0].id;
+                cookie.port = name;
                 Cookies.set('vce', cookie);
 
                 // Reset the command selection box
@@ -134,6 +138,7 @@ function loadPorts() {
 
                 // Load commands available for this port
                 getPortCommands();
+                document.getElementById('selected_port').innerHTML = `${name} <small>${description}</small>`;
             });
         });
     });
