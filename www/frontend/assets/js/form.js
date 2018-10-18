@@ -27,7 +27,6 @@ function NewCommandForm(details, reponseFunc) {
         var param = details.parameters[i];
 
         var group = document.createElement("div");
-        group.setAttribute("class", "form-group");
         
         var input = null;
         var label = document.createElement("label");
@@ -64,7 +63,7 @@ function NewCommandForm(details, reponseFunc) {
     
     // Create submit button
     var group = document.createElement("div");
-    group.setAttribute("class", "form-group");
+    group.style.marginTop = '15px';
 
     var input = document.createElement("input");
     input.setAttribute("type", "button");
