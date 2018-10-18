@@ -279,8 +279,13 @@ function loadVlans() {
             $('#vlan_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
 
+                let row = $(this)[0];
+                let id = row.id;
+                let name = row.childNodes[0].innerHTML;
+                let description = row.childNodes[1].innerHTML;
+
                 var cookie = Cookies.getJSON('vce');
-                cookie.selectedVlanId = $(this)[0].id;
+                cookie.selectedVlanId = id;
                 Cookies.set('vce', cookie);
 
                 document.getElementById('edit_vlan').setAttribute('style', 'display: block; margin: 2px;');
@@ -291,6 +296,7 @@ function loadVlans() {
                 document.getElementById('vlan_form_container').setAttribute('style', 'display: none;');
 
                 getVlanCommands();
+                document.getElementById('selected_vlan').innerHTML = `${name} <small>${description}</small>`;
             });
         });
     });
