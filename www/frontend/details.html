@@ -199,54 +199,58 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="container" id="port_subtab">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div>
-                                                <ul class="nav nav-tabs">
-                                                    <li class="active"><a href="#command" role="tab" data-toggle="tab">Command</a></li>
-                                                    <li><a href="#stats" role="tab" data-toggle="tab">Statistics </a></li>
-                                                </ul>
-                                                <div class="tab-content">
-                                                    <div class="tab-pane fade in active" role="tabpanel" id="command">
-                                                        <div class="row">
-                                                            <div class="col-md-12">
-                                                                <form class="form-horizontal">
-                                                                    <div class="form-group">
-                                                                        <label class="control-label">Commands </label>
-                                                                        <select class="form-control" disabled="" id="port_select">
-                                                                            <option value="" selected=""></option>
-                                                                            <optgroup label="Show Commands" id="port_show_commands"></optgroup>
-                                                                            <optgroup label="Config Actions" id="port_action_commands"></optgroup>
-                                                                        </select>
-                                                                    </div>
-                                                                </form>
+
+                                <div>
+                                   &nbsp;
+                                   &nbsp;
+                                   &nbsp;
+                                   &nbsp;
+                                   &nbsp;
+                                </div>
+                                <div class="row" id="port_subtab" style="display:none">
+                                    <div class="col-md-12">
+                                        <ul class="nav nav-tabs" id="comm-port-tabs">
+                                            <li class="active"><a href="#command" role="tab" data-toggle="tab">Command</a></li>
+                                            <li><a href="#statstab" role="tab" data-toggle="tab">Statistics </a></li>
+                                        </ul>
+                                        <div class="tab-content">
+                                            <div class="tab-pane fade in active" role="tabpanel" id="command">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <form class="form-horizontal">
+                                                            <div class="form-group">
+                                                                <label class="control-label">Commands </label>
+                                                                <select class="form-control" disabled="" id="port_select">
+                                                                    <option value="" selected=""></option>
+                                                                    <optgroup label="Show Commands" id="port_show_commands"></optgroup>
+                                                                    <optgroup label="Config Actions" id="port_action_commands"></optgroup>
+                                                                </select>
                                                             </div>
-                                                        </div>
-
-                                                        <div class="row">
-                                                            <div class="col-md-12" id="port_form_container"></div>
-
-                                                        </div>
-
-                                                        <div class="row">
-                                                            <div class="col-md-12">
-                                                                <h4 class="text-left">Results </h4>
-                                                                <div class="well" id="port_response_well"></div>
-                                                            </div>
-                                                        </div>
+                                                        </form>
                                                     </div>
+                                                </div>
 
-                                                    <div class="tab-pane fade" role="tabpanel" id="stats">
+                                                <div class="row">
+                                                    <div class="col-md-12" id="port_form_container"></div>
+
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <h4 class="text-left">Results </h4>
+                                                        <div class="well" id="port_response_well"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="tab-pane fade" role="tabpanel" id="statstab">
+                                                <div class="col-md-12">
+                                                    <div class="row">
                                                         <div class="col-md-12">
-                                                            <div class="row">
-                                                                <div class="col-md-12">
-                                                                    <!-- <form class="form-horizontal"> -->
-                                                                    <h5>Click on the port to generate the graph</h5>
-                                                                    <iframe id="grafana-plugin" src="" width="100%" height="200" frameborder="0"></iframe>
-                                                                    <!-- </form> -->
-                                                                </div>
-                                                            </div>
+                                                            <!-- <form class="form-horizontal"> -->
+                                                            <h5>Click on the port to generate the graph</h5>
+                                                            <iframe id="grafana-plugin" src="" width="100%" height="200" frameborder="0"></iframe>
+                                                            <!-- </form> -->
                                                         </div>
                                                     </div>
                                                 </div>

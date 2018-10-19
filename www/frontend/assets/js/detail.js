@@ -1,3 +1,6 @@
+const grafanaUrl = document.location.protocol+"//"+document.location.hostname+":3000/d-solo/oigOLR1ik/mlxe16-2?orgId=1&refresh=5s&panelId=2&";
+
+
 function loadSwitch() {
     var cookie = Cookies.getJSON('vce');
     var sw = cookie.switch;
@@ -118,8 +121,8 @@ function loadPorts() {
                     status.innerHTML = 'Disabled';
                 }
             }
-            
-            document.getElementById('port_subtab').style.display = 'none';
+
+            // document.getElementById('port_subtab').style.display = 'none';
             $('#port_table').off('click', '.clickable-row');
             $('#port_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
@@ -134,14 +137,14 @@ function loadPorts() {
                 
                 document.getElementById('port_subtab').style.display = 'block';
                 var grafana = document.getElementById('grafana-plugin');
+                cookie.grafana = grafanaUrl+"var-node="+cookie.switch+"&var-intf="+cookie.port.replace(/ /g,'');
+                grafana.src = cookie.grafana;
+                Cookies.set('vce', cookie);
 
-                grafana.src = "http://absheth-dev.grnoc.iu.edu:3000/d-solo/oigOLR1ik/mlxe16-2?orgId=1&var-node="+cookie.switch+"&var-intf="+cookie.port.replace(/ /g,'')+"&refresh=5s&panelId=2";
-
-                // Reset the command selection box
+                document.getElementById('port_subtab').style.display = 'block';
                 document.getElementById('port_select').disabled = false;
                 document.getElementById('port_select').selectedIndex = 0;
                 document.getElementById('port_form_container').setAttribute('style', 'display: none;');
-
 
                 // Load commands available for this port
                 getPortCommands();
@@ -150,6 +153,15 @@ function loadPorts() {
         });
     });
 }
+
+$('#comm-port-tabs').click(function(e) {
+    var cookie = Cookies.getJSON('vce');
+    var grafana = document.getElementById('grafana-plugin');
+    grafana.src = cookie.grafana;
+});
+
+
+
 
 function getPortCommands() {
     var cookie = Cookies.getJSON('vce');
