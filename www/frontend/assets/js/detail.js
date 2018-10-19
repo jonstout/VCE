@@ -134,7 +134,7 @@ function loadPorts() {
                 var cookie = Cookies.getJSON('vce');
                 cookie.port = name;
                 Cookies.set('vce', cookie);
-                
+
                 document.getElementById('port_subtab').style.display = 'block';
                 var grafana = document.getElementById('grafana-plugin');
                 cookie.grafana = grafanaUrl+"var-node="+cookie.switch+"&var-intf="+cookie.port.replace(/ /g,'');

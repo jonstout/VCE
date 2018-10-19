@@ -46,13 +46,14 @@
                     </div>
                 </nav>
             </div>
-        </div>
-        <div style="background-color:#f0f0f0;">
-            <ol class="breadcrumb container">
-                <li><a href="index.html"><span>Home</span></a></li>
-                <li><a href="index.html"><span>Switches </span></a></li>
-                <li><a><span id="switch_name_crumb">demonet</span></a></li>
-            </ol>
+            <div style="background-color:#f0f0f0;">
+                <ol class="breadcrumb container">
+                    <li><a href="index.html"><span>Home</span></a></li>
+                    <li><a href="index.html"><span>Switches </span></a></li>
+                    <li><a><span id="switch_name_crumb">demonet</span></a></li>
+                </ol>
+            </div>
+
         </div>
         <div class="vce-content container">
             <div class="row">
@@ -201,11 +202,7 @@
                                 </div>
 
                                 <div>
-                                   &nbsp;
-                                   &nbsp;
-                                   &nbsp;
-                                   &nbsp;
-                                   &nbsp;
+                                    <h2 id="selected_port"></h2>
                                 </div>
                                 <div class="row" id="port_subtab" style="display:none">
                                     <div class="col-md-12">
@@ -218,14 +215,12 @@
                                                 <div class="row">
                                                     <div class="col-md-12">
                                                         <form class="form-horizontal">
-                                                            <div class="form-group">
-                                                                <label class="control-label">Commands </label>
-                                                                <select class="form-control" disabled="" id="port_select">
-                                                                    <option value="" selected=""></option>
-                                                                    <optgroup label="Show Commands" id="port_show_commands"></optgroup>
-                                                                    <optgroup label="Config Actions" id="port_action_commands"></optgroup>
-                                                                </select>
-                                                            </div>
+                                                            <label class="control-label">Commands </label>
+                                                            <select class="form-control" disabled="" id="port_select">
+                                                                <option value="" selected=""></option>
+                                                                <optgroup label="Show Commands" id="port_show_commands"></optgroup>
+                                                                <optgroup label="Config Actions" id="port_action_commands"></optgroup>
+                                                            </select>
                                                         </form>
                                                     </div>
                                                 </div>
