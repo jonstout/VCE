@@ -82,15 +82,12 @@ function loadPorts() {
     var url = baseUrl + 'operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
-    // console.log(url);
+
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
-
-            // console.log("get_interfaces_operational_status");
-            // console.log(data);
 
             var table = document.getElementById("port_table");
             table.innerHTML = "";
@@ -122,7 +119,6 @@ function loadPorts() {
                 }
             }
 
-            // document.getElementById('port_subtab').style.display = 'none';
             $('#port_table').off('click', '.clickable-row');
             $('#port_table').on('click', '.clickable-row', function(e) {
                 $(this).addClass('active').siblings().removeClass('active');
