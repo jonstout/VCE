@@ -1,0 +1,4 @@
+<config>
+  <simp host='simp host' port='port' user='simp user' password='simp password' />
+  <tsds url='tsds url' user='tsds user' password='tsds password' />
+</config>

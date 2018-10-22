@@ -1,0 +1,4 @@
+<config workers="3" >
+ <redis host="redis_host" port="" />
+ <rabbitMQ host="rabbitmq_host" port="" user="rabbitmq_user" password="rabbitmq_pwd"/>
+</config>

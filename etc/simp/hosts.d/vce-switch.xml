@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+  <host ip="" community="" snmp_version="" node_name="">
+    <group name=""></group>
+  </host>
+</config>

@@ -1,0 +1,29 @@
+<!-- hostType is used to control what instance to apply
+     types are designed to act like progressively more specific strings
+     /vendor/model/codeversion/arbitrary
+     if not set then its a default, setting it to "juniper" gives you
+     something applicable to all juniper  "juniper/mx"  more specific
+     this is not full proof but just a convention to use between simp
+     and comp, with where we do the setting of hostType is not yet defined
+-->
+
+<config workers="5" >
+    <redis host="redis_host" port=""/>
+    <rabbitMQ host="rabbitmq_host" port="" user="rabbitmq_user" password="rabbitmq_pwd"/>
+
+    <composite id="">
+        <input id="node" required="1"/>
+        <input id="ifName" />
+        <instance id="" hostType="default">
+            <scan id="" oid="" var="" />
+            <result>
+                <val id="" var="" />
+                <val id="" oid="" />
+                <val id="" var="" oid="" type="">
+                    <fctn name="" value="" />
+                    <fctn name="" />
+                </val>
+            </result>
+        </instance>
+    </composite>
+</config>

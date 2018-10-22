@@ -1,0 +1,5 @@
+<config>
+    <collection tsds_type='interface' interval='60' composite-name='Enter composite name here' workers='1'>
+      <host><!-- Enter host name here--></host>
+  </collection>
+</config>

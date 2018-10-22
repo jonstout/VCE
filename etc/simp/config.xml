@@ -1,0 +1,25 @@
+<!--
+  config.xml defines the config for the simp collector, with the individual hosts defined in hosts.conf
+-->
+<config purge_interval='500'>
+    <!-- redis: defines how to connect to redis, which is used for data storage -->
+    <!-- <redis host="127.0.0.1" port="6380"/> -->
+    <redis host="redis_host" port="port"/>
+    <!--
+    <groups> define a collection profile for a set of OIDs, hosts and even oids can be collected
+    by multiple overlaping groups if desired
+
+    name:      used identify the group interally.
+    active:    the way turn off configs groups, 0 = inactive 1 = active
+    workers:   the number of processes that the collector will use for this particular group
+           each group is given independent process polls, if one is running slow it will
+           not impact the other group.
+    interval:  the frequency at which data is gathered.
+    retention: the number of poll cycles to keep data, if set to 6 and interval 60 then keep 6 minutes worth
+    snmp_timeout:
+    max_reps:
+    -->
+    <group name="" active="" workers="" interval="" retention="" snmp_timeout="" max_reps="">
+        <mib oid=""/>
+    </group>
+</config>
