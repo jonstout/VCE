@@ -1,6 +1,3 @@
-const grafanaUrl = document.location.protocol+"//"+document.location.hostname+":3000/d-solo/oigOLR1ik/mlxe16-2?orgId=1&refresh=5s&panelId=2&";
-
-
 function loadSwitch() {
     var cookie = Cookies.getJSON('vce');
     var sw = cookie.switch;
