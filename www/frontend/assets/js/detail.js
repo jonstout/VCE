@@ -79,15 +79,12 @@ function loadPorts() {
     var url = baseUrl + 'operational.cgi?method=get_interfaces_operational_status';
     url += '&workgroup=' + cookie.workgroup;
     url += '&switch=' + name;
-    // console.log(url);
+
     fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
         response.json().then(function(data) {
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
-
-            console.log("get_interfaces_operational_status");
-            console.log(data);
 
             var table = document.getElementById("port_table");
             table.innerHTML = "";
@@ -131,7 +128,13 @@ function loadPorts() {
                 cookie.port = name;
                 Cookies.set('vce', cookie);
 
-                // Reset the command selection box
+                document.getElementById('port_subtab').style.display = 'block';
+                var grafana = document.getElementById('grafana-plugin');
+                cookie.grafana = grafanaUrl+"var-node="+cookie.switch+"&var-intf="+cookie.port.replace(/ /g,'');
+                grafana.src = cookie.grafana;
+                Cookies.set('vce', cookie);
+
+                document.getElementById('port_subtab').style.display = 'block';
                 document.getElementById('port_select').disabled = false;
                 document.getElementById('port_select').selectedIndex = 0;
                 document.getElementById('port_form_container').setAttribute('style', 'display: none;');
@@ -143,6 +146,15 @@ function loadPorts() {
         });
     });
 }
+
+$('#comm-port-tabs').click(function(e) {
+    var cookie = Cookies.getJSON('vce');
+    var grafana = document.getElementById('grafana-plugin');
+    grafana.src = cookie.grafana;
+});
+
+
+
 
 function getPortCommands() {
     var cookie = Cookies.getJSON('vce');
