@@ -1,5 +1,5 @@
 <config>
-    <collection tsds_type='interface' interval='60' composite-name='Enter composite name here' workers='1'>
-      <host><!-- Enter host name here--></host>
-  </collection>
+    <collection tsds_type='interface' interval='60' composite-name='interfaces' workers='1'>
+        <host>brocade.example.com</host>
+    </collection>
 </config>

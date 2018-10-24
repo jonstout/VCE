@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <config>
-  <host ip="" community="" snmp_version="" node_name="">
-    <group name=""></group>
-  </host>
+    <host ip="127.0.0.1" community="public" snmp_version="2c" node_name="brocade.example.com">
+        <group name="int"></group>
+    </host>
 </config>

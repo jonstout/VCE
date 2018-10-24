@@ -1,4 +1,10 @@
 <config>
-  <simp host='simp host' port='port' user='simp user' password='simp password' />
-  <tsds url='tsds url' user='tsds user' password='tsds password' />
+    <!-- Defines how to connect to RabbitMQ for simp-comp as well as collector Master/Worker IPC -->
+    <simp host='127.0.0.1' port='5672'
+        user='guest' password='guest' />
+
+    <!-- Defines how to connect to TSDS for publishing metrics -->
+    <tsds url='https://localhost/path/to/api'
+        user='username' password='password' />
+
 </config>
