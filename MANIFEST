@@ -14,6 +14,12 @@ etc/password.json
 etc/schema.sqlite
 etc/vce.init
 etc/vce.systemd
+etc/simp/compDataConfig.xml
+etc/simp/simpDataConfig.xml
+etc/simp/config.xml
+etc/simp/simp-tsds.xml
+etc/simp/tsds/static.xml
+etc/simp/hosts.d/vce-switch.xml
 lib/VCE.pm
 lib/VCE/Access.pm
 lib/VCE/Database/ACL.pm

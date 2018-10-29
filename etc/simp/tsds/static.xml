@@ -1,0 +1,5 @@
+<config>
+    <collection tsds_type='interface' interval='60' composite-name='interfaces' workers='1'>
+        <host>brocade.example.com</host>
+    </collection>
+</config>

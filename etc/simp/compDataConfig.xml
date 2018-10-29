@@ -1,0 +1,41 @@
+<!-- hostType is used to control what instance to apply
+     types are designed to act like progressively more specific strings
+     /vendor/model/codeversion/arbitrary
+     if not set then its a default, setting it to "juniper" gives you
+     something applicable to all juniper  "juniper/mx"  more specific
+     this is not full proof but just a convention to use between simp
+     and comp, with where we do the setting of hostType is not yet defined
+-->
+
+<config workers="5" >
+    <redis host="127.0.0.1" port="6379"/>
+    <rabbitMQ host="127.0.0.1" port="5672" user="guest" password="guest"/>
+
+    <composite id="interfaces">
+        <input id="node" required="1"/>
+        <input id="ifName"/>
+
+        <instance id="int" hostType="default">
+            <!-- if ifName not provided get all values in the table-->
+            <scan id="ifIdx" oid="1.3.6.1.2.1.31.1.1.1.1.*" />
+            <result>
+                <val id="*node" var="node"/>
+                <val id="*intf" oid="1.3.6.1.2.1.31.1.1.1.1.ifIdx" />
+                <val id="description" oid="1.3.6.1.2.1.31.1.1.1.18.ifIdx" />
+                <val id="in" type="rate"  oid="1.3.6.1.2.1.31.1.1.1.6.ifIdx" >
+                    <fctn name="/" value="1000000000"/>
+                </val>
+                <val id="out" type="rate" oid="1.3.6.1.2.1.31.1.1.1.10.ifIdx" >
+                    <fctn name="/" value="1000000000"/>
+                </val>
+                <val id="inerror" type="rate" oid="1.3.6.1.2.1.2.2.1.14.ifIdx" />
+                <val id="outerror" type="rate" oid="1.3.6.1.2.1.2.2.1.20.ifIdx" />
+                <val id="inUcast" type="rate" oid="1.3.6.1.2.1.2.2.1.11.ifIdx" />
+                <val id="outUcast" type="rate" oid="1.3.6.1.2.1.2.2.1.17.ifIdx" />
+                <val id="indiscard" type="rate" oid="1.3.6.1.2.1.2.2.1.13.ifIdx" />
+                <val id="outdiscard" type="rate" oid="1.3.6.1.2.1.2.2.1.19.ifIdx" />
+                <val id="status"  oid="1.3.6.1.2.1.2.2.1.8.ifIdx" />
+            </result>
+        </instance>
+    </composite>
+</config>
