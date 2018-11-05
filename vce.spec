@@ -105,6 +105,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -d -p %{buildroot}%{_bindir}
 
 %{__install} -m 544 bin/vce.pl %{buildroot}%{_bindir}/vce
+%{__install} -m 544 bin/vce-simp-generator %{buildroot}%{_bindir}/vce-simp-generator
 %{__install} -m 555 bin/vce-run-check %{buildroot}%{_bindir}/vce-run-check
 %{__install} -m 544 bin/vce-update-db %{buildroot}%{_bindir}/vce-update-db
 %{__install} -m 544 bin/vce-migrate-access-policy %{buildroot}%{_bindir}/vce-migrate-access-policy
@@ -120,6 +121,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 # Configuration Files
 %{__install} -d -p %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce
+%{__install} -d -p %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/hosts.d
@@ -139,6 +141,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/simp/simpDataConfig.xml %{buildroot}%{_sysconfdir}/vce/simp/simpDataConfig.xml
 %{__install} etc/simp/hosts.d/vce-switch.xml %{buildroot}%{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
 %{__install} etc/simp/tsds/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/static.xml
+%{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron 
 
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
 %{__install} etc/database.sqlite %{buildroot}%{_sharedstatedir}/vce/database.sqlite
@@ -188,6 +191,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/vce/www/frontend/
 
 %{_bindir}/vce
+%{_bindir}/vce-simp-generator
 %{_bindir}/vce-run-check
 %{_bindir}/vce-update-db
 %{_bindir}/vce-migrate-access-policy
@@ -196,6 +200,9 @@ rm -rf $RPM_BUILD_ROOT
 /usr/lib/systemd/scripts/vce
 
 %{_sysconfdir}/vce/config.xsd
+
+%defattr(644,root,root,755)
+/etc/cron.d/vce_switch_cron
 
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/vce.conf
 %config(noreplace) %{_sysconfdir}/vce/access_policy.xml
