@@ -182,29 +182,60 @@
                                 </div>
                             </div>
                             <div class="tab-pane fade" role="tabpanel" id="port">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <h5>Status </h5>
-                                                <div class="table-responsive" style="display:block;max-height:350px;overflow-y:scroll;">
-                                                    <table class="table table-striped table-hover table-condensed">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Port </th>
-                                                                <th>Description </th>
-                                                                <th>VLANS </th>
-                                                                <th>Status </th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="port_table"></tbody>
-                                                    </table>
+
+                                <div class="col-md-12"> <!-- Delete this div tag (not the content) for statistics -->
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h5>Status </h5>
+                                                    <div class="table-responsive" style="display:block;max-height:350px;overflow-y:scroll;">
+                                                        <table class="table table-striped table-hover table-condensed">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Port </th>
+                                                                    <th>Description </th>
+                                                                    <th>VLANS </th>
+                                                                    <th>Status </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="port_table"></tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- Delete the following part in `row` div for statistics -->
+                                            <div>
+                                                <h2 id="selected_port"></h2>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <form class="form-horizontal">
+                                                        <label class="control-label">Commands </label>
+                                                        <select class="form-control" disabled="" id="port_select">
+                                                            <option value="" selected=""></option>
+                                                            <optgroup label="Show Commands" id="port_show_commands"></optgroup>
+                                                            <optgroup label="Config Actions" id="port_action_commands"></optgroup>
+                                                        </select>
+                                                        </form>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12" id="port_form_container"></div>
+
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h4 class="text-left">Results </h4>
+                                                    <div class="well" id="port_response_well"></div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
+                                <!-- Uncomment for statistics -->
+                                <!--
                                 <div>
                                     <h2 id="selected_port"></h2>
                                 </div>
@@ -246,17 +277,15 @@
                                                 <div class="col-md-12">
                                                     <div class="row">
                                                         <div class="col-md-12">
-                                                            <!-- <form class="form-horizontal"> -->
                                                             <h5>Click on the port to generate the graph</h5>
                                                             <iframe id="grafana-plugin" src="" width="100%" height="200" frameborder="0"></iframe>
-                                                            <!-- </form> -->
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
