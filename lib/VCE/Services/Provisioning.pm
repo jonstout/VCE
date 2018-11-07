@@ -358,7 +358,7 @@ sub edit_vlan{
     }
 
     $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
-    $self->vce->provision_vlan(
+    my $new_vlan = $self->vce->provision_vlan(
         vlan_id => $vlan_id,
         workgroup => $workgroup,
         description => $description,
@@ -367,6 +367,7 @@ sub edit_vlan{
         port => $ports,
         vlan => $vlan
     );
+    $vlan_id = $new_vlan->{vlan_id};
 
     my $details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan_id);
     if (!defined $details) {
