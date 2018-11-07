@@ -99,9 +99,12 @@ function loadVlanDropdown() {
 
 function createEndpointSelector() {
     var container = document.getElementById('endpoint-container');
-    container.addEventListener('change', function() {
-        filterVlansDrop();
-    } );
+
+    if (window.location.href.indexOf('create.html') > -1) {
+        container.addEventListener('change', function() {
+            filterVlansDrop();
+        } );
+    }
 
     var formGroup = document.createElement('div');
     formGroup.setAttribute('class', 'form-group endpoint');
@@ -116,10 +119,14 @@ function createEndpointSelector() {
     button.setAttribute('class', 'btn btn-danger')
     button.setAttribute('type', 'button');
     button.setAttribute('style', 'margin:0px 5px;');
-    button.addEventListener('click', function(e) {
-        formGroup.remove();
-        filterVlansDrop();
-    });
+
+        button.addEventListener('click', function(e) {
+            formGroup.remove();
+
+            if (window.location.href.indexOf('create.html') > -1) {
+                filterVlansDrop();
+            }
+        });
 
     var i = document.createElement('i');
     i.setAttribute('class', 'glyphicon glyphicon-remove');
