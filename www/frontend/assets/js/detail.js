@@ -127,14 +127,14 @@ function loadPorts() {
                 var cookie = Cookies.getJSON('vce');
                 cookie.port = name;
                 Cookies.set('vce', cookie);
-
-                document.getElementById('port_subtab').style.display = 'block';
+                // Uncomment for statistics part
+                /* document.getElementById('port_subtab').style.display = 'block';
                 var grafana = document.getElementById('grafana-plugin');
                 cookie.grafana = grafanaUrl+"var-node="+cookie.switch+"&var-intf="+cookie.port.replace(/ /g,'');
                 grafana.src = cookie.grafana;
                 Cookies.set('vce', cookie);
-
                 document.getElementById('port_subtab').style.display = 'block';
+                */
                 document.getElementById('port_select').disabled = false;
                 document.getElementById('port_select').selectedIndex = 0;
                 document.getElementById('port_form_container').setAttribute('style', 'display: none;');
@@ -147,11 +147,12 @@ function loadPorts() {
     });
 }
 
-$('#comm-port-tabs').click(function(e) {
+// Uncomment for statistics part
+/* $('#comm-port-tabs').click(function(e) {
     var cookie = Cookies.getJSON('vce');
     var grafana = document.getElementById('grafana-plugin');
     grafana.src = cookie.grafana;
-});
+});*/
 
 
 
