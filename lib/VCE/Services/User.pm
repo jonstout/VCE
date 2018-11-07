@@ -162,9 +162,23 @@ sub get_current {
     my $method = shift;
     my $params = shift;
 
-    my $workgroup = $params->{workgroup}{value};
-
     my $details = $self->db->get_user_by_name($ENV{REMOTE_USER});
+    if (defined $details) {
+        return { results => $details };
+    }
+
+    my $id = $self->db->add_user($ENV{REMOTE_USER}, '', '');
+    if (!defined $id) {
+        $method->set_error("User '$ENV{REMOTE_USER}' could not be created. Please try again later.");
+        return;
+    }
+
+    $details = $self->db->get_user_by_name($ENV{REMOTE_USER});
+    if (!defined $details) {
+        $method->set_error("Something went wrong while creating '$ENV{REMOTE_USER}'. Please try again later.");
+        return;
+    }
+
     return { results => $details };
 }
 
