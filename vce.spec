@@ -1,7 +1,7 @@
 Summary: Virtual Customer Equipment
 Name: vce
-Version: 0.3.6
-Release: 5%{?dist}
+Version: 0.3.7
+Release: 1%{?dist}
 License: Apache
 Group: GRNOC
 URL: http://globalnoc.iu.edu
