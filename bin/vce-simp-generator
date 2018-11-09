@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use feature ':5.12';
+use XML::LibXML;
+use GRNOC::Log;
+use VCE::Database::Connection;
+use VCE;
+use VCE::Switch;
+
+use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
+# use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
+use constant DEFAULT_MODEL_FILE => '/var/lib/vce/database.sqlite';
+use constant DEFAULT_PASSWORD_FILE => '/etc/vce/password.json';
+use Data::Dumper;
+
+
+my $community   = 'public';
+my $version     = '2c';
+my $ip          = '127.0.0.1';
+my $node_name   = 'brocade.example.com';
+my $group_name  = 'int';
+my $config_file = DEFAULT_CONFIG_FILE;
+my $model_file = DEFAULT_MODEL_FILE;
+my $password_file = DEFAULT_PASSWORD_FILE;
+my $vce;
+my $file        = 'vce-switch.xml';
+my $path        = '/etc/simp/hosts.d';
+
+GetOptions(
+    'community=s' => \$community,
+    'version=s' => \$version,
+) or die "Usage: $0 --community <community name> --version <version>\n";
+
+
+sub main {
+    my $config_file = shift;
+    my $model_file = shift;
+    my $password_file = shift;
+    #-----------------------------------------
+    unless(open FILE, ">$path/$file") {
+        # Die with error message
+        # if we can't open it.
+        die "\nUnable to create $file\n";
+    }
+    my $doc = XML::LibXML::Document->new('1.0', 'utf-8');
+
+    my $config = $doc->createElement("config");
+    my $host   = $doc->createElement("host");
+    my $group  = $doc->createElement("group");
+    #-----------------------------------------
+    # my $log = GRNOC::Log->get_logger("VCE");
+    # $log->info("access_policy.xml: $config_file");
+    # $log->info("network_model.sqlite: $model_file");
+    # $log->info("password.json: $password_file");
+
+
+    $vce = VCE->new(
+        config_file => $config_file,
+        network_model_file => $model_file,
+        password_file => $password_file
+    );
+
+    my $db = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
+    my $switches = $db->get_switches();
+    foreach my $switch (@$switches){
+        # warn Dumper($switch);
+        $host->setAttribute('ip' => $switch->{'ipv4'} );
+        $host->setAttribute('community'=> $community);
+        $host->setAttribute('snmp_version'=> $version);
+        $host->setAttribute('node_name'=> $switch->{'name'});
+        $group->setAttribute('name' => $group_name);
+        $host->appendChild($group);
+        $config->appendChild($host);
+    }
+
+    $doc->setDocumentElement($config);
+    print FILE $doc->toString();
+
+    close FILE;
+
+}
+
+
+GRNOC::Log->new(config => '/etc/vce/logging.conf');
+my $log = GRNOC::Log->get_logger("VCE");
+
+$log->info("VCE Initialization Fork Skipped.");
+eval {
+    main($config_file, $model_file, $password_file);
+};
+if ($@) {
+    $log->fatal("Fatal exception raised: $@");
+    exit 1;
+}
