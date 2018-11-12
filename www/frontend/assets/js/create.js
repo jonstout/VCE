@@ -99,9 +99,12 @@ function loadVlanDropdown() {
 
 function createEndpointSelector() {
     var container = document.getElementById('endpoint-container');
-    container.addEventListener('change', function() {
-        filterVlansDrop();
-    } );
+
+    if (window.location.href.indexOf('create.html') > -1) {
+        container.addEventListener('change', function() {
+            filterVlansDrop();
+        } );
+    }
 
     var formGroup = document.createElement('div');
     formGroup.setAttribute('class', 'form-group endpoint');
@@ -116,9 +119,13 @@ function createEndpointSelector() {
     button.setAttribute('class', 'btn btn-danger')
     button.setAttribute('type', 'button');
     button.setAttribute('style', 'margin:0px 5px;');
+
     button.addEventListener('click', function(e) {
         formGroup.remove();
-        filterVlansDrop();
+
+        if (window.location.href.indexOf('create.html') > -1) {
+            filterVlansDrop();
+        }
     });
 
     var i = document.createElement('i');
@@ -129,11 +136,45 @@ function createEndpointSelector() {
     formGroup.appendChild(button);
     button.appendChild(i);
 
-    for (var i = 0; i < endpointOptions.length; i++) {
-        var opt = document.createElement('option');
-        opt.innerHTML = endpointOptions[i];
-        opt.setAttribute('value', endpointOptions[i]);
-        select.appendChild(opt);
+    if (window.location.href.indexOf('create.html') > -1) {
+        for (var i = 0; i < endpointOptions.length; i++) {
+            var opt = document.createElement('option');
+            opt.innerHTML = endpointOptions[i];
+            opt.setAttribute('value', endpointOptions[i]);
+            select.appendChild(opt);
+        }
+    } else {
+
+        var vlan = document.getElementById('vlan');
+        var vlanValue   =   vlan.options[vlan.selectedIndex].value;
+        var populateEndpoints = {};
+        for (var endpoint in portTags) {
+            for (var i = 0; i < portTags[endpoint].length; i++)
+            {
+                var parts = portTags[endpoint][i].split("-").map(Number);
+
+                low   = parts[0];
+                high  = parts[0];
+
+                if (parts.length > 1) {
+                    high = parts[1];
+                }
+
+                if (high >=  vlanValue ) {
+                    if (low <= vlanValue) {
+                        populateEndpoints[endpoint] = 1;
+                    }
+                }
+            }
+        }
+
+        for (var endpoint in populateEndpoints) {
+            var opt = document.createElement('option');
+            opt.innerHTML = endpoint;
+            opt.setAttribute('value', endpoint);
+            select.appendChild(opt);
+        }
+
     }
     return select;
 }
