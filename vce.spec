@@ -143,7 +143,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/simp/simpDataConfig.xml %{buildroot}%{_sysconfdir}/vce/simp/simpDataConfig.xml
 %{__install} etc/simp/hosts.d/vce-switch.xml %{buildroot}%{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
 %{__install} etc/simp/tsds/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/static.xml
-%{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron
+%{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron 
 
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
 %{__install} etc/database.sqlite %{buildroot}%{_sharedstatedir}/vce/database.sqlite
