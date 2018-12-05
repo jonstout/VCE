@@ -32,8 +32,13 @@ Requires: rabbitmq-server
 Requires: httpd
 Requires: sqlite
 Requires: perl-DBD-SQLite
+Requires: simp-data
+Requires: simp-comp
+Requires: simp-poller
+Requires: simp-tsds
 Requires: globalnoc-grafana
 Requires: grafana
+Requires: globalnoc-tsds-datasource 
 
 %description
 Installs VCE and its prerequisites.
