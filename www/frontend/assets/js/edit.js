@@ -50,6 +50,7 @@ function loadVlanDetails() {
                 opt.setAttribute('value', circuit.vlan);
                 dropd.appendChild(opt);
                 vlan.selectedIndex = vlan.options.length - 1;
+                dropd.disabled = true;
             }
 
             // Load and select reported endpoints
@@ -113,7 +114,7 @@ function editVlan(e) {
             if (typeof data.error !== 'undefined') {
                 return displayError(data.error.msg);
             }
-	    setDisplayMessage('success', 'Vlan edited successfully.' + data.msg);
+            setDisplayMessage('success', 'Vlan edited successfully.' + data.msg);
             window.location.href = 'details.html?tab=vlan';
         });
     });
