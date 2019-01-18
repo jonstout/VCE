@@ -36,7 +36,7 @@ Requires: simp-data
 Requires: simp-comp
 Requires: simp-poller
 Requires: simp-tsds
-Requires: globalnoc-grafana
+# Requires: globalnoc-grafana
 Requires: grafana
 Requires: globalnoc-tsds-datasource 
 
