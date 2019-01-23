@@ -130,7 +130,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce
 %{__install} -d -p %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp
-%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/hosts.d
 %{__install} -d -p %{buildroot}%{_sharedstatedir}/vce
 
@@ -147,7 +147,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/simp/simp-tsds.xml %{buildroot}%{_sysconfdir}/vce/simp/simp-tsds.xml
 %{__install} etc/simp/simpDataConfig.xml %{buildroot}%{_sysconfdir}/vce/simp/simpDataConfig.xml
 %{__install} etc/simp/hosts.d/vce-switch.xml %{buildroot}%{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
-%{__install} etc/simp/tsds/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/static.xml
+%{__install} etc/simp/tsds.d/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds.d/static.xml
 %{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron 
 
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
@@ -220,7 +220,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/simp/config.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/simp-tsds.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/simpDataConfig.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/tsds/static.xml
+%config(noreplace) %{_sysconfdir}/vce/simp/tsds.d/static.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
 %{_sysconfdir}/vce/schema.sqlite
 

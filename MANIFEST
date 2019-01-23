@@ -19,7 +19,7 @@ etc/simp/compDataConfig.xml
 etc/simp/simpDataConfig.xml
 etc/simp/config.xml
 etc/simp/simp-tsds.xml
-etc/simp/tsds/static.xml
+etc/simp/tsds.d/static.xml
 etc/simp/hosts.d/vce-switch.xml
 etc/cron.d/vce_switch_cron
 lib/VCE.pm
