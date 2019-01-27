@@ -141,6 +141,7 @@ function loadPorts() {
 
                 // Load commands available for this port
                 getPortCommands();
+                drawChart();
                 document.getElementById('selected_port').innerHTML = `${name} <small>${description}</small>`;
             });
         });
@@ -431,4 +432,68 @@ function selectTab() {
     }
 
     $('a[href="#' + tabSelection + '"]').tab('show');
+}
+
+google.charts.load('current', {'packages':['corechart']});
+
+function drawChart() {
+    var cookie = Cookies.getJSON('vce');
+
+    let host = cookie.switch;
+    let port = cookie.port.replace(' ', '');
+
+    var url = `../influx/query?db=mydb&q=select "time",mean("tx") as "tx" ,mean("rx") as "rx" from "intf" where "name"=$name and time > now()-12h group by time(30m)&params={"name":"${port}"}`;
+
+    fetch(url, {method: 'get', credentials: 'include'}).then(function(response) {
+        response.json().then(function(data) {
+            if (typeof data.error !== 'undefined') {
+                return displayError(data.error.msg);
+            }
+
+            let c = data.results[0].series[0].values;
+
+            let legend = 'bps';
+            let rate_d = 1;
+            var max = c.reduce(function(a, b) {
+                if (Array.isArray(a)) {
+                    return Math.max(Math.round(a[2]), Math.round(b[2]));
+                } else {
+                    return Math.max(a, Math.round(b[2]));
+                }
+            });
+            if (max > 1000) {
+                legend = 'kbps';
+                rate_d = 1000;
+            }
+            if (max > 1000000) {
+                legend = 'Mbps';
+                rate_d = 1000000;
+            }
+            if (max > 1000000000) {
+                legend = 'Gbps';
+                rate_d = 1000000000;
+            }
+            let d = c.map((v) => {
+                v[0] = new Date(v[0]);
+                v[1] = v[1]/rate_d;
+                v[2] = v[2]/rate_d;
+                return v;
+            });
+
+            d.unshift(data.results[0].series[0].columns);
+
+            var data = google.visualization.arrayToDataTable(d);
+            var options = {
+                colors:['#18BC9C','#2C3E50'],
+                curveType: 'function',
+                legend: { position: 'bottom' },
+                vAxes: {
+                    0: {title: legend}
+                }
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
+            chart.draw(data, options);
+        });
+    });
 }
