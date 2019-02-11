@@ -12,6 +12,7 @@ etc/database.sqlite
 etc/logging.conf
 etc/network_model.sqlite
 etc/password.json
+etc/grafana-dashboard.json
 etc/schema.sqlite
 etc/vce.init
 etc/vce.systemd

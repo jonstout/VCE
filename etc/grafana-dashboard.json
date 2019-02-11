@@ -1,0 +1,258 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": 1,
+  "iteration": 1549913705645,
+  "links": [],
+  "panels": [
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "GlobalNOC TSDS",
+      "fill": 1,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "aggregate_all": false,
+          "condition": [],
+          "displayFormat": "series",
+          "func": [
+            {
+              "alias": "",
+              "bucket": "",
+              "expanded": false,
+              "method": "average",
+              "operation": "",
+              "percentile": "85",
+              "root": true,
+              "target": "input",
+              "template": "",
+              "title": "Aggregate",
+              "type": "Aggregate",
+              "wrapper": []
+            }
+          ],
+          "groupby_field": "node, intf",
+          "inlineGroupOperator": [
+            [
+              "",
+              "and"
+            ]
+          ],
+          "metricValueAliasMappings": {
+            "aggregate(values.input, 60, average)": ""
+          },
+          "metricValueAliases": [
+            ""
+          ],
+          "metricValues_array": [
+            "Select Metric Value"
+          ],
+          "metric_array": [
+            "node",
+            "intf"
+          ],
+          "orderby_field": "",
+          "outerGroupOperator": [
+            ""
+          ],
+          "refId": "A",
+          "series": "interface",
+          "target": "get node, intf, aggregate(values.input, 60, average) between (1549910197, 1549913797) by node, intf from interface where ((node = \"mlxe16-2.sdn-test.grnoc.iu.edu\") and (intf = \"loopback1\"))",
+          "target_alias": "",
+          "templateVariableValue": [
+            ""
+          ],
+          "type": "timeserie",
+          "whereClauseGroup": [
+            [
+              {
+                "left": "node",
+                "op": "=",
+                "right": "$node"
+              },
+              {
+                "left": "intf",
+                "op": "=",
+                "right": "$intf"
+              }
+            ]
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "$node - $intf",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    }
+  ],
+  "schemaVersion": 16,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "mlxe16-2.sdn-test.grnoc.iu.edu",
+          "value": "mlxe16-2.sdn-test.grnoc.iu.edu"
+        },
+        "datasource": "GlobalNOC TSDS",
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "node",
+        "options": [],
+        "query": "get node between ($START, $END) by node from interface limit 100 offset 0",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "loopback1",
+          "value": "loopback1"
+        },
+        "datasource": "GlobalNOC TSDS",
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": null,
+        "multi": false,
+        "name": "intf",
+        "options": [],
+        "query": "get intf between ($START, $END) by intf from interface limit 100 offset 0",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "mlxe16-2",
+  "uid": "oigOLR1ik",
+  "version": 2
+}
