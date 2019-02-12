@@ -6,6 +6,7 @@ The following installation assumes a Centos7 machine. It also assumes that rabbi
 
 ### New installations
 
+#### VCE
 1. Edit `/etc/yum.repos.d/grnoc-public.repo` to install the GlobalNOC's Centos7 RPM repository.
 ```
 [grnoc-public]
@@ -18,32 +19,13 @@ gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
 2. Execute `sudo yum makecache`
 3. Execute `sudo yum install vce`
 
-Assuming the previous steps finished successfully, VCE is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete start vce using `systemctl`.
+Once the VCE is installed, we need to install the grafana which will render the Statistics Graph.
 
-```
-sudo systemctl start vce
-```
-
-### Upgrading to a newer version
-
-1. Execute `sudo systemctl stop httpd`
-0. Execute `sudo systemctl stop vce`
-
-Ensure that `/etc/vce/access_policy.xml` contains the following
-`network_model` tag. Verify the path is set to
-`/var/lib/vce/database.sqlite`. An example config can be
-found
-[here](https://github.com/GlobalNOC/VCE/blob/master/etc/access_policy.xml#L3).
-
-```
-<network_model path="/var/lib/vce/database.sqlite"/>
-```
-
+#### Grafana Setup
 0. Execute `sudo yum install globalnoc-grafana`
-0. Execute `sudo yum install vce`
-0. Execute `sudo /bin/vce-update-db`
-0. Setup up the VCE for [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics)
-0. Execute `sudo yum install grnoc-tsds-services`
+0. Please go to [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page and perform all the necessary steps.
+0. Assuming that you have performed all steps on [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page, let us now install tsds-services.
+0. execute `sudo yum install grnoc-tsds-services`
   * **The below step is for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
   * Execute `sudo /usr/bin/tsds_setup.pl` and when asked for the number of shards, please enter 1.
   * Edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
@@ -51,7 +33,10 @@ found
 * Visit `http://<hostname>:3000/` and login grafana with default credentials.
 * Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
 * Once the data source is created, click **+** on the left bar and select 'import' to import the dashboard with graph configurations.
-* Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json text area, and save the page.
+* Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
+
+Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete start vce using `systemctl`.
+
 0. Execute `sudo systemctl daemon-reload`
 0. Execute `sudo systemctl restart rabbitmq-server`
 0. Execute `sudo systemctl restart redis`
@@ -68,6 +53,29 @@ found
 0. Execute `sudo systemctl restart searchd`
 0. Execute `sudo systemctl restart tsds_writer`
 0. Execute `sudo systemctl restart grafana-server`
+
+### Upgrading to a newer version
+
+1. Execute `sudo systemctl stop httpd`
+0. Execute `sudo systemctl stop vce`
+
+Ensure that `/etc/vce/access_policy.xml` contains the following
+`network_model` tag. Verify the path is set to
+`/var/lib/vce/database.sqlite`. An example config can be
+found
+[here](https://github.com/GlobalNOC/VCE/blob/master/etc/access_policy.xml#L3).
+
+```
+<network_model path="/var/lib/vce/database.sqlite"/>
+```
+
+
+0. Execute `sudo yum install vce`
+0. Execute `sudo /bin/vce-update-db`
+**NOTE**: Make sure that you gone thought Grafana Setup steps in the installation section. If yes, please proceed.
+0. Execute `sudo systemctl restart vce`
+0. Execute `sudo systemctl restart httpd`
+
 
 ## Configuration
 
