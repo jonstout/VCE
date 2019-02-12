@@ -39,10 +39,35 @@ found
 <network_model path="/var/lib/vce/database.sqlite"/>
 ```
 
+0. Execute `sudo yum install globalnoc-grafana`
 0. Execute `sudo yum install vce`
 0. Execute `sudo /bin/vce-update-db`
-0. Execute `sudo systemctl start vce`
-0. Execute `sudo systemctl start httpd`
+0. Setup up the VCE for [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics)
+0. Execute `sudo yum install grnoc-tsds-services`
+  * **The below step is for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
+  * Execute `sudo /usr/bin/tsds_setup.pl` and when asked for the number of shards, please enter 1.
+  * Edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
+0. The following step is for setting up the Statistics graph.
+* Visit `http://<hostname>:3000/` and login grafana with default credentials.
+* Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
+* Once the data source is created, click **+** on the left bar and select 'import' to import the dashboard with graph configurations.
+* Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json text area, and save the page.
+0. Execute `sudo systemctl daemon-reload`
+0. Execute `sudo systemctl restart rabbitmq-server`
+0. Execute `sudo systemctl restart redis`
+0. Execute `sudo systemctl restart vce`
+0. Execute `sudo systemctl restart httpd`
+0. Execute `sudo systemctl restart simp-data`
+0. Execute `sudo systemctl restart simp-comp`
+0. Execute `sudo systemctl restart simp-poller`
+0. Execute `sudo systemctl restart mongod-config1`
+0. Execute `sudo systemctl restart mongod-shard1`
+0. Execute `sudo systemctl restart mongos`
+0. Execute `sudo systemctl restart simp-tsds`
+0. Execute `sudo systemctl restart memcached`
+0. Execute `sudo systemctl restart searchd`
+0. Execute `sudo systemctl restart tsds_writer`
+0. Execute `sudo systemctl restart grafana-server`
 
 ## Configuration
 
