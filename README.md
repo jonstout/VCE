@@ -23,36 +23,66 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
 #### Grafana Setup
 0. Execute `sudo yum install globalnoc-grafana`
-0. Please go to [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page and perform all the necessary steps.
-0. Assuming that you have performed all steps on [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page, let us now install tsds-services.
-0. execute `sudo yum install grnoc-tsds-services`
-  * **The below step is for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
-  * Execute `sudo /usr/bin/tsds_setup.pl` and when asked for the number of shards, please enter 1.
-  * Edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
-0. The following step is for setting up the Statistics graph.
-* Visit `http://<hostname>:3000/` and login grafana with default credentials.
-* Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
-* Once the data source is created, click **+** on the left bar and select 'import' to import the dashboard with graph configurations.
-* Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
+1. Execute `sudo systemctl restart rabbitmq-server`
+2. Execute `sudo systemctl restart redis`
+3. Please go to [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page and perform all the necessary steps.
+4. Assuming that you have performed all steps on [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page, let us now install tsds-services.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo yum install grnoc-tsds-services`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * **The below steps are for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo /usr/bin/tsds_setup.pl` and when asked for the number of shards, please enter 1.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - While creating certificate, when asked for common name, please enter the hostname.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - To ignore a field, just press enter.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When asked for 'The certificate will expire in (days)', please enter appropriate number.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Keep pressing Enter till it says 'Is the above information ok? (y/N)'. Enter 'y'.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When asked for number of config server and shard, please enter 1. This will setup mongodb and the shard for data collection.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Once the mongodb environment is setup, it will ask for password for the root user. Please enter the appropriate password.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - It will ask the password for the tsds read-only user. Please enter the appropriate password.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - It will ask the password for the tsds read-write user. Please enter the appropriate password.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - It will then initialize the mongo database with necessatry databases and collections. Please enter 'y' when asked 'Are you sure?'
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * On successful completion of the above step, edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
+
+5. The following step is for setting up the grafana dashboard which renders the Statistics chart.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Visit `http://<hostname>:3000/` and login grafana with default credentials.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Once the data source is created, click **+** on the left bar and select 'import' to import the dashboard with graph configurations.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
 
 Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete start vce using `systemctl`.
 
-0. Execute `sudo systemctl daemon-reload`
-0. Execute `sudo systemctl restart rabbitmq-server`
-0. Execute `sudo systemctl restart redis`
-0. Execute `sudo systemctl restart vce`
-0. Execute `sudo systemctl restart httpd`
-0. Execute `sudo systemctl restart simp-data`
-0. Execute `sudo systemctl restart simp-comp`
-0. Execute `sudo systemctl restart simp-poller`
-0. Execute `sudo systemctl restart mongod-config1`
-0. Execute `sudo systemctl restart mongod-shard1`
-0. Execute `sudo systemctl restart mongos`
-0. Execute `sudo systemctl restart simp-tsds`
-0. Execute `sudo systemctl restart memcached`
-0. Execute `sudo systemctl restart searchd`
-0. Execute `sudo systemctl restart tsds_writer`
-0. Execute `sudo systemctl restart grafana-server`
+
+6. Execute `sudo systemctl daemon-reload`
+7. Execute `sudo systemctl restart rabbitmq-server`
+8. Execute `sudo systemctl restart redis`
+9. Execute `sudo systemctl restart vce`
+10. Execute `sudo systemctl restart httpd`
+11. Execute `sudo systemctl restart simp-data`
+12. Execute `sudo systemctl restart simp-comp`
+13. Execute `sudo systemctl restart simp-poller`
+14. Execute `sudo systemctl restart mongod-config1`
+15. Execute `sudo systemctl restart mongod-shard1`
+16. Execute `sudo systemctl restart mongos`
+17. Execute `sudo systemctl restart simp-tsds`
+18. Execute `sudo systemctl restart memcached`
+19. Execute `sudo systemctl restart searchd`
+20. Execute `sudo systemctl restart tsds_writer`
+21. Execute `sudo systemctl restart grafana-server`
 
 ### Upgrading to a newer version
 
@@ -71,10 +101,12 @@ found
 
 
 0. Execute `sudo yum install vce`
-0. Execute `sudo /bin/vce-update-db`
+1. Execute `sudo /bin/vce-update-db`
+
 **NOTE**: Make sure that you gone thought Grafana Setup steps in the installation section. If yes, please proceed.
-0. Execute `sudo systemctl restart vce`
-0. Execute `sudo systemctl restart httpd`
+
+2. Execute `sudo systemctl restart vce`
+3. Execute `sudo systemctl restart httpd`
 
 
 ## Configuration
