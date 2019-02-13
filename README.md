@@ -32,7 +32,7 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * **The below steps are for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo /usr/bin/tsds_setup.pl` and when asked for the number of shards, please enter 1.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo /usr/bin/tsds_setup.pl`.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - While creating certificate, when asked for common name, please enter the hostname.
 
@@ -64,7 +64,7 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
 
-Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete start vce using `systemctl`.
+Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
 
 
 6. Execute `sudo systemctl daemon-reload`
@@ -103,7 +103,7 @@ found
 0. Execute `sudo yum install vce`
 1. Execute `sudo /bin/vce-update-db`
 
-**NOTE**: Make sure that you gone thought Grafana Setup steps in the installation section. If yes, please proceed.
+**NOTE**: Make sure that you gone through **Grafana Setup** steps in the installation section. If yes, please proceed.
 
 2. Execute `sudo systemctl restart vce`
 3. Execute `sudo systemctl restart httpd`
