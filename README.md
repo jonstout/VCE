@@ -17,12 +17,13 @@ gpgcheck=1
 gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
 ```
 2. Execute `sudo yum makecache`
-3. Execute `sudo yum install vce`
+3. Execute `sudo yum install globalnoc-grafana`
+4. Execute `sudo yum install vce`
 
 Once the VCE is installed, we need to install the grafana which will render the Statistics Graph.
 
 #### Grafana Setup
-0. Execute `sudo yum install globalnoc-grafana`
+
 1. Execute `sudo systemctl restart rabbitmq-server`
 2. Execute `sudo systemctl restart redis`
 3. Please go to [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page and perform all the necessary steps.
@@ -54,7 +55,27 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * On successful completion of the above step, edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
 
-5. The following step is for setting up the grafana dashboard which renders the Statistics chart.
+Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
+
+
+5. Execute `sudo systemctl daemon-reload`
+6. Execute `sudo systemctl restart rabbitmq-server`
+7. Execute `sudo systemctl restart redis`
+8. Execute `sudo systemctl restart vce`
+9. Execute `sudo systemctl restart httpd`
+10. Execute `sudo systemctl restart simp-data`
+11. Execute `sudo systemctl restart simp-comp`
+12. Execute `sudo systemctl restart simp-poller`
+13. Execute `sudo systemctl restart mongod-config1`
+14. Execute `sudo systemctl restart mongod-shard1`
+15. Execute `sudo systemctl restart mongos`
+16. Execute `sudo systemctl restart simp-tsds`
+17. Execute `sudo systemctl restart memcached`
+18. Execute `sudo systemctl restart searchd`
+19. Execute `sudo systemctl restart tsds_writer`
+20. Execute `sudo systemctl restart grafana-server`
+
+21. The following step is for setting up the grafana dashboard which renders the Statistics chart.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Visit `http://<hostname>:3000/` and login grafana with default credentials.
 
@@ -64,30 +85,11 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
 
-Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
-
-
-6. Execute `sudo systemctl daemon-reload`
-7. Execute `sudo systemctl restart rabbitmq-server`
-8. Execute `sudo systemctl restart redis`
-9. Execute `sudo systemctl restart vce`
-10. Execute `sudo systemctl restart httpd`
-11. Execute `sudo systemctl restart simp-data`
-12. Execute `sudo systemctl restart simp-comp`
-13. Execute `sudo systemctl restart simp-poller`
-14. Execute `sudo systemctl restart mongod-config1`
-15. Execute `sudo systemctl restart mongod-shard1`
-16. Execute `sudo systemctl restart mongos`
-17. Execute `sudo systemctl restart simp-tsds`
-18. Execute `sudo systemctl restart memcached`
-19. Execute `sudo systemctl restart searchd`
-20. Execute `sudo systemctl restart tsds_writer`
-21. Execute `sudo systemctl restart grafana-server`
-
 ### Upgrading to a newer version
 
-1. Execute `sudo systemctl stop httpd`
-0. Execute `sudo systemctl stop vce`
+0. Execute `sudo systemctl stop httpd`
+1. Execute `sudo systemctl stop vce`
+
 
 Ensure that `/etc/vce/access_policy.xml` contains the following
 `network_model` tag. Verify the path is set to
@@ -100,7 +102,7 @@ found
 ```
 
 
-0. Execute `sudo yum install vce`
+0. Execute `sudo yum install vce`: If this installation gives error about Grafana, please execute `sudo yum install globalnoc-grafana` to resolve it and try again.
 1. Execute `sudo /bin/vce-update-db`
 
 **NOTE**: Make sure that you gone through **Grafana Setup** steps in the installation section. If yes, please proceed.
