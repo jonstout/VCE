@@ -32,6 +32,12 @@ Requires: rabbitmq-server
 Requires: httpd
 Requires: sqlite
 Requires: perl-DBD-SQLite
+Requires: simp-data
+Requires: simp-comp
+Requires: simp-poller
+Requires: simp-tsds
+Requires: grafana
+Requires: globalnoc-tsds-datasource 
 
 %description
 Installs VCE and its prerequisites.
@@ -123,13 +129,14 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce
 %{__install} -d -p %{buildroot}%{_sysconfdir}/cron.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp
-%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/hosts.d
 %{__install} -d -p %{buildroot}%{_sharedstatedir}/vce
 
 %{__install} etc/apache-vce.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/vce.conf
 %{__install} etc/access_policy.xml %{buildroot}%{_sysconfdir}/vce/access_policy.xml
 %{__install} etc/password.json %{buildroot}%{_sysconfdir}/vce/password.json
+%{__install} etc/grafana-dashboard.json %{buildroot}%{_sysconfdir}/vce/grafana-dashboard.json
 %{__install} etc/config.xsd %{buildroot}%{_sysconfdir}/vce/config.xsd
 %{__install} etc/apache_logging.conf %{buildroot}%{_sysconfdir}/vce/apache_logging.conf
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
@@ -140,7 +147,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/simp/simp-tsds.xml %{buildroot}%{_sysconfdir}/vce/simp/simp-tsds.xml
 %{__install} etc/simp/simpDataConfig.xml %{buildroot}%{_sysconfdir}/vce/simp/simpDataConfig.xml
 %{__install} etc/simp/hosts.d/vce-switch.xml %{buildroot}%{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
-%{__install} etc/simp/tsds/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/static.xml
+%{__install} etc/simp/tsds.d/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds.d/static.xml
 %{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron 
 
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
@@ -207,13 +214,14 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/vce.conf
 %config(noreplace) %{_sysconfdir}/vce/access_policy.xml
 %config(noreplace) %attr(600,vce,vce) %{_sysconfdir}/vce/password.json
+%config(noreplace) %{_sysconfdir}/vce/grafana-dashboard.json
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
 %config(noreplace) %{_sysconfdir}/vce/simp/compDataConfig.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/config.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/simp-tsds.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/simpDataConfig.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/tsds/static.xml
+%config(noreplace) %{_sysconfdir}/vce/simp/tsds.d/static.xml
 %config(noreplace) %{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
 %{_sysconfdir}/vce/schema.sqlite
 

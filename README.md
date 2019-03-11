@@ -6,6 +6,7 @@ The following installation assumes a Centos7 machine. It also assumes that rabbi
 
 ### New installations
 
+#### VCE
 1. Edit `/etc/yum.repos.d/grnoc-public.repo` to install the GlobalNOC's Centos7 RPM repository.
 ```
 [grnoc-public]
@@ -16,18 +17,79 @@ gpgcheck=1
 gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
 ```
 2. Execute `sudo yum makecache`
-3. Execute `sudo yum install vce`
+3. Execute `sudo yum install globalnoc-grafana`
+4. Execute `sudo yum install vce`
 
-Assuming the previous steps finished successfully, VCE is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete start vce using `systemctl`.
+Once the VCE is installed, we need to install the grafana which will render the Statistics Graph.
 
-```
-sudo systemctl start vce
-```
+#### Grafana Setup
+
+1. Execute `sudo systemctl restart rabbitmq-server`
+2. Execute `sudo systemctl restart redis`
+3. Please go to [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page and perform all the necessary steps.
+4. Assuming that you have performed all steps on [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page, let us now install tsds-services.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo yum install grnoc-tsds-services`
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * **The below steps are for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo /usr/bin/tsds_setup.pl`.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - While creating certificate, when asked for common name, please enter the hostname.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - To ignore a field, just press enter.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When asked for 'The certificate will expire in (days)', please enter appropriate number.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Keep pressing Enter till it says 'Is the above information ok? (y/N)'. Enter 'y'.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When asked for number of config server and shard, please enter 1. This will setup mongodb and the shard for data collection.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Once the mongodb environment is setup, it will ask for password for the root user. Please enter the appropriate password.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - It will ask the password for the tsds read-only user. Please enter the appropriate password.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - It will ask the password for the tsds read-write user. Please enter the appropriate password.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - It will then initialize the mongo database with necessatry databases and collections. Please enter 'y' when asked 'Are you sure?'
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * On successful completion of the above step, edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
+
+Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
+
+
+5. Execute `sudo systemctl daemon-reload`
+6. Execute `sudo systemctl restart rabbitmq-server`
+7. Execute `sudo systemctl restart redis`
+8. Execute `sudo systemctl restart vce`
+9. Execute `sudo systemctl restart httpd`
+10. Execute `sudo systemctl restart simp-data`
+11. Execute `sudo systemctl restart simp-comp`
+12. Execute `sudo systemctl restart simp-poller`
+13. Execute `sudo systemctl restart mongod-config1`
+14. Execute `sudo systemctl restart mongod-shard1`
+15. Execute `sudo systemctl restart mongos`
+16. Execute `sudo systemctl restart simp-tsds`
+17. Execute `sudo systemctl restart memcached`
+18. Execute `sudo systemctl restart searchd`
+19. Execute `sudo systemctl restart tsds_writer`
+20. Execute `sudo systemctl restart grafana-server`
+
+21. The following step is for setting up the grafana dashboard which renders the Statistics chart.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Visit `http://<hostname>:3000/` and login grafana with default credentials.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Once the data source is created, click **+** on the left bar and select 'import' to import the dashboard with graph configurations.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
 
 ### Upgrading to a newer version
 
-1. Execute `sudo systemctl stop httpd`
-0. Execute `sudo systemctl stop vce`
+0. Execute `sudo systemctl stop httpd`
+1. Execute `sudo systemctl stop vce`
+
 
 Ensure that `/etc/vce/access_policy.xml` contains the following
 `network_model` tag. Verify the path is set to
@@ -39,10 +101,15 @@ found
 <network_model path="/var/lib/vce/database.sqlite"/>
 ```
 
-0. Execute `sudo yum install vce`
-0. Execute `sudo /bin/vce-update-db`
-0. Execute `sudo systemctl start vce`
-0. Execute `sudo systemctl start httpd`
+
+0. Execute `sudo yum install vce`: If this installation gives error about Grafana, please execute `sudo yum install globalnoc-grafana` to resolve it and try again.
+1. Execute `sudo /bin/vce-update-db`
+
+**NOTE**: Make sure that you gone through **Grafana Setup** steps in the installation section. If yes, please proceed.
+
+2. Execute `sudo systemctl restart vce`
+3. Execute `sudo systemctl restart httpd`
+
 
 ## Configuration
 
