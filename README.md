@@ -68,7 +68,7 @@ sudo systemctl restart grafana-server;
 
 
 ```
-21. The following step is for setting up the grafana dashboard which renders the Statistics chart.
+5. The following step is for setting up the grafana dashboard which renders the Statistics chart.
 
     * Visit `http://<hostname>:3000/` and login grafana with default credentials.
 
@@ -113,6 +113,13 @@ VCE's configuration file is located at `/etc/vce/access_policy.xml`. This file i
 * RabbitMQ credentials
 ```xml
 <rabbit host="localhost" port="5672" user="guest" pass="guest" />
+```
+### Final snapshot of access_policy.xml
+```xml
+<accessPolicy>
+  <rabbit host="localhost" port="5672" user="guest" pass="guest"/>
+  <network_model path="/var/lib/vce/database.sqlite"/>
+</accessPolicy>
 ```
 
 #### Validate configuration
