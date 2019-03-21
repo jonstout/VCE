@@ -98,7 +98,7 @@ found
 1. Execute `sudo yum install vce`
 2. Execute `sudo /bin/vce-update-db`
 
-**NOTE**: Make sure that you have gone through **Grafana Setup** steps in the installation section. If **yes**, please proceed.
+**NOTE**: Make sure that you have gone through **Grafana Setup** steps in the installation section. If **yes**, please proceed with step 3.
 
 3. Execute `sudo systemctl restart vce`
 4. Execute `sudo systemctl restart httpd`
@@ -167,5 +167,5 @@ Alias /vce/api /usr/share/vce/www/api
 Users are managed via htpasswd file. Create the password file `/usr/share/vce/www/.htpasswd` and first user with the following command. See the htpasswd [documentation](https://httpd.apache.org/docs/current/programs/htpasswd.html) for more information.
 
 ```
-htpasswd -c /usr/share/vce/www/.htpasswd jane
+htpasswd -c /usr/share/vce/www/.htpasswd admin
 ```
