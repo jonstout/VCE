@@ -35,14 +35,6 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Execute `sudo /usr/bin/tsds_setup.pl`.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - While creating certificate, when asked for common name, please enter the hostname.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - To ignore a field, just press enter.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When asked for 'The certificate will expire in (days)', please enter appropriate number.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Keep pressing Enter till it says 'Is the above information ok? (y/N)'. Enter 'y'.
-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When asked for number of config server and shard, please enter 1. This will setup mongodb and the shard for data collection.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - Once the mongodb environment is setup, it will ask for password for the root user. Please enter the appropriate password.
@@ -81,7 +73,7 @@ Assuming the previous steps finished successfully, VCE and Grafana is now instal
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Once the data source is created, click **+** on the left bar and select 'import' to import the dashboard with graph configurations.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Once the data source is created, click **'+'** on the left bar and select 'import' to import the dashboard with graph configurations.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; * Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
 
@@ -101,11 +93,11 @@ found
 <network_model path="/var/lib/vce/database.sqlite"/>
 ```
 
-
-0. Execute `sudo yum install vce`: If this installation gives error about Grafana, please execute `sudo yum install globalnoc-grafana` to resolve it and try again.
+0. Execute `sudo yum install globalnoc-grafana`
+0. Execute `sudo yum install vce`
 1. Execute `sudo /bin/vce-update-db`
 
-**NOTE**: Make sure that you gone through **Grafana Setup** steps in the installation section. If yes, please proceed.
+**NOTE**: Make sure that you have gone through **Grafana Setup** steps in the installation section. If **yes**, please proceed.
 
 2. Execute `sudo systemctl restart vce`
 3. Execute `sudo systemctl restart httpd`
