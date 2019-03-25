@@ -3,6 +3,7 @@ bin/vce-run-check
 bin/vce-update-db
 bin/vce.pl
 bin/vce_switch.pl
+bin/vce-simp-generator
 etc/access_policy.xml
 etc/apache-vce.conf
 etc/apache_logging.conf
@@ -11,6 +12,7 @@ etc/database.sqlite
 etc/logging.conf
 etc/network_model.sqlite
 etc/password.json
+etc/grafana-dashboard.json
 etc/schema.sqlite
 etc/vce.init
 etc/vce.systemd
@@ -18,8 +20,9 @@ etc/simp/compDataConfig.xml
 etc/simp/simpDataConfig.xml
 etc/simp/config.xml
 etc/simp/simp-tsds.xml
-etc/simp/tsds/static.xml
+etc/simp/tsds.d/static.xml
 etc/simp/hosts.d/vce-switch.xml
+etc/cron.d/vce_switch_cron
 lib/VCE.pm
 lib/VCE/Access.pm
 lib/VCE/Database/ACL.pm

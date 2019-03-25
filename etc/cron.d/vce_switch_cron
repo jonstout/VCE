@@ -1,0 +1,2 @@
+# Generate the /etc/simp/hosts.d/vce-switch.xml every 1 hour
+# 0 * * * * root /usr/bin/vce-simp-generator --community public 2>/tmp/switch_cron_out
