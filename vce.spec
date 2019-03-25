@@ -29,7 +29,6 @@ Requires: perl-Test-Deep
 Requires: perl-Type-Tiny
 Requires: perl-AnyEvent-Fork
 Requires: rabbitmq-server
-Requires: redis 
 Requires: httpd
 Requires: sqlite
 Requires: perl-DBD-SQLite
