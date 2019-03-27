@@ -47,6 +47,22 @@ Once the VCE is installed, we need to install the grafana which will render the 
 
     * On successful completion of the above step, edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
 
+5. **Grafana configuration:** The grafana runs on localhost and need not be directly access by unauthorized user. So in order to make sure only vce users can access grafana, edit `/etc/grafana/grafana.ini` and perform below steps:
+
+      * **Note**: Make sure below changes do not start with ';'
+      * In \[server\], update the following:
+      
+            protocol = http
+            root_url = http://localhost/grafana
+            
+      * In \[auth.proxy\], update the following:
+            
+            enabled = true
+            header_name = X-WEBAUTH-USER
+            header_property = username
+            auto_sign_up = true
+
+
 Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
 ```
 sudo systemctl daemon-reload;
@@ -66,11 +82,10 @@ sudo systemctl restart searchd;
 sudo systemctl restart tsds_writer;
 sudo systemctl restart grafana-server;
 
-
 ```
-5. The following step is for setting up the grafana dashboard which renders the Statistics chart.
+6. The following step is for setting up the grafana dashboard which renders the Statistics chart.
 
-    * Visit `http://<hostname>:3000/` and login grafana with default credentials.
+    * Visit `https://<hostname>/grafana/` and login grafana with **admin** credentials.
 
     * Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
 
@@ -133,8 +148,26 @@ To quickly verify that the configuration is valid use the `vce-run-check` comman
 The frontend is installed to `/usr/share/vce/www/`. Below is an Apache configuration that may be used to host the frontend and the API.
 
 ```
-Alias /vce     /usr/share/vce/www/frontend
 Alias /vce/api /usr/share/vce/www/api
+Alias /vce     /usr/share/vce/www/frontend
+
+ProxyPass        /grafana http://localhost:3000
+ProxyPassReverse /grafana http://localhost:3000
+RequestHeader unset Authorization
+<Location /grafana>
+
+  AuthType Basic
+  AuthName GrafanaAuthProxy
+  AuthBasicProvider file
+  AuthUserFile /usr/share/vce/www/.htpasswd
+  Require valid-user
+
+  RewriteEngine On
+  RewriteRule .* - [E=PROXY_USER:%{LA-U:REMOTE_USER},NS]
+  RequestHeader set X-WEBAUTH-USER "%{PROXY_USER}e"
+  Order allow,deny
+  Allow from all
+</Location>
 
 <Location /vce>
   AuthType Basic
