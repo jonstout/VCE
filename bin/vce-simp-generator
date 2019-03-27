@@ -49,8 +49,6 @@ sub main {
     my $doc = XML::LibXML::Document->new('1.0', 'utf-8');
 
     my $config = $doc->createElement("config");
-    my $host   = $doc->createElement("host");
-    my $group  = $doc->createElement("group");
     #-----------------------------------------
     # my $log = GRNOC::Log->get_logger("VCE");
     # $log->info("access_policy.xml: $config_file");
@@ -67,6 +65,8 @@ sub main {
     my $db = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
     my $switches = $db->get_switches();
     foreach my $switch (@$switches){
+        my $host   = $doc->createElement("host");
+        my $group  = $doc->createElement("group");
         # warn Dumper($switch);
         $host->setAttribute('ip' => $switch->{'ipv4'} );
         $host->setAttribute('community'=> $community);
