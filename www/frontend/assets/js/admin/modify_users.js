@@ -61,7 +61,7 @@ function modifyUser(form) {
 }
 
 function deleteUser() {
-    let ok = confirm('Are you sure you wish to delete this device?');
+    let ok = confirm('Are you sure you wish to delete this user?');
     if (!ok) {
         return false;
     }
