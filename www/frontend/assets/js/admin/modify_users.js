@@ -60,21 +60,24 @@ function modifyUser(form) {
     return false;
 }
 
-function deleteSwitch() {
+function deleteUser() {
     let ok = confirm('Are you sure you wish to delete this device?');
     if (!ok) {
         return false;
     }
 
+
     let del = async function(data) {
+        let params = new URLSearchParams(location.search);
+        let id = params.get('user_id');
+
         let cookie = Cookies.getJSON('vce');
         let wg = cookie.workgroup;
 
-        let id = data.get('id');
-        let method = 'delete_switch';
+        let method = 'delete_user';
 
         try {
-            const url = `../api/switch.cgi?method=${method}&id=${id}&workgroup=${wg}`;
+            const url = `../api/user.cgi?method=${method}&user_id=${id}&workgroup=${wg}`;
             const resp = await fetch(url, {method: 'get', credentials: 'include'});
             const obj = await resp.json();
 
@@ -82,7 +85,7 @@ function deleteSwitch() {
                 console.log(obj.error_text);
                 return false;
             }
-            window.location.href = `switches.html`;
+            window.location.href = `users.html`;
         } catch (error) {
             console.log(error);
             return false;
