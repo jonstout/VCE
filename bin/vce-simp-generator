@@ -12,7 +12,6 @@ use VCE;
 use VCE::Switch;
 
 use constant DEFAULT_CONFIG_FILE => '/etc/vce/access_policy.xml';
-# use constant DEFAULT_MODEL_FILE => '/var/lib/vce/network_model.sqlite';
 use constant DEFAULT_MODEL_FILE => '/var/lib/vce/database.sqlite';
 use constant DEFAULT_PASSWORD_FILE => '/etc/vce/password.json';
 use Data::Dumper;
@@ -22,13 +21,16 @@ my $community   = 'public';
 my $version     = '2c';
 my $ip          = '127.0.0.1';
 my $node_name   = 'brocade.example.com';
-my $group_name  = 'int';
+my $group_name  = 'intf';
 my $config_file = DEFAULT_CONFIG_FILE;
 my $model_file = DEFAULT_MODEL_FILE;
 my $password_file = DEFAULT_PASSWORD_FILE;
 my $vce;
-my $file        = 'vce-switch.xml';
-my $path        = '/etc/simp/hosts.d';
+my $file        = 'vce.xml';
+my $path        = '/etc/simp/poller/hosts.d';
+
+my $tsds_collection_path = '/etc/simp/tsds/collections.d';
+my $tsds_collection_file = 'vce.xml';
 
 GetOptions(
     'community=s' => \$community,
@@ -40,21 +42,23 @@ sub main {
     my $config_file = shift;
     my $model_file = shift;
     my $password_file = shift;
-    #-----------------------------------------
-    unless(open FILE, ">$path/$file") {
-        # Die with error message
-        # if we can't open it.
-        die "\nUnable to create $file\n";
-    }
+
     my $doc = XML::LibXML::Document->new('1.0', 'utf-8');
 
     my $config = $doc->createElement("config");
-    #-----------------------------------------
-    # my $log = GRNOC::Log->get_logger("VCE");
-    # $log->info("access_policy.xml: $config_file");
-    # $log->info("network_model.sqlite: $model_file");
-    # $log->info("password.json: $password_file");
+    $doc->setDocumentElement($config);
 
+    my $tsds_collection_doc = XML::LibXML::Document->new('1.0', 'utf-8');
+
+    my $tsds_collection_conf = $doc->createElement("config");
+    $tsds_collection_doc->setDocumentElement($tsds_collection_conf);
+
+    my $tsds_collection_collection = $tsds_collection_doc->createElement('collection');
+    $tsds_collection_conf->appendChild($tsds_collection_collection);
+    $tsds_collection_collection->setAttribute('measurement_type' => 'interface');
+    $tsds_collection_collection->setAttribute('interval' => 60);
+    $tsds_collection_collection->setAttribute('composite' => 'interface');
+    $tsds_collection_collection->setAttribute('workers' => 1);
 
     $vce = VCE->new(
         config_file => $config_file,
@@ -65,23 +69,38 @@ sub main {
     my $db = VCE::Database::Connection->new('/var/lib/vce/database.sqlite');
     my $switches = $db->get_switches();
     foreach my $switch (@$switches){
-        my $host   = $doc->createElement("host");
-        my $group  = $doc->createElement("group");
-        # warn Dumper($switch);
+        my $host = $doc->createElement("host");
         $host->setAttribute('ip' => $switch->{'ipv4'} );
         $host->setAttribute('community'=> $community);
         $host->setAttribute('snmp_version'=> $version);
-        $host->setAttribute('node_name'=> $switch->{'name'});
-        $group->setAttribute('name' => $group_name);
+        $host->setAttribute('name'=> $switch->{'name'});
+
+        my $group  = $doc->createElement("group");
+        $group->setAttribute('id' => $group_name);
         $host->appendChild($group);
+
         $config->appendChild($host);
+
+        my $tsds_collection_host = $tsds_collection_doc->createElement('host');
+        $tsds_collection_collection->appendChild($tsds_collection_host);
+        $tsds_collection_host->appendText($switch->{'name'});
     }
 
-    $doc->setDocumentElement($config);
+    unless(open FILE, ">$path/$file") {
+        # Die with error message
+        # if we can't open it.
+        die "\nUnable to create $file\n";
+    }
     print FILE $doc->toString();
-
     close FILE;
 
+    unless(open SIMP_TSDS_FILE, ">$tsds_collection_path/$tsds_collection_file") {
+        # Die with error message
+        # if we can't open it.
+        die "\nUnable to create $file\n";
+    }
+    print SIMP_TSDS_FILE $tsds_collection_doc->toString();
+    close SIMP_TSDS_FILE;
 }
 
 
