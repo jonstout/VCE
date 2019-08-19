@@ -61,6 +61,9 @@ Once the VCE is installed, we need to install the grafana which will render the 
             header_name = X-WEBAUTH-USER
             header_property = username
             auto_sign_up = true
+      * In \[security\], update the following
+            
+            allow_embedding = true
 
 
 Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
