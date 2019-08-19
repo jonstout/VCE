@@ -19,8 +19,8 @@ etc/vce.systemd
 etc/simp/comp/composites.d/interfaces.xml
 etc/simp/poller/groups.d/intf.xml
 etc/simp/poller/hosts.d/vce.xml
-etc/simp/simp-tsds.xml
-etc/simp/tsds.d/static.xml
+etc/simp/tsds/config.xml
+etc/simp/tsds/collections.d/vce.xml
 etc/cron.d/vce_switch_cron
 lib/VCE.pm
 lib/VCE/Access.pm
