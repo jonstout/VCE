@@ -5,6 +5,7 @@ Virtual Customer Equipment
 The following installation assumes a Centos7 machine. It also assumes that rabbitmq is installed and running. See [here](https://www.rabbitmq.com/install-rpm.html) for RabbitMQ installation instructions.
 
 ### New installations
+Requires VCE, SIMP, TSDS, and Grafana.
 
 #### VCE
 1. Edit `/etc/yum.repos.d/grnoc-public.repo` to install the GlobalNOC's Centos7 RPM repository.
@@ -16,47 +17,34 @@ The following installation assumes a Centos7 machine. It also assumes that rabbi
     gpgcheck=1
     gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
     ```
-2. Update your local RPM cache
+2. Update your local RPM cache: `sudo yum makecache`
+3. Install additional RPM repositories: `sudo yum install globalnoc-grafana`
+4. Install VCE: `sudo yum install vce`
+5. Ensure VCE Database is fully updated: `sudo perl /usr/bin/vce-update-db`
 
-    `sudo yum makecache`
-3. Install additional RPM repositories
+#### SIMP
+SIMP is an SNMP poller which is used to collect network statistics from devices controlled by VCE.
 
-    `sudo yum install globalnoc-grafana`
-4. Install VCE
+1. Ensure prerequiste SIMP components are running: `sudo systemctl restart rabbitmq-server redis`
+2. The SIMP packages were installed along with VCE. Complete configuration of these packages as described [here](https://github.com/GlobalNOC/VCE/wiki/Statistics).
+3. Ensure SIMP components are running: `sudo systemctl restart simp-poller simp-data simp-comp simp-tsds`
 
-    `sudo yum install vce`
-5. Ensure VCE Database is fully updated
+#### TSDS
+TSDS is a timeseries database which will persist collected statistics to disk. This databse may be used for any type of timeseries data. **As the TSDS installation is somewhat complex, please be sure to follow the provided instructions carefully.**
 
-    `sudo perl /usr/bin/vce-update-db`
+1. Install the TSDS package: `sudo yum install grnoc-tsds-services`
+2. Begin configuration the TSDS installation using the following command: `sudo /usr/bin/tsds_setup.pl`.
+3. When asked for number of config servers and shards, enter: `1`
+4. You will be asked to provide a password for the `root` mongodb user, enter any password: `...`
+5. You will be asked to provide a password for the `tsds_ro` mongodb user, enter any password: `...`
+6. You will be asked to provide a password for the `tsds_rw` mongodb user, enter any password: `...`
+7. It will then initialize the mongo database with necessatry databases and collections. Please enter `y` when asked 'Are you sure?'
+8. Lastly, edit `/etc/simp/tsds/config.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi`, set user to `tsds_rw`, and set password to the value provided in step 6.
 
 #### Grafana Setup
+Grafana which will render network statistics.
 
-Once VCE is installed, we need to install Grafana which will render network statistics.
-
-1. Execute `sudo systemctl restart rabbitmq-server`
-2. Execute `sudo systemctl restart redis`
-3. Please go to [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page and perform all the necessary steps.
-4. Assuming that you have performed all steps on [Statistics](https://github.com/GlobalNOC/VCE/wiki/Statistics) page, let us now install tsds-services.
-
-    * Execute `sudo yum install grnoc-tsds-services`
-
-    * **The below steps are for setting up the environment for data collection and requires user input. Please follow all the instructions carefully.** 
-
-    * Execute `sudo /usr/bin/tsds_setup.pl`.
-
-        * When asked for number of config server and shard, please enter 1. This will setup mongodb and the shard for data collection.
-
-        * Once the mongodb environment is setup, it will ask for password for the root user. Please enter the appropriate password.
-
-        * It will ask the password for the tsds read-only user. Please enter the appropriate password.
-
-        * It will ask the password for the tsds read-write user. Please enter the appropriate password.
-
-        * It will then initialize the mongo database with necessatry databases and collections. Please enter 'y' when asked 'Are you sure?'
-
-    * On successful completion of the above step, edit `/etc/simp/simp-tsds.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi` along with tsds user and password.
-
-5. **Grafana configuration:** The grafana runs on localhost and need not be directly access by unauthorized user. So in order to make sure only vce users can access grafana, edit `/etc/grafana/grafana.ini` and perform below steps:
+1. **Grafana configuration:** The grafana runs on localhost and need not be directly access by unauthorized user. So in order to make sure only vce users can access grafana, edit `/etc/grafana/grafana.ini` and perform below steps:
 
       * **Note**: Make sure below changes do not start with ';'
       * In \[server\], update the following:
