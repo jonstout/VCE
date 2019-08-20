@@ -21,6 +21,7 @@ Requires VCE, SIMP, TSDS, and Grafana.
 3. Install additional RPM repositories: `sudo yum install globalnoc-grafana`
 4. Install VCE: `sudo yum install vce`
 5. Ensure VCE Database is fully updated: `sudo perl /usr/bin/vce-update-db`
+6. Setup the web credentials of the VCE **admin** user: `sudo htpasswd -c /usr/share/vce/www/.htpasswd admin`
 6. Configure your network devices login credentials in: `/etc/vce/password.json`
     ```
     {
@@ -204,8 +205,8 @@ RequestHeader unset Authorization
 ```
 
 ### Users
-Users are managed via htpasswd file. Create the password file `/usr/share/vce/www/.htpasswd` and first user with the following command. See the htpasswd [documentation](https://httpd.apache.org/docs/current/programs/htpasswd.html) for more information.
+Users are managed via htpasswd file. Add them using the below command. Create the password file `/usr/share/vce/www/.htpasswd` and first user using the `-c` flag; If the file has already been created do **not** specify this flag. See the htpasswd [documentation](https://httpd.apache.org/docs/current/programs/htpasswd.html) for more information.
 
 ```
-htpasswd -c /usr/share/vce/www/.htpasswd admin
+htpasswd /usr/share/vce/www/.htpasswd user
 ```
