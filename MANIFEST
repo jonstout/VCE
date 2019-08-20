@@ -16,12 +16,11 @@ etc/grafana-dashboard.json
 etc/schema.sqlite
 etc/vce.init
 etc/vce.systemd
-etc/simp/compDataConfig.xml
-etc/simp/simpDataConfig.xml
-etc/simp/config.xml
-etc/simp/simp-tsds.xml
-etc/simp/tsds.d/static.xml
-etc/simp/hosts.d/vce-switch.xml
+etc/simp/comp/composites.d/interfaces.xml
+etc/simp/poller/groups.d/intf.xml
+etc/simp/poller/hosts.d/vce.xml
+etc/simp/tsds/config.xml
+etc/simp/tsds/collections.d/vce.xml
 etc/cron.d/vce_switch_cron
 lib/VCE.pm
 lib/VCE/Access.pm

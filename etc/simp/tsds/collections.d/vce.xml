@@ -1,0 +1,5 @@
+<config>
+    <collection measurement_type='interface' interval='60' composite='interfaces' workers='1'>
+        <host>network-device.example.edu</host>
+    </collection>
+</config>
