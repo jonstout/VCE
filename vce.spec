@@ -132,6 +132,7 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/poller/groups.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/poller/hosts.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds/collections.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/httpd/conf.d/grnoc
 %{__install} -d -p %{buildroot}%{_sharedstatedir}/vce
 
 %{__install} etc/apache-vce.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/vce.conf
@@ -143,13 +144,13 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
 %{__install} etc/schema.sqlite %{buildroot}%{_sysconfdir}/vce/schema.sqlite
 
-%{__install} etc/simp/comp/composites.d/interfaces.xml %{buildroot}%{_sysconfdir}/vce/simp/comp/composites.d/interfaces.xml
+%{__install} etc/simp/comp/composites.d/interface.xml %{buildroot}%{_sysconfdir}/vce/simp/comp/composites.d/interface.xml
 %{__install} etc/simp/poller/groups.d/intf.xml %{buildroot}%{_sysconfdir}/vce/simp/poller/groups.d/intf.xml
 %{__install} etc/simp/poller/hosts.d/vce.xml %{buildroot}%{_sysconfdir}/vce/simp/poller/hosts.d/vce.xml
 %{__install} etc/simp/tsds/config.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/config.xml
 %{__install} etc/simp/tsds/collections.d/vce.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/collections.d/vce.xml
 %{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron 
-
+%{__install} etc/httpd/conf.d/grnoc/tsds-services.conf  %{buildroot}%{_sysconfdir}/vce/httpd/conf.d/grnoc/tsds-services.conf
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
 %{__install} etc/database.sqlite %{buildroot}%{_sharedstatedir}/vce/database.sqlite
 
@@ -217,11 +218,12 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/grafana-dashboard.json
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
-%config(noreplace) %{_sysconfdir}/vce/simp/comp/composites.d/interfaces.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/poller/groups.d/intf.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/poller/hosts.d/vce.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/tsds/config.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/tsds/collections.d/vce.xml
+%{_sysconfdir}/vce/simp/comp/composites.d/interface.xml
+%{_sysconfdir}/vce/simp/poller/groups.d/intf.xml
+%{_sysconfdir}/vce/simp/poller/hosts.d/vce.xml
+%{_sysconfdir}/vce/simp/tsds/config.xml
+%{_sysconfdir}/vce/simp/tsds/collections.d/vce.xml
+%{_sysconfdir}/vce/httpd/conf.d/grnoc/tsds-services.conf
 %{_sysconfdir}/vce/schema.sqlite
 
 %dir               %attr(775,vce,vce) %{_sharedstatedir}/vce
