@@ -21,6 +21,17 @@ Requires VCE, SIMP, TSDS, and Grafana.
 3. Install additional RPM repositories: `sudo yum install globalnoc-grafana`
 4. Install VCE: `sudo yum install vce`
 5. Ensure VCE Database is fully updated: `sudo perl /usr/bin/vce-update-db`
+6. Configure your network devices login credentials in: `/etc/vce/password.json`
+    ```
+    {
+      "hostname1": { "username": "username", "password": "password" },
+      "hostname2": { "username": "username", "password": "password" },
+      ...
+    }
+    ```
+    _Note: You'll need to restart vce whenever this file is updated._
+7. Start VCE: `sudo systemctl start vce`
+8. Navigate to `http://hostname/vce/admin/switches.html` and finish configuring your network devices.
 
 #### SIMP
 SIMP is an SNMP poller which is used to collect network statistics from devices controlled by VCE.
