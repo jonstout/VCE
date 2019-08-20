@@ -81,17 +81,15 @@ sudo systemctl restart memcached;
 sudo systemctl restart searchd;
 sudo systemctl restart tsds_writer;
 sudo systemctl restart grafana-server;
-
 ```
-6. The following step is for setting up the grafana dashboard which renders the Statistics chart.
 
-    * Visit `https://<hostname>/grafana/` and login grafana with **admin** credentials.
-
-    * Setup the tsds datasource according to configuration section [here](https://globalnoc.github.io/tsds-grafana/)
-
-    * Once the data source is created, click **'+'** on the left bar and select 'import' to import the dashboard with graph configurations.
-
-    * Upload `/etc/vce/grafana-dashboard.json` via upload option or copy and paste the file contents in the paste json textarea, and save the page.
+6. Visit `https://<hostname>/grafana/` and login grafana with the web credentials of the VCE **admin** user.
+7. Set URL to `http://<hostname>/tsds/services/push.cgi`
+8. Check Basic Auth
+9. Check Skip TLS Verify
+10. Under Basic Auth Details, enter the web credentials of the VCE **admin** user and click Save & Test.
+11. Click **'+'** on the left bar and select 'import' to import the dashboard with graph configurations.
+12. Copy and paste `/etc/vce/grafana-dashboard.json` or [grafana-dashboard.json](https://raw.githubusercontent.com/GlobalNOC/VCE/master/etc/grafana-dashboard.json) into the JSON textarea and click Load.
 
 ### Upgrading to a newer version
 
