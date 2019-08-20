@@ -8,21 +8,30 @@ The following installation assumes a Centos7 machine. It also assumes that rabbi
 
 #### VCE
 1. Edit `/etc/yum.repos.d/grnoc-public.repo` to install the GlobalNOC's Centos7 RPM repository.
-```
-[grnoc-public]
-name=GlobalNOC Public el7 Packages - $basearch
-baseurl=https://repo-public.grnoc.iu.edu/repo/7/$basearch
-enabled=1
-gpgcheck=1
-gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
-```
-2. Execute `sudo yum makecache`
-3. Execute `sudo yum install globalnoc-grafana`
-4. Execute `sudo yum install vce`
+    ```
+    [grnoc-public]
+    name=GlobalNOC Public el7 Packages - $basearch
+    baseurl=https://repo-public.grnoc.iu.edu/repo/7/$basearch
+    enabled=1
+    gpgcheck=1
+    gpgkey=https://repo-public.grnoc.iu.edu/repo/RPM-GPG-KEY-GRNOC7
+    ```
+2. Update your local RPM cache
 
-Once the VCE is installed, we need to install the grafana which will render the Statistics Graph.
+    `sudo yum makecache`
+3. Install additional RPM repositories
+
+    `sudo yum install globalnoc-grafana`
+4. Install VCE
+
+    `sudo yum install vce`
+5. Ensure VCE Database is fully updated
+
+    `sudo perl /usr/bin/vce-update-db`
 
 #### Grafana Setup
+
+Once VCE is installed, we need to install Grafana which will render network statistics.
 
 1. Execute `sudo systemctl restart rabbitmq-server`
 2. Execute `sudo systemctl restart redis`
