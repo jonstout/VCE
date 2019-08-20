@@ -39,10 +39,10 @@ TSDS is a timeseries database which will persist collected statistics to disk. T
 5. You will be asked to provide a password for the `tsds_ro` mongodb user, enter any password: `...`
 6. You will be asked to provide a password for the `tsds_rw` mongodb user, enter any password: `...`
 7. It will then initialize the mongo database with necessatry databases and collections. Please enter `y` when asked 'Are you sure?'
-8. Lastly, edit `/etc/simp/tsds/config.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi`, set user to `tsds_rw`, and set password to the value provided in step 6.
+8. Lastly, edit `/etc/simp/tsds/config.xml` and change the tsds usrl to `http://<hostname>/tsds/services/push.cgi`, set user and password the web credentials of the VCE **admin** user.
 
 #### Grafana Setup
-Grafana which will render network statistics.
+Grafana provides network statistic graphs.
 
 1. **Grafana configuration:** The grafana runs on localhost and need not be directly access by unauthorized user. So in order to make sure only vce users can access grafana, edit `/etc/grafana/grafana.ini` and perform below steps:
 
@@ -63,33 +63,32 @@ Grafana which will render network statistics.
             allow_embedding = true
 
 
-Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
-```
-sudo systemctl daemon-reload;
-sudo systemctl restart rabbitmq-server;
-sudo systemctl restart redis;
-sudo systemctl restart vce;
-sudo systemctl restart httpd;
-sudo systemctl restart simp-data;
-sudo systemctl restart simp-comp;
-sudo systemctl restart simp-poller;
-sudo systemctl restart mongod-config1;
-sudo systemctl restart mongod-shard1;
-sudo systemctl restart mongos;
-sudo systemctl restart simp-tsds;
-sudo systemctl restart memcached;
-sudo systemctl restart searchd;
-sudo systemctl restart tsds_writer;
-sudo systemctl restart grafana-server;
-```
-
-6. Visit `https://<hostname>/grafana/` and login grafana with the web credentials of the VCE **admin** user.
-7. Set URL to `http://<hostname>/tsds/services/push.cgi`
-8. Check Basic Auth
-9. Check Skip TLS Verify
-10. Under Basic Auth Details, enter the web credentials of the VCE **admin** user and click Save & Test.
-11. Click **'+'** on the left bar and select 'import' to import the dashboard with graph configurations.
-12. Copy and paste `/etc/vce/grafana-dashboard.json` or [grafana-dashboard.json](https://raw.githubusercontent.com/GlobalNOC/VCE/master/etc/grafana-dashboard.json) into the JSON textarea and click Load.
+2. Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
+    ```
+    sudo systemctl daemon-reload;
+    sudo systemctl restart rabbitmq-server;
+    sudo systemctl restart redis;
+    sudo systemctl restart vce;
+    sudo systemctl restart httpd;
+    sudo systemctl restart simp-data;
+    sudo systemctl restart simp-comp;
+    sudo systemctl restart simp-poller;
+    sudo systemctl restart mongod-config1;
+    sudo systemctl restart mongod-shard1;
+    sudo systemctl restart mongos;
+    sudo systemctl restart simp-tsds;
+    sudo systemctl restart memcached;
+    sudo systemctl restart searchd;
+    sudo systemctl restart tsds_writer;
+    sudo systemctl restart grafana-server;
+    ```
+3. Visit `https://<hostname>/grafana/` and login grafana with the web credentials of the VCE **admin** user.
+4. Set URL to `http://<hostname>/tsds/services/`
+5. Check Basic Auth
+6. Check Skip TLS Verify
+7. Under Basic Auth Details, enter the web credentials of the VCE **admin** user and click Save & Test.
+8. Click **'+'** on the left bar and select 'import' to import the dashboard with graph configurations.
+9. Copy and paste `/etc/vce/grafana-dashboard.json` or [grafana-dashboard.json](https://raw.githubusercontent.com/GlobalNOC/VCE/master/etc/grafana-dashboard.json) into the JSON textarea and click Load.
 
 ### Upgrading to a newer version
 
