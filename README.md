@@ -97,8 +97,8 @@ Grafana provides network statistic graphs.
     sudo systemctl restart tsds_writer;
     sudo systemctl restart grafana-server;
     ```
-3. Visit `https://<hostname>/grafana/` and login grafana with the web credentials of the VCE **admin** user.
-4. Set URL to `http://<hostname>/tsds/services/`
+3. Using the web credentials of the VCE **admin** user, visit `https://<hostname>/grafana/datasources/new` and select the `GlobalNOC TSDS` datasource.
+4. When prompted for configuration set URL to `http://<hostname>/tsds/services/`
 5. Check Basic Auth
 6. Check Skip TLS Verify
 7. Under Basic Auth Details, enter the web credentials of the VCE **admin** user and click Save & Test.
