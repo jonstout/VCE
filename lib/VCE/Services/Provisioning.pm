@@ -226,6 +226,7 @@ sub provision_vlan{
     }
     my $vlan_id = $prov_vlan_res->{vlan_id};
 
+    
     my $details = $self->vce->network_model->get_vlan_details( vlan_id => $vlan_id);
     my $endpoints = [];
     my $endpoint_count = 0;
@@ -236,6 +237,7 @@ sub provision_vlan{
     }
 
     $self->switch->{topic} = 'VCE.Switch.' . $switch;
+
     my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
     if (defined $response->{'error'}) {
         $self->logger->error($response->{'error'});
@@ -382,7 +384,7 @@ sub edit_vlan{
         push(@{$endpoints}, $e->{'port'});
         $endpoint_count++;
     }
-
+  
     my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
     if (defined $response->{'error'}) {
         $self->logger->error($response->{'error'});
