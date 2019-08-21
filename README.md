@@ -56,7 +56,7 @@ TSDS is a timeseries database which will persist collected statistics to disk. T
 8. Copy `/etc/vce/httpd/conf.d/grnoc/tsds-services.conf` to `/etc/httpd/conf.d/grnoc/tsds-services.conf` and overwrite.
 9. Restart httpd: `sudo systemctl restart httpd`
 
-#### Grafana Setup
+#### Grafana
 Grafana provides network statistic graphs.
 
 1. **Grafana configuration:** The grafana runs on localhost and need not be directly access by unauthorized user. So in order to make sure only vce users can access grafana, edit `/etc/grafana/grafana.ini` and perform below steps:
@@ -78,7 +78,7 @@ Grafana provides network statistic graphs.
             allow_embedding = true
 
 
-2. Assuming the previous steps finished successfully, VCE and Grafana is now installed. Continue to the configuration portion of this document to configure network device credentials, rabbitmq credentials, and user permissions. Once complete, execute the below given commands.
+2. Assuming the previous steps finished successfully, VCE, SIMP, TSDS, and Grafana are now installed. Restart all services to ensure everything is running as expected, and complete the final steps in this section.
     ```
     sudo systemctl daemon-reload;
     sudo systemctl restart rabbitmq-server;
@@ -104,6 +104,7 @@ Grafana provides network statistic graphs.
 7. Under Basic Auth Details, enter the web credentials of the VCE **admin** user and click Save & Test.
 8. Click **'+'** on the left bar and select 'import' to import the dashboard with graph configurations.
 9. Copy and paste `/etc/vce/grafana-dashboard.json` or [grafana-dashboard.json](https://raw.githubusercontent.com/GlobalNOC/VCE/master/etc/grafana-dashboard.json) into the JSON textarea and click Load.
+10. At this point you should now see port statistics visualized under each port in VCE under the statistics tab.
 
 ### Upgrading to a newer version
 
@@ -125,7 +126,7 @@ found
 1. Execute `sudo yum install vce`
 2. Execute `sudo /bin/vce-update-db`
 
-**NOTE**: Make sure that you have gone through **Grafana Setup** steps in the installation section. If **yes**, please proceed with step 3.
+**NOTE**: Make sure that you have gone through the **SIMP, TSDS, and Grafana** steps in the installation section. If **yes**, please proceed with step 3.
 
 3. Execute `sudo systemctl restart vce`
 4. Execute `sudo systemctl restart httpd`
