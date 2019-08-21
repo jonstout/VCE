@@ -22,7 +22,8 @@ Requires VCE, SIMP, TSDS, and Grafana.
 4. Install VCE: `sudo yum install vce`
 5. Ensure VCE Database is fully updated: `sudo perl /usr/bin/vce-update-db`
 6. Setup the web credentials of the VCE **admin** user: `sudo htpasswd -c /usr/share/vce/www/.htpasswd admin`
-6. Configure your network devices login credentials in: `/etc/vce/password.json`
+7. Start VCE: `sudo systemctl start vce`
+8. Configure your network devices' login credentials in: `/etc/vce/password.json`
     ```
     {
       "hostname1": { "username": "username", "password": "password" },
@@ -30,9 +31,10 @@ Requires VCE, SIMP, TSDS, and Grafana.
       ...
     }
     ```
-    _Note: You'll need to restart vce whenever this file is updated._
-7. Start VCE: `sudo systemctl start vce`
-8. Navigate to `http://hostname/vce/admin/switches.html` and finish configuring your network devices.
+9. Navigate to `http://hostname/vce/admin/switches.html` and finish configuring your network devices.
+10. Restart VCE: `sudo systemctl restart vce`
+
+_Note: You'll need to restart vce whenever a new host is created._
 
 #### SIMP
 SIMP is an SNMP poller which is used to collect network statistics from devices controlled by VCE.
