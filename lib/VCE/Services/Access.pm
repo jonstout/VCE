@@ -464,11 +464,12 @@ sub get_port_commands{
                     push @$params, $p;
                 }
 
-                $command->{parameters} = $params;
                 my $name = "$command->{command_id}_$command->{name}";
                 $name =~ tr/- /__/;
-
+                $command->{'command_id'} = $command->{'id'};
+                $command->{parameters} = $params;
                 $command->{method_name} = $name;
+
                 delete $command->{params};
                 delete $command->{interaction};
                 delete $command->{description};
