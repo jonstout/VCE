@@ -53,6 +53,8 @@ TSDS is a timeseries database which will persist collected statistics to disk. T
 5. You will be asked to provide a password for the `tsds_ro` mongodb user, enter any password: `...`
 6. You will be asked to provide a password for the `tsds_rw` mongodb user, enter any password: `...`
 7. It will then initialize the mongo database with necessatry databases and collections. Please enter `y` when asked 'Are you sure?'
+8. Copy `/etc/vce/httpd/conf.d/grnoc/tsds-services.conf` to `/etc/httpd/conf.d/grnoc/tsds-services.conf` and overwrite.
+9. Restart httpd: `sudo systemctl restart httpd`
 
 #### Grafana Setup
 Grafana provides network statistic graphs.
