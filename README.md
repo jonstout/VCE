@@ -22,7 +22,7 @@ Requires VCE, SIMP, TSDS, and Grafana.
 4. Install VCE: `sudo yum install vce`
 5. Ensure VCE Database is fully updated: `sudo perl /usr/bin/vce-update-db`
 6. Setup the web credentials of the VCE **admin** user: `sudo htpasswd -c /usr/share/vce/www/.htpasswd admin`
-7. Start VCE: `sudo systemctl start vce`
+7. Start VCE: `sudo systemctl start rabbitmq-server redis vce`
 8. Configure your network devices' login credentials in: `/etc/vce/password.json`
     ```
     {
@@ -39,7 +39,7 @@ _Note: You'll need to restart vce whenever a new host is created._
 #### SIMP
 SIMP is an SNMP poller which is used to collect network statistics from devices controlled by VCE.
 
-1. Ensure prerequiste SIMP components are running: `sudo systemctl restart rabbitmq-server redis`
+1. Ensure prerequiste SIMP components are running: `sudo systemctl start rabbitmq-server redis`
 2. The SIMP packages were installed along with VCE. Complete configuration of these packages as described [here](https://github.com/GlobalNOC/VCE/wiki/Statistics).
 3. Ensure SIMP components are running: `sudo systemctl restart simp-poller simp-data simp-comp simp-tsds`
 
