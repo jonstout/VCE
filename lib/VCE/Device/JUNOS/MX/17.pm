@@ -216,20 +216,44 @@ sub get_vlans {
     my $res = $self->conn->send($xml);
     my $resp = $self->conn->recv();
 
-    my $bridges = $resp->{'data'}->{'configuration'}->{'bridge-domains'};
-    if (ref($bridges) ne 'ARRAY') {
-        $bridges = [$bridges];
+    my $bridges = $resp->{'data'}->{'configuration'}->{'bridge-domains'}->{'domain'};
+
+    # If domain-type is listed under domain, then (assuming the bridge
+    # domain isn't named 'domain-type') we know that only one bridge
+    # domain was returned from the device.
+    #
+    # Case for multiple bridge domains
+    # $resp->{'data'}->{'configuration'}->{'bridge-domains'}->{'domain'} = {
+    #  vlan123 => { vlan-id => 123},
+    #  vlan124 => { vlan-id => 124 }
+    # }
+
+    # Case for single bridge domains
+    # $resp->{'data'}->{'configuration'}->{'bridge-domains'}->{'domain'} = {
+    #  domain-type => 'bridge',
+    #  vlan-id => 123
+    # }
+
+    # In this case vlan123 wouldn't be found.
+    # $resp->{'data'}->{'configuration'}->{'bridge-domains'}->{'domain'} = {
+    #  'domain-type' => { vlan-id => 1 },
+    #  'vlan123' => { vlan-id => 123 }
+    # }
+
+    if (defined $bridges->{'domain-type'}) {
+        $bridges = {$bridges->{'name'} => $bridges};
     }
 
     my $result = [];
-    foreach my $bridge (@$bridges){
+    foreach my $bridge_name (keys %$bridges) {
+        my $bridge = $bridges->{$bridge_name};
         my $ports = [];
-        if (looks_like_number($bridge->{'domain'}->{'vlan-id'})) {
-            if (!defined $bridge->{'domain'}->{'vlan-id'}) {
+        if (looks_like_number($bridge->{'vlan-id'})) {
+            if (!defined $bridge->{'vlan-id'}) {
                 next;
             }
 
-            for my $port (keys %{$bridge->{'domain'}->{'interface'}}) {
+            for my $port (keys %{$bridge->{'interface'}}) {
                 # Capture interface name and ignore unit
                 # Ex. ge-0/0/3.420 -> ge-0/0/3
                 my @p = split(/\./, $port);
@@ -237,9 +261,9 @@ sub get_vlans {
             }
 
             push @$result, {
-                vlan => $bridge->{'domain'}->{'vlan-id'},
-                name => $bridge->{'domain'}->{'name'},
-                description => $bridge->{'domain'}->{'description'},
+                vlan => $bridge->{'vlan-id'},
+                name => $bridge_name,
+                description => $bridge->{'description'},
                 ports => $ports
             };
         }
