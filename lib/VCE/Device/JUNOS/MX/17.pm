@@ -346,8 +346,9 @@ sub add_vlans{
     $writer->endTag("commit");
     $writer->endTag("rpc"); 
     $writer->end();
-    $res = $self->conn->send($xml);
-    $resp = $self->conn->recv();
+
+    my $res = $self->conn->send($xml);
+    my $resp = $self->conn->recv();
     return $resp;
    
 }
