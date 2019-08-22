@@ -201,12 +201,12 @@ sub get_vlans{
 
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
-    #<rpc>
-    #<get-bridge-instance-information>
-    #<detail/>
-    #</get-bridge-instance-information>
-    #</rpc>
 
+    # <rpc>
+    #   <get-bridge-instance-information>
+    #     <detail/>
+    #   </get-bridge-instance-information>
+    #  </rpc>
     $writer->startTag("rpc");
     $writer->startTag("get-bridge-instance-information");
     $writer->startTag("detail");
@@ -214,27 +214,32 @@ sub get_vlans{
     $writer->endTag("get-bridge-instance-information");
     $writer->endTag("rpc");
     $writer->end();
+
     my $res = $self->conn->send($xml);
     my $resp = $self->conn->recv();
-    #print $resp->{'l2ald-bridge-instance-information'} . "\n";
-    #print $resp->{'l2ald-bridge-instance-information'}->{'l2ald-bridge-instance-group'};
+
     my $bridges = $resp->{'l2ald-bridge-instance-information'}->{'l2ald-bridge-instance-group'};
+    if (ref($bridges) ne 'ARRAY') {
+        $bridges = [$bridges];
+    }
+
     my $result = [];
     foreach my $bridge (@$bridges){
-	my $ports = [];
-	if(looks_like_number($bridge->{'l2rtb-bridge-vlan'})){
-	if (ref($bridge->{'l2rtb-interface-name'}) ne 'ARRAY') {
-            $bridge->{'l2rtb-interface-name'} = [ $bridge->{'l2rtb-interface-name'} ];
+        my $ports = [];
+        if (looks_like_number($bridge->{'l2rtb-bridge-vlan'})) {
+            if (ref($bridge->{'l2rtb-interface-name'}) ne 'ARRAY') {
+                $bridge->{'l2rtb-interface-name'} = [$bridge->{'l2rtb-interface-name'}];
+            }
+
+            foreach my $port (@{$bridge->{'l2rtb-interface-name'}}) {
+                push @$ports, {port => $port, mode => "TAGGED"};
+            }
+
+            push @$result, {vlan => $bridge->{'l2rtb-bridge-vlan'}, name => $bridge->{'l2rtb-bridging-domain'}, ports => $ports};
         }
+    }
 
-        foreach my $port (@{$bridge->{'l2rtb-interface-name'}}) {
-		push(@{$ports}, { port => $port, mode => "TAGGED" });
-        }	
-	push (@$result, {vlan => $bridge->{'l2rtb-bridge-vlan'}, name => $bridge->{'l2rtb-bridging-domain'}, ports => $ports});
-	}
-    } 
-    return $result;    
-
+    return $result;
 }
 
 #Not being used yet
