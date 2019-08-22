@@ -376,10 +376,7 @@ sub interface_tagged{
     my $self    = shift;
     my $ifaces  = shift;
     my $vlan_id = shift;
-     
-    #changes--
-    #my $desc = shift;
-    #$self->logger->info("----------------In interface tagged-----------------------vlanid is " . $vlan_id . " and iface is " . $ifaces);# . " and desc is " . $desc);    
+
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
 
@@ -390,12 +387,18 @@ sub interface_tagged{
         $writer->startTag("name");
         $writer->characters($iface);
         $writer->endTag();
+
         $writer->startTag("unit");
         $writer->startTag("name");
         $writer->characters($vlan_id);
         $writer->endTag();
+
         $writer->startTag("vlan-id");
         $writer->characters($vlan_id);
+        $writer->endTag();
+
+        $writer->startTag('encapsulation');
+        $writer->characters('vlan-bridge');
         $writer->endTag();
         $writer->endTag();
         $writer->endTag();
@@ -410,6 +413,9 @@ sub interface_tagged{
     $writer->startTag("vlan-id");
     $writer->characters($vlan_id);
     $writer->endTag();
+    $writer->startTag("domain-type");
+    $writer->characters("bridge");
+    $writer->endTag();
 
     foreach my $iface (@$ifaces){
         $writer->startTag("interface");
@@ -419,15 +425,18 @@ sub interface_tagged{
         $writer->endTag();
     }
 
-
     $writer->endTag();
     $writer->endTag();
     $writer->endTag();
     $writer->end();
 
     my $res = $self->conn->edit_configuration(config => $xml);
-    warn Dumper($res);
-   
+    if (!defined $res->{ok}) {
+        warn Dumper($res);
+        $self->logger->error(Dumper($res));
+    }
+
+    return $res;
 }
 
 sub no_interface_tagged{
