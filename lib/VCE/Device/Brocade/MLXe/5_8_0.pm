@@ -333,9 +333,11 @@ sub get_vlans {
             push(@{$ports}, { port => $port->{'brcd:port-id'}, mode => $port->{'brcd:tag-mode'} });
         }
 
-        push(@{$result}, { vlan => $vlan->{'brcd:vlan-id'}, name => $name, ports => $ports });
+        push(@{$result}, { vlan => $vlan->{'brcd:vlan-id'}, name => $name, description => $name, ports => $ports });
     }
 
+    $self->logger->error(Dumper($result));
+    warn Dumper($result);
     return $result, $err;
 }
 

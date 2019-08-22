@@ -698,8 +698,8 @@ sub _gather_operational_status{
                 description => $interfaces_state->{$name}->{description},
                 mtu         => $interfaces_state->{$name}->{mtu},
                 speed       => $interfaces_state->{$name}->{speed},
-		hardware_type => $interfaces_state->{$name}->{hardware_type},
-		mac_addr      => $interfaces_state->{$name}->{mac_addr}
+                hardware_type => $interfaces_state->{$name}->{hardware_type},
+                mac_addr      => $interfaces_state->{$name}->{mac_addr}
             );
             delete $ifaces->{$name};
         } else {
@@ -756,7 +756,7 @@ sub _gather_operational_status{
             $self->logger->info("Discovered vlan $vlan->{vlan}!");
             my $id = $self->db->add_vlan(
                 created_by => 1, # admin user
-                description => $vlan->{name},
+                description => $vlan->{description},
                 name => $vlan->{name},
                 number => $vlan->{vlan},
                 switch_id => $self->{id},

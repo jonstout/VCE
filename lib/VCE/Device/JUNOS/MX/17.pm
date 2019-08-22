@@ -196,29 +196,27 @@ sub get_interfaces {
     return {interfaces => \%ints};
 }
 
-sub get_vlans{
+sub get_vlans {
     my $self = shift;
 
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
 
-    # <rpc>
-    #   <get-bridge-instance-information>
-    #     <detail/>
-    #   </get-bridge-instance-information>
-    #  </rpc>
     $writer->startTag("rpc");
-    $writer->startTag("get-bridge-instance-information");
-    $writer->startTag("detail");
-    $writer->endTag("detail");
-    $writer->endTag("get-bridge-instance-information");
+    $writer->startTag('get');
+    $writer->startTag('filter', type => 'subtree');
+    $writer->startTag('configuration');
+    $writer->emptyTag('bridge-domains');
+    $writer->endTag('configuration');
+    $writer->endTag('filter');
+    $writer->endTag('get');
     $writer->endTag("rpc");
     $writer->end();
 
     my $res = $self->conn->send($xml);
     my $resp = $self->conn->recv();
 
-    my $bridges = $resp->{'l2ald-bridge-instance-information'}->{'l2ald-bridge-instance-group'};
+    my $bridges = $resp->{'data'}->{'configuration'}->{'bridge-domains'};
     if (ref($bridges) ne 'ARRAY') {
         $bridges = [$bridges];
     }
@@ -226,19 +224,29 @@ sub get_vlans{
     my $result = [];
     foreach my $bridge (@$bridges){
         my $ports = [];
-        if (looks_like_number($bridge->{'l2rtb-bridge-vlan'})) {
-            if (ref($bridge->{'l2rtb-interface-name'}) ne 'ARRAY') {
-                $bridge->{'l2rtb-interface-name'} = [$bridge->{'l2rtb-interface-name'}];
+        if (looks_like_number($bridge->{'domain'}->{'vlan-id'})) {
+            if (!defined $bridge->{'domain'}->{'vlan-id'}) {
+                next;
             }
 
-            foreach my $port (@{$bridge->{'l2rtb-interface-name'}}) {
-                push @$ports, {port => $port, mode => "TAGGED"};
+            for my $port (keys %{$bridge->{'domain'}->{'interface'}}) {
+                # Capture interface name and ignore unit
+                # Ex. ge-0/0/3.420 -> ge-0/0/3
+                my @p = split(/\./, $port);
+                push @$ports, {port => $p[0], mode => "TAGGED"};
             }
 
-            push @$result, {vlan => $bridge->{'l2rtb-bridge-vlan'}, name => $bridge->{'l2rtb-bridging-domain'}, ports => $ports};
+            push @$result, {
+                vlan => $bridge->{'domain'}->{'vlan-id'},
+                name => $bridge->{'domain'}->{'name'},
+                description => $bridge->{'domain'}->{'description'},
+                ports => $ports
+            };
         }
     }
 
+    $self->logger->error(Dumper($result));
+    warn Dumper($result);
     return $result;
 }
 
