@@ -553,6 +553,7 @@ sub get_vlan_details{
     my $result = {
         create_time => $vlan->{created_on},
         description => $vlan->{description},
+        name        => $vlan->{name},
         endpoints   => [],
         status      => 'Active',
         switch      => $switch->{name},

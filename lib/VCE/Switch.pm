@@ -286,6 +286,12 @@ sub _register_rpc_methods{
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
     );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
     $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new(
@@ -299,6 +305,12 @@ sub _register_rpc_methods{
         description => "VLAN number to use for tag",
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $d->register_method($method);
 
@@ -321,6 +333,12 @@ sub _register_rpc_methods{
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
     );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
     $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new(
@@ -341,6 +359,12 @@ sub _register_rpc_methods{
         description => "VLAN number to use for tag",
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $d->register_method($method);
 
@@ -444,6 +468,7 @@ sub vlan_description {
 
     my $desc = $params->{'description'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     $self->logger->info("Calling get_vlans");
 
@@ -451,7 +476,7 @@ sub vlan_description {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->vlan_description($desc, $vlan);
+    my ($res, $err) = $self->device->vlan_description($desc, $vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -489,12 +514,13 @@ sub interface_tagged {
 
     my $port = $params->{'port'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     if (!$self->device->connected) {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->interface_tagged($port, $vlan);
+    my ($res, $err) = $self->device->interface_tagged($port, $vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -532,12 +558,13 @@ sub no_interface_tagged {
 
     my $port = $params->{'port'}{'value'} || [];
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     if (!$self->device->connected) {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->no_interface_tagged($port, $vlan);
+    my ($res, $err) = $self->device->no_interface_tagged($port, $vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -629,12 +656,13 @@ sub no_vlan {
     my $error   = $method->{'error_callback'};
 
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     if (!$self->device->connected) {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->no_vlan($vlan);
+    my ($res, $err) = $self->device->no_vlan($vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);

@@ -227,13 +227,13 @@ sub get_vlans {
     #  vlan123 => { vlan-id => 123},
     #  vlan124 => { vlan-id => 124 }
     # }
-
+    #
     # Case for single bridge domains
     # $resp->{'data'}->{'configuration'}->{'bridge-domains'}->{'domain'} = {
     #  domain-type => 'bridge',
     #  vlan-id => 123
     # }
-
+    #
     # In this case vlan123 wouldn't be found.
     # $resp->{'data'}->{'configuration'}->{'bridge-domains'}->{'domain'} = {
     #  'domain-type' => { vlan-id => 1 },
@@ -269,137 +269,22 @@ sub get_vlans {
         }
     }
 
-    $self->logger->error(Dumper($result));
     warn Dumper($result);
     return $result;
 }
 
-#Not being used yet
-sub add_vlans{
-    my $self = shift;
-
-    my $xml = "";
-    my $writer = XML::Writer->new( OUTPUT => \$xml);
-    #<rpc-reply xmlns:junos="http://xml.juniper.net/junos/15.1F6/junos">
-    #<configuration junos:commit-seconds="1564587526" junos:commit-localtime="2019-07-31 15:38:46 UTC" junos:commit-user="bmerugur">
-    #        <interfaces>
-    #            <interface>
-    #                <name>ge-0/0/4</name>
-    #                <per-unit-scheduler/>
-    #                <flexible-vlan-tagging/>
-    #                <mtu>9192</mtu>
-    #                <encapsulation>flexible-ethernet-services</encapsulation>
-    #                <unit>
-    #                    <name>777</name>
-    #                    <encapsulation>vlan-bridge</encapsulation>
-    #                    <vlan-id>777</vlan-id>
-    #                </unit>
-    #            </interface>
-    #        </interfaces>
-    #	     <bridge-domains>
-    #            <domain>
-    #                <name>VCE-test</name>
-    #                <domain-type>bridge</domain-type>
-    #                <vlan-id>777</vlan-id>
-    #                <interface>
-    #                    <name>ge-0/0/4.777</name>
-    #                </interface>
-    #                <interface>
-    #                    <name>ge-0/0/1.777</name>
-    #                </interface>
-    #            </domain>
-    #        </bridge-domains>
-    #</configuration>
-    #<cli>
-    #    <banner></banner>
-    #</cli>
-    #</rpc-reply>
-    my $interf = "ge-0/0/4";
-    my $vlanid = 810;
-    my $bridgename = "VCE--testing...";
-
-    $writer->startTag("rpc");
-    $writer->startTag("edit-config");
-    $writer->startTag("target");
-    $writer->startTag("candidate");
-    $writer->endTag("candidate");
-    $writer->endTag("target");
-    $writer->startTag("config");
-    $writer->startTag("configuration");
-    $writer->startTag("interfaces");
-    $writer->startTag("interface");
-    $writer->startTag("name");
-    $writer->characters($interf);
-    $writer->endTag("name");
-    $writer->startTag("per-unit-scheduler");
-    $writer->endTag("per-unit-scheduler");
-    $writer->startTag("flexible-vlan-tagging");
-    $writer->endTag("flexible-vlan-tagging");
-    $writer->startTag("mtu");
-    $writer->characters("9192");
-    $writer->endTag("mtu");
-    $writer->startTag("encapsulation");
-    $writer->characters("flexible-ethernet-services");
-    $writer->endTag("encapsulation");
-    $writer->startTag("unit");
-    $writer->startTag("name");
-    $writer->characters($vlanid);
-    $writer->endTag("name");
-    $writer->startTag("encapsulation");
-    $writer->characters("vlan-bridge");
-    $writer->endTag("encapsulation");
-    $writer->startTag("vlan-id");
-    $writer->characters($vlanid);
-    $writer->endTag("vlan-id");
-    $writer->endTag("unit");
-    $writer->endTag("interface");
-    $writer->endTag("interfaces");
-    $writer->startTag("bridge-domains");
-    $writer->startTag("domain");
-    $writer->startTag("name");
-    $writer->characters($bridgename);
-    $writer->endTag("name");
-    $writer->startTag("domain-type");
-    $writer->characters("bridge");
-    $writer->endTag("domain-type");
-    $writer->startTag("vlan-id");
-    $writer->characters($vlanid);
-    $writer->endTag("vlan-id");
-    $writer->startTag("interface");
-    $writer->startTag("name");
-    $writer->characters($interf . "." . $vlanid);
-    $writer->endTag("name");
-    $writer->endTag("interface");
-    $writer->endTag("domain");
-    $writer->endTag("bridge-domains");
-    $writer->endTag("configuration");
-    $writer->endTag("config");
-    $writer->endTag("edit-config");
-    $writer->endTag("rpc");
-    $writer->end();
-   
-    $writer->startTag("rpc");
-    $writer->startTag("commit");
-    $writer->endTag("commit");
-    $writer->endTag("rpc"); 
-    $writer->end();
-
-    my $res = $self->conn->send($xml);
-    my $resp = $self->conn->recv();
-    return $resp;
-   
-}
-
 =head2 interface_tagged
+
 Using netconf connection $conn add interfaces $ifaces to VLAN
 $vlan_id. Returns a response and error; The error is undef if nothing
 failed.
-=cut
 
+=cut
 sub interface_tagged{
     my $self    = shift;
     my $ifaces  = shift;
     my $vlan_id = shift;
+    my $vlan_name = shift;
 
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
@@ -410,48 +295,48 @@ sub interface_tagged{
         $writer->startTag("interface");
         $writer->startTag("name");
         $writer->characters($iface);
-        $writer->endTag();
+        $writer->endTag("name");
 
         $writer->startTag("unit");
         $writer->startTag("name");
         $writer->characters($vlan_id);
-        $writer->endTag();
+        $writer->endTag("name");
 
         $writer->startTag("vlan-id");
         $writer->characters($vlan_id);
-        $writer->endTag();
+        $writer->endTag("vlan-id");
 
-        $writer->startTag('encapsulation');
-        $writer->characters('vlan-bridge');
-        $writer->endTag();
-        $writer->endTag();
-        $writer->endTag();
+        $writer->startTag("encapsulation");
+        $writer->characters("vlan-bridge");
+        $writer->endTag("encapsulation");
+        $writer->endTag("unit");
+        $writer->endTag("interface");
     }
-    $writer->endTag();
+    $writer->endTag("interfaces");
 
     $writer->startTag("bridge-domains");
     $writer->startTag("domain");
     $writer->startTag("name");
-    $writer->characters("vlan" . $vlan_id);
-    $writer->endTag();
+    $writer->characters($vlan_name);
+    $writer->endTag("name");
     $writer->startTag("vlan-id");
     $writer->characters($vlan_id);
-    $writer->endTag();
+    $writer->endTag("vlan-id");
     $writer->startTag("domain-type");
     $writer->characters("bridge");
-    $writer->endTag();
+    $writer->endTag("domain-type");
 
     foreach my $iface (@$ifaces){
         $writer->startTag("interface");
         $writer->startTag("name");
-        $writer->characters($iface . "." . $vlan_id);
-        $writer->endTag();
-        $writer->endTag();
+        $writer->characters("$iface.$vlan_id");
+        $writer->endTag("name");
+        $writer->endTag("interface");
     }
+    $writer->endTag("domain");
+    $writer->endTag("bridge-domains");
 
-    $writer->endTag();
-    $writer->endTag();
-    $writer->endTag();
+    $writer->endTag("configuration");
     $writer->end();
 
     my $res = $self->conn->edit_configuration(config => $xml);
@@ -463,34 +348,50 @@ sub interface_tagged{
     return $res;
 }
 
+=head2 no_interface_tagged
+
+=cut
 sub no_interface_tagged{
     my $self    = shift;
     my $ifaces  = shift;
     my $vlan_id = shift;
+    my $vlan_name = shift;
 
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
 
     $writer->startTag("configuration");
     $writer->startTag("interfaces");
+
     foreach my $iface (@$ifaces){
         $writer->startTag("interface");
         $writer->startTag("name");
-	$writer->characters($iface);
+        $writer->characters($iface);
         $writer->endTag();
-        $writer->startTag("unit", operation => 'delete');
 
+        $writer->startTag("unit", operation => 'delete');
         $writer->startTag("name");
-	$writer->characters($vlan_id);
+        $writer->characters($vlan_id);
+        $writer->endTag();
+        $writer->endTag();
+        $writer->endTag();
+    }
+    $writer->endTag();
+
+    $writer->startTag("bridge-domains");
+    $writer->startTag("domain");
+    $writer->startTag("name");
+    $writer->characters($vlan_name);
+    $writer->endTag();
+
+    foreach my $iface (@$ifaces){
+        $writer->startTag("interface");
+        $writer->startTag("name", operation => 'delete');
+        $writer->characters("$iface.$vlan_id");
         $writer->endTag();
         $writer->endTag();
     }
 
-    $writer->startTag("bridge-domains");
-    $writer->startTag("domain");
-    $writer->startTag("name", operation => 'delete');
-    $writer->characters("vlan" . $vlan_id);
-    $writer->endTag();
     $writer->endTag();
     $writer->endTag();
     $writer->endTag();
@@ -498,34 +399,42 @@ sub no_interface_tagged{
 
     my $res = $self->conn->edit_configuration(config => $xml);
     warn Dumper($res);
+    return $res;
 }
 
+=head2 no_vlan
 
+=cut
 sub no_vlan{
     my $self = shift;
     my $vlan_id = shift;
+    my $vlan_name = shift;
 
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
     $writer->startTag("configuration");
     $writer->startTag("bridge-domains");
-    $writer->startTag("domain");
-    $writer->startTag("name", operation => 'delete');
-    $writer->characters("vlan" . $vlan_id);
+    $writer->startTag("domain", operation => 'delete');
+    $writer->startTag("name");
+    $writer->characters($vlan_name);
     $writer->endTag();
     $writer->endTag();
     $writer->endTag();
     $writer->endTag();
     $writer->end();
 
-    $self->conn->edit_configuration(config => $xml);
-
+    my $res = $self->conn->edit_configuration(config => $xml);
+    return $res;
 }
 
+=head2 vlan_description
+
+=cut
 sub vlan_description{
     my $self = shift;
     my $desc = shift;
     my $vlan_id = shift;
+    my $vlan_name = shift;
 
     my $xml = "";
     my $writer = XML::Writer->new( OUTPUT => \$xml);
@@ -533,32 +442,33 @@ sub vlan_description{
     $writer->startTag("bridge-domains");
     $writer->startTag("domain");
     $writer->startTag("name");
-    $writer->characters("vlan" . $vlan_id);
-    $writer->endTag();
+    $writer->characters($vlan_name);
+    $writer->endTag("name");
     $writer->startTag("description");
     $writer->characters($desc);
-    $writer->endTag();
-    $writer->endTag();
-    $writer->endTag();
-    $writer->endTag();
-
+    $writer->endTag("description");
+    $writer->endTag("domain");
+    $writer->endTag("bridge-domains");
+    $writer->endTag("configuration");
     $writer->end();
 
-    $self->conn->edit_configuration(config => $xml);
+    my $res = $self->conn->edit_configuration(config => $xml);
+    return $res;
 }
 
+=head2 no_vlan_spanning_tree
+
+=cut
 sub no_vlan_spanning_tree{
-    
-    
 
 }
 
+=head2 vlan_spanning_tree
+
+=cut
 sub vlan_spanning_tree{
-    
-    
 
 }
-
 
 
 =head2 configure
