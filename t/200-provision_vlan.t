@@ -47,7 +47,12 @@ $method->add_input_parameter( name        => "vlan",
                               description => "VLAN number to use for tag",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::INTEGER );
-
+$method->add_input_parameter(
+    name        => "vlan_name",
+    description => "Name of VLAN identifier",
+    required    => 0,
+    pattern     => $GRNOC::WebService::Regex::TEXT
+);
 $dispatcher->register_method($method);
 
 $method = GRNOC::RabbitMQ::Method->new( name => "no_interface_tagged",
@@ -61,6 +66,12 @@ $method->add_input_parameter( name        => "vlan",
                               description => "VLAN number to use for tag",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::INTEGER );
+$method->add_input_parameter(
+    name        => "vlan_name",
+    description => "Name of VLAN identifier",
+    required    => 0,
+    pattern     => $GRNOC::WebService::Regex::TEXT
+);
 $dispatcher->register_method($method);
 
 
@@ -119,6 +130,7 @@ cmp_deeply($vlan_details,{
             'circuit' => {
                 'workgroup' => 'ajco',
                 'status' => 'Impacted',
+                'name' => 'Automated test suite!',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',

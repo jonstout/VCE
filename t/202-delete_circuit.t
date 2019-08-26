@@ -43,12 +43,16 @@ $method->add_input_parameter( name        => "port",
                               description => "Name of the interface to add tag to",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::TEXT );
-
 $method->add_input_parameter( name        => "vlan",
                               description => "VLAN number to use for tag",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::INTEGER );
-
+$method->add_input_parameter(
+    name        => "vlan_name",
+    description => "Name of VLAN identifier",
+    required    => 0,
+    pattern     => $GRNOC::WebService::Regex::TEXT
+);
 $dispatcher->register_method($method);
 
 $method = GRNOC::RabbitMQ::Method->new( name => "no_interface_tagged",
@@ -62,6 +66,12 @@ $method->add_input_parameter( name        => "vlan",
                               description => "VLAN number to use for tag",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::INTEGER );
+$method->add_input_parameter(
+    name        => "vlan_name",
+    description => "Name of VLAN identifier",
+    required    => 0,
+    pattern     => $GRNOC::WebService::Regex::TEXT
+);
 $dispatcher->register_method($method);
 
 my $client = GRNOC::WebService::Client->new( url => 'http://localhost:8529/vce/services/access.cgi',
@@ -122,6 +132,7 @@ cmp_deeply($vlan_details,{
             'circuit' => {
                 'workgroup' => 'ajco',
                 'status' => 'Impacted',
+                'name' => 'Automated test suite!',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',
@@ -193,6 +204,7 @@ cmp_deeply($vlan_details,{
             'circuit' => {
                 'workgroup' => 'ajco',
                 'status' => 'Impacted',
+                'name' => 'Automated test suite!',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',
