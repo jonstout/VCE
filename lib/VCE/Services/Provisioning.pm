@@ -226,7 +226,6 @@ sub provision_vlan{
     }
     my $vlan_id = $prov_vlan_res->{vlan_id};
 
-    
     my $details = $self->vce->network_model->get_vlan_details(vlan_id => $vlan_id);
     my $endpoints = [];
     my $endpoint_count = 0;
@@ -239,8 +238,8 @@ sub provision_vlan{
     $self->switch->{topic} = 'VCE.Switch.' . $switch;
 
     my $response = $self->switch->interface_tagged(
-        port => $endpoints,
-        vlan => $vlan,
+        port      => $endpoints,
+        vlan      => $vlan,
         vlan_name => $details->{name}
     );
     if (defined $response->{'error'}) {
@@ -319,17 +318,20 @@ sub edit_vlan{
     my $ok  = undef;
     my $err = undef;
 
-    foreach my $port (@{$ports}) {
-        my $new = 1;
+    # Port tracker. Begin by adding all ports to tracker with value of
+    # zero. This 'zero' means that the port is not to be included in
+    # the VLAN.
+    my $total_ports = {};
+    foreach my $endpoint (@{$details->{endpoints}}) {
+        $total_ports->{$endpoint->{port}} = 0;
+    }
 
-        foreach my $endpoint (@{$details->{endpoints}}) {
-            if ($endpoint->{port} eq $port) {
-                $new = 0;
-                last;
-            }
-        }
-        if ($new) {
-            push(@{$new_interfaces}, $port);
+    foreach my $port (@{$ports}) {
+        if (!defined $total_ports->{$port}) {
+            $total_ports->{$port} = 1;
+            push @$new_interfaces, $port;
+        } else {
+            $total_ports->{$port} = 1;
         }
     }
     ($ok, $err) = $self->vce->access->is_vlan_permittee($workgroup, $switch, $new_interfaces, $vlan);
@@ -338,18 +340,13 @@ sub edit_vlan{
         return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $err}};
     }
 
-    foreach my $endpoint (@{$details->{endpoints}}) {
-        my $exists = 0;
-        foreach my $port (@{$ports}) {
-            if ($port eq $endpoint->{port}) {
-                $exists = 1;
-                last;
-            }
-        }
-        if (!$exists) {
-            push(@{$old_interfaces}, $endpoint->{port});
+    foreach my $port (keys %$total_ports) {
+        if ($total_ports->{$port} == 0) {
+            delete $total_ports->{$port};
+            push @$old_interfaces, $port;
         }
     }
+
     ($ok, $err) = $self->vce->access->is_vlan_permittee($workgroup, $switch, $old_interfaces, $vlan);
     if (defined $err) {
         $self->logger->error($err);
@@ -368,13 +365,17 @@ sub edit_vlan{
     }
 
     $self->vce->delete_vlan(vlan_id => $vlan_id, workgroup => $workgroup);
+
+    my @new_ports = keys %$total_ports;
+
     my $new_vlan = $self->vce->provision_vlan(
         vlan_id => $vlan_id,
         workgroup => $workgroup,
+        name => $details->{name},
         description => $description,
         username => $user,
         switch => $switch,
-        port => $ports,
+        port => \@new_ports,
         vlan => $vlan
     );
     $vlan_id = $new_vlan->{vlan_id};
@@ -385,18 +386,11 @@ sub edit_vlan{
         return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $err}};
     }
 
-    my $endpoints = [];
-    my $endpoint_count = 0;
+    my $endpoint_count = @new_ports;
 
-    foreach my $e (@{$details->{'endpoints'}}) {
-        push(@{$endpoints}, $e->{'port'});
-        $endpoint_count++;
-    }
-
-    my $response = $self->switch->interface_tagged(port => $endpoints, vlan => $vlan);
+    my $response = $self->switch->interface_tagged(port => \@new_ports, vlan => $vlan, vlan_name => $details->{name});
     if (defined $response->{'error'}) {
         $self->logger->error($response->{'error'});
-
         return {results => [{success => 0, vlan_id => $vlan_id}], error => {msg => $response->{'error'}}};
     }
 
