@@ -38,6 +38,7 @@ lib/VCE/Database/VLAN.pm
 lib/VCE/Database/Workgroup.pm
 lib/VCE/Device.pm
 lib/VCE/Device/Brocade/MLXe/5_8_0.pm
+lib/VCE/Device/JUNOS/MX/17.pm
 lib/VCE/NetworkDB.pm
 lib/VCE/Services/ACL.pm
 lib/VCE/Services/Access.pm

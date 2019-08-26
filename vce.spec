@@ -61,6 +61,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Services
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Database
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe
+%{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Device/JUNOS/MX
 
 %{__install} lib/VCE.pm %{buildroot}%{perl_vendorlib}/VCE.pm
 %{__install} lib/VCE/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Access.pm
@@ -90,6 +91,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Services/User.pm %{buildroot}%{perl_vendorlib}/VCE/Services/User.pm
 
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
+%{__install} lib/VCE/Device/JUNOS/MX/17.pm %{buildroot}%{perl_vendorlib}/VCE/Device/JUNOS/MX/17.pm
 
 # Web
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/api
@@ -185,6 +187,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Services/Workgroup.pm
 %{perl_vendorlib}/VCE/Services/User.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
+%{perl_vendorlib}/VCE/Device/JUNOS/MX/17.pm
 
 %{_datadir}/vce/www/api/acl.cgi
 %{_datadir}/vce/www/api/access.cgi
