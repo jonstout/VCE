@@ -158,40 +158,72 @@ sub get_interfaces {
     my %ints;
 
     foreach my $int (@$ints){
-	if(!defined($int->{'description'})){
-	    $int->{'description'} = $int->{'name'};
-	}
+        if(!defined($int->{'description'})){
+            $int->{'description'} = $int->{'name'};
+        }
 
-	if($int->{'status'} eq 'up'){
-	    $int->{'status'} = 1;
-	}else{
-	    $int->{'status'} = 0;
-	}
+        if($int->{'status'} eq 'up'){
+            $int->{'status'} = 1;
+        }else{
+            $int->{'status'} = 0;
+        }
 
-	if($int->{'admin_status'} eq 'up'){
-	    $int->{'admin_status'} = 1;
-	}else{
-	    $int->{'admin_status'} = 0;
-	}
-	
-	if(ref $int->{'mac_addr'} eq ref {}){
-		my $sub = $int->{'mac_addr'}->{'content'};
-		$sub =~ s/^\s*(.*?)\s*$/$1/;
-		$int->{'mac_addr'} = $sub;
-	}
-	#print $int->{'hardware_type'} . "\n";
-	if(index($int->{'hardware_type'}, 'mbps') != -1){
-		my @sub = split('mbps', $int->{'hardware_type'});
-		$sub[0] = $sub[0]/1000;
-		$sub[0] = $sub[0] . "GigabitEthernet";
-		$int->{'hardware_type'} = $sub[0];
-	}
-			
-	$ints{$int->{'name'}} = $int;
-	
+        if($int->{'admin_status'} eq 'up'){
+            $int->{'admin_status'} = 1;
+        }else{
+            $int->{'admin_status'} = 0;
+        }
+
+        if(ref $int->{'mac_addr'} eq ref {}){
+            my $sub = $int->{'mac_addr'}->{'content'};
+            $sub =~ s/^\s*(.*?)\s*$/$1/;
+            $int->{'mac_addr'} = $sub;
+        }
+
+        if (!defined $int->{hardware_type}) {
+            $int->{hardware_type} = undef;
+            $int->{speed} = 'unknown';
+        } elsif ($int->{hardware_type} eq 'Unlimited') {
+            $int->{speed} = 'unknown';
+        } elsif ($int->{hardware_type} eq '10Gbps') {
+            $int->{hardware_type} = '10GigabitEthernet';
+        } elsif ($int->{hardware_type} eq '100Gbps') {
+            $int->{hardware_type} = '100GigabitEthernet';
+        } else {
+            my @speed = split('mbps', $int->{hardware_type});
+            if ($speed[0] < 1000) {
+                $int->{hardware_type} = undef;
+                $int->{speed} = 'unknown';
+            } elsif ($speed[0] == 1000) {
+                $int->{hardware_type} = 'Ethernet';
+                $int->{speed} = '1Gbit';
+            }
+        }
+
+        if (defined $int->{input}->{bytes}) {
+            $int->{input}->{bytes} =~ s/^\s+|\s+$//g;
+        } else {
+            $int->{input}->{bytes} = '0';
+        }
+        if (defined $int->{input}->{packets}) {
+            $int->{input}->{packets} =~ s/^\s+|\s+$//g;
+        } else {
+            $int->{input}->{packets} = '0';
+        }
+
+        if (defined $int->{output}->{bytes}) {
+            $int->{output}->{bytes} =~ s/^\s+|\s+$//g;
+        } else {
+            $int->{output}->{bytes} = '0';
+        }
+        if (defined $int->{output}->{packets}) {
+            $int->{output}->{packets} =~ s/^\s+|\s+$//g;
+        } else {
+            $int->{output}->{packets} = '0';
+        }
+
+        $ints{$int->{'name'}} = $int;
     }
-
-    warn "Hash INTS: " .Dumper(%ints);
 
     return {interfaces => \%ints};
 }
@@ -254,6 +286,14 @@ sub get_vlans {
             }
 
             for my $port (keys %{$bridge->{'interface'}}) {
+                # When a single port is attached to the domain, the
+                # interface name is stored under the 'name' key. When
+                # multiple ports are attached the key itself holds the
+                # interface name.
+                if ($port eq 'name') {
+                    $port = $bridge->{'interface'}->{'name'};
+                }
+
                 # Capture interface name and ignore unit
                 # Ex. ge-0/0/3.420 -> ge-0/0/3
                 my @p = split(/\./, $port);
@@ -269,7 +309,7 @@ sub get_vlans {
         }
     }
 
-    warn Dumper($result);
+    $self->logger->error(Dumper($result));
     return $result;
 }
 
@@ -367,34 +407,34 @@ sub no_interface_tagged{
         $writer->startTag("interface");
         $writer->startTag("name");
         $writer->characters($iface);
-        $writer->endTag();
+        $writer->endTag("name");
 
         $writer->startTag("unit", operation => 'delete');
         $writer->startTag("name");
         $writer->characters($vlan_id);
-        $writer->endTag();
-        $writer->endTag();
-        $writer->endTag();
+        $writer->endTag("name");
+        $writer->endTag("unit");
+        $writer->endTag("interface");
     }
-    $writer->endTag();
+    $writer->endTag("interfaces");
 
     $writer->startTag("bridge-domains");
     $writer->startTag("domain");
     $writer->startTag("name");
     $writer->characters($vlan_name);
-    $writer->endTag();
+    $writer->endTag("name");
 
     foreach my $iface (@$ifaces){
-        $writer->startTag("interface");
-        $writer->startTag("name", operation => 'delete');
+        $writer->startTag("interface", operation => 'delete');
+        $writer->startTag("name");
         $writer->characters("$iface.$vlan_id");
-        $writer->endTag();
-        $writer->endTag();
+        $writer->endTag("name");
+        $writer->endTag("interface");
     }
 
-    $writer->endTag();
-    $writer->endTag();
-    $writer->endTag();
+    $writer->endTag("domain");
+    $writer->endTag("bridge-domains");
+    $writer->endTag("configuration");
     $writer->end();
 
     my $res = $self->conn->edit_configuration(config => $xml);

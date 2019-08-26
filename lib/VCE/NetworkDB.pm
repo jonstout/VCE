@@ -297,6 +297,7 @@ sub get_interfaces {
 =head2 add_vlan
 
     my $uuid = add_vlan(
+      name        => 'Example', # Optional: Only used for Junos devices
       description => 'Example',
       endpoints   => [
         'ethernet 1/1',
@@ -339,8 +340,12 @@ sub add_vlan {
         return { vlan_id => undef, error => "Couldn't find specified user." };
     }
 
+    if (!defined $params{name}) {
+        $params{name} = ($switch->{vendor} eq 'Brocade') ? $params{description} : "vce-$params{vlan}";
+    }
+
     my $nvlan_id = $self->db2->add_vlan(
-        name => $params{description},
+        name => $params{name},
         description => $params{description},
         number => $params{vlan},
         created_by => $user->{id},

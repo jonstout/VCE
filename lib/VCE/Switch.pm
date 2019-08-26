@@ -489,11 +489,14 @@ sub vlan_description {
 =head2 interface_tagged
 
     my $response = interface_tagged(
-      port => ['ethernet 15/1', 'ethernet 15/2'],
-      vlan => 300
+      port      => ['ethernet 15/1', 'ethernet 15/2'],
+      vlan      => 300,
+      vlan_name => 'vce-100'
     );
 
-interface_tagged adds C<vlan> to the array of interfaces in C<port>.
+interface_tagged adds C<vlan> to the array of interfaces in
+C<port>. Optional argument C<vlan_name> may be provided when
+identifying a Junos bridge domain.
 
 Response
 
@@ -532,12 +535,14 @@ sub interface_tagged {
 =head2 no_interface_tagged
 
     my $response = no_interface_tagged(
-      port => ['ethernet 15/1', 'ethernet 15/2'],
-      vlan => 300
+      port      => ['ethernet 15/1', 'ethernet 15/2'],
+      vlan      => 300
+      vlan_name => 'vce-100'
     );
 
 no_interface_tagged removes C<vlan> from the array of interfaces in
-C<port>.
+C<port>. Optional argument C<vlan_name> may be provided when
+identifying a Junos bridge domain.
 
 Response
 
