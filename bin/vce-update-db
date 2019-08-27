@@ -109,7 +109,6 @@ sub main {
     if ($version eq '0.3.7') {
         $version = upgrade_to_0_3_8($db2, $version);
         warn "Version: $version";
-        warn 'Database update complete!';
     }
 
     if ($version eq '0.3.8') {
