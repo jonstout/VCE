@@ -105,9 +105,15 @@ sub main {
         $version = upgrade_to_0_3_7($db2, $version);
         warn "Version: $version";
     }
-    
+
     if ($version eq '0.3.7') {
         $version = upgrade_to_0_3_8($db2, $version);
+        warn "Version: $version";
+        warn 'Database update complete!';
+    }
+
+    if ($version eq '0.3.8') {
+        $version = upgrade_to_0_3_9($db2, $version);
         warn "Version: $version";
         warn 'Database update complete!';
     }
@@ -247,6 +253,20 @@ sub upgrade_to_0_3_8{
     $query->execute();
 
     return "0.3.8";
+}
+
+sub upgrade_to_0_3_9{
+    my $db              = shift;
+    my $current_version = shift;
+
+    my $query = undef;
+
+    $query = $db->prepare(
+    'UPDATE version SET version="0.3.9"'
+    );
+    $query->execute();
+
+    return "0.3.9";
 }
 
 
