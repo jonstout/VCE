@@ -23,11 +23,11 @@
 
 =head1 VCE - VCE Virtual Customer Equipement
 
-Version 0.3.8
+Version 0.3.9
 
 =cut
 
-our $VERSION = '0.3.8';
+our $VERSION = '0.3.9';
 
 package VCE;
 
@@ -632,6 +632,7 @@ sub validate_circuit{
       port        => [$string],
       vlan        => $string,
       description => $string,
+      name        => $string (optional), # Only used for Junos devices
       vlan_id     => $string (optional),
     );
 
@@ -650,6 +651,7 @@ sub provision_vlan {
     }
 
     return $self->network_model->add_vlan(
+        name => $params{'name'},
         description => $params{'description'},
         vlan_id => $params{'vlan_id'},
         workgroup => $params{'workgroup'},

@@ -41,12 +41,16 @@ $method->add_input_parameter( name        => "port",
                               description => "Name of the interface to add tag to",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::TEXT );
-
 $method->add_input_parameter( name        => "vlan",
                               description => "VLAN number to use for tag",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::INTEGER );
-
+$method->add_input_parameter(
+    name        => "vlan_name",
+    description => "Name of VLAN identifier",
+    required    => 0,
+    pattern     => $GRNOC::WebService::Regex::TEXT
+);
 $dispatcher->register_method($method);
 
 $method = GRNOC::RabbitMQ::Method->new( name => "no_interface_tagged",
@@ -60,6 +64,12 @@ $method->add_input_parameter( name        => "vlan",
                               description => "VLAN number to use for tag",
                               required    => 1,
                               pattern     => $GRNOC::WebService::Regex::INTEGER );
+$method->add_input_parameter(
+    name        => "vlan_name",
+    description => "Name of VLAN identifier",
+    required    => 0,
+    pattern     => $GRNOC::WebService::Regex::TEXT
+);
 $dispatcher->register_method($method);
 
 
@@ -120,6 +130,7 @@ cmp_deeply($vlan_details,{
             'circuit' => {
                 'workgroup' => 'ajco',
                 'status' => 'Impacted',
+                'name' => 'Automated test suite!',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',
@@ -186,12 +197,13 @@ cmp_deeply($vlan_details2,{
             'circuit' => {
                 'workgroup' => 'ajco',
                 'status' => 'Impacted',
+                'name' => 'Automated test suite!',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '104',
                 'endpoints' => [
-                    { 'port' => 'eth0/1' },
-                    { 'port' => 'eth0/3' }
+                    { 'port' => 'eth0/3' },
+                    { 'port' => 'eth0/1' }
                 ],
                 'username' => 'aragusa'
             }
@@ -254,6 +266,7 @@ cmp_deeply($vlan_details3,{
             'circuit' => {
                 'workgroup' => 'ajco',
                 'status' => 'Impacted',
+                'name' => 'Automated test suite!',
                 'description' => 'Automated test suite!',
                 'switch' => 'foobar',
                 'vlan' => '105',
