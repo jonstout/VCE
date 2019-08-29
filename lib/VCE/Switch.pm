@@ -873,12 +873,12 @@ sub execute_command{
     my $err;
 
     if ($self->vendor eq 'Brocade') {
-        ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*\#$/);
+        ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*\#$/, $p_ref->{'cli_type'}{'value'});
         if (defined $err) {
             return &$success({success => 0, error => 1, error_msg => $err});
         }
     } else {
-        ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*\> $/);
+        ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*(\> |\# )$/, $p_ref->{'cli_type'}{'value'});
         if (defined $err) {
             return &$success({success => 0, error => 1, error_msg => $err});
         }
