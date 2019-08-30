@@ -333,9 +333,11 @@ sub get_vlans {
             push(@{$ports}, { port => $port->{'brcd:port-id'}, mode => $port->{'brcd:tag-mode'} });
         }
 
-        push(@{$result}, { vlan => $vlan->{'brcd:vlan-id'}, name => $name, ports => $ports });
+        push(@{$result}, { vlan => $vlan->{'brcd:vlan-id'}, name => $name, description => $name, ports => $ports });
     }
 
+    $self->logger->error(Dumper($result));
+    warn Dumper($result);
     return $result, $err;
 }
 
@@ -418,40 +420,10 @@ sub vlan_spanning_tree {
     my $res;
     my $err;
 
-    my $ok = $self->configure();
-    if (!$ok) {
-        $err = "Could not enter configure mode.";
-        $self->logger->error($err);
-        return $res, $err;
-    }
-
-    $ok = $self->set_context("vlan $vlan_id");
-    if (!$ok) {
-        $err = "Could not enter vlan configure mode.";
-        $self->logger->error($err);
-        return $res, $err;
-    }
-
-    ($res, $err) = $self->issue_command("spanning-tree", "#");
+    ($res, $err) = $self->issue_command("conf t; vlan $vlan_id; spanning-tree", "#", "write");
     if ($err) {
         $self->logger->error($err);
         return $res, $err;
-    }
-
-    ($res, $err) = $self->issue_command("write mem", "#");
-    if ($err) {
-        $self->logger->error($err);
-        return $res, $err;
-    }
-
-    $ok = $self->exit_context();
-    if (!$ok) {
-        $self->logger->warn("Failed to exit context.");
-    }
-
-    $ok = $self->exit_configure();
-    if (!$ok) {
-        $self->logger->warn("Failed to exit configure.");
     }
 
     return $res, $err;
@@ -472,40 +444,10 @@ sub no_vlan_spanning_tree {
     my $res;
     my $err;
 
-    my $ok = $self->configure();
-    if (!$ok) {
-        $err = "Could not enter configure mode.";
-        $self->logger->error($err);
-        return $res, $err;
-    }
-
-    $ok = $self->set_context("vlan $vlan_id");
-    if (!$ok) {
-        $err = "Could not enter vlan configure mode.";
-        $self->logger->error($err);
-        return $res, $err;
-    }
-
-    ($res, $err) = $self->issue_command("no spanning-tree", "#");
+    ($res, $err) = $self->issue_command("conf t; vlan $vlan_id; no spanning-tree", "#", "write");
     if ($err) {
         $self->logger->error($err);
         return $res, $err;
-    }
-
-    ($res, $err) = $self->issue_command("write mem", "#");
-    if ($err) {
-        $self->logger->error($err);
-        return $res, $err;
-    }
-
-    $ok = $self->exit_context();
-    if (!$ok) {
-        $self->logger->warn("Failed to exit context.");
-    }
-
-    $ok = $self->exit_configure();
-    if (!$ok) {
-        $self->logger->warn("Failed to exit configure.");
     }
 
     return $res, $err;
@@ -955,6 +897,7 @@ sub issue_command{
     my $self    = shift;
     my $command = shift;
     my $prompt  = shift;
+    my $operation = shift || 'read';
 
     my $statements_run = 0;
     my @statements = split(/;\s*/, $command);
@@ -976,6 +919,15 @@ sub issue_command{
         }
 
         $statements_run += 1;
+    }
+
+    if ($operation eq 'write') {
+        $self->logger->info("Running command: write mem");
+        my $ok = $self->comm->issue_command('write mem', $prompt);
+        if (!defined $ok) {
+            $self->logger->error("Couldn't run 'write mem'.");
+        }
+        $result = '';
     }
 
     # Consider running C<conf t>, C<vlan 218>, C<spanning-tree>. To

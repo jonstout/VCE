@@ -1,6 +1,6 @@
 Summary: Virtual Customer Equipment
 Name: vce
-Version: 0.3.8
+Version: 0.3.9
 Release: 1%{?dist}
 License: Apache
 Group: GRNOC
@@ -61,6 +61,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Services
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Database
 %{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe
+%{__install} -d -p %{buildroot}%{perl_vendorlib}/VCE/Device/JUNOS/MX
 
 %{__install} lib/VCE.pm %{buildroot}%{perl_vendorlib}/VCE.pm
 %{__install} lib/VCE/Access.pm %{buildroot}%{perl_vendorlib}/VCE/Access.pm
@@ -90,6 +91,7 @@ rm -rf $RPM_BUILDR_ROOT
 %{__install} lib/VCE/Services/User.pm %{buildroot}%{perl_vendorlib}/VCE/Services/User.pm
 
 %{__install} lib/VCE/Device/Brocade/MLXe/5_8_0.pm %{buildroot}%{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
+%{__install} lib/VCE/Device/JUNOS/MX/17.pm %{buildroot}%{perl_vendorlib}/VCE/Device/JUNOS/MX/17.pm
 
 # Web
 %{__install} -d -p %{buildroot}%{_datadir}/vce/www/api
@@ -128,9 +130,11 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} -d -p %{buildroot}%{_sysconfdir}/httpd/conf.d
 %{__install} -d -p %{buildroot}%{_sysconfdir}/vce
 %{__install} -d -p %{buildroot}%{_sysconfdir}/cron.d
-%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp
-%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds.d
-%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/hosts.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/comp/composites.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/poller/groups.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/poller/hosts.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/simp/tsds/collections.d
+%{__install} -d -p %{buildroot}%{_sysconfdir}/vce/httpd/conf.d/grnoc
 %{__install} -d -p %{buildroot}%{_sharedstatedir}/vce
 
 %{__install} etc/apache-vce.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/vce.conf
@@ -142,14 +146,13 @@ cp -ar www/frontend/* %{buildroot}%{_datadir}/vce/www/frontend
 %{__install} etc/logging.conf %{buildroot}%{_sysconfdir}/vce/logging.conf
 %{__install} etc/schema.sqlite %{buildroot}%{_sysconfdir}/vce/schema.sqlite
 
-%{__install} etc/simp/compDataConfig.xml %{buildroot}%{_sysconfdir}/vce/simp/compDataConfig.xml
-%{__install} etc/simp/config.xml %{buildroot}%{_sysconfdir}/vce/simp/config.xml
-%{__install} etc/simp/simp-tsds.xml %{buildroot}%{_sysconfdir}/vce/simp/simp-tsds.xml
-%{__install} etc/simp/simpDataConfig.xml %{buildroot}%{_sysconfdir}/vce/simp/simpDataConfig.xml
-%{__install} etc/simp/hosts.d/vce-switch.xml %{buildroot}%{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
-%{__install} etc/simp/tsds.d/static.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds.d/static.xml
+%{__install} etc/simp/comp/composites.d/interface.xml %{buildroot}%{_sysconfdir}/vce/simp/comp/composites.d/interface.xml
+%{__install} etc/simp/poller/groups.d/intf.xml %{buildroot}%{_sysconfdir}/vce/simp/poller/groups.d/intf.xml
+%{__install} etc/simp/poller/hosts.d/vce.xml %{buildroot}%{_sysconfdir}/vce/simp/poller/hosts.d/vce.xml
+%{__install} etc/simp/tsds/config.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/config.xml
+%{__install} etc/simp/tsds/collections.d/vce.xml %{buildroot}%{_sysconfdir}/vce/simp/tsds/collections.d/vce.xml
 %{__install} etc/cron.d/vce_switch_cron %{buildroot}%{_sysconfdir}/cron.d/vce_switch_cron 
-
+%{__install} etc/httpd/conf.d/grnoc/tsds-services.conf  %{buildroot}%{_sysconfdir}/vce/httpd/conf.d/grnoc/tsds-services.conf
 %{__install} etc/network_model.sqlite %{buildroot}%{_sharedstatedir}/vce/network_model.sqlite
 %{__install} etc/database.sqlite %{buildroot}%{_sharedstatedir}/vce/database.sqlite
 
@@ -185,6 +188,7 @@ rm -rf $RPM_BUILD_ROOT
 %{perl_vendorlib}/VCE/Services/Workgroup.pm
 %{perl_vendorlib}/VCE/Services/User.pm
 %{perl_vendorlib}/VCE/Device/Brocade/MLXe/5_8_0.pm
+%{perl_vendorlib}/VCE/Device/JUNOS/MX/17.pm
 
 %{_datadir}/vce/www/api/acl.cgi
 %{_datadir}/vce/www/api/access.cgi
@@ -217,12 +221,12 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/vce/grafana-dashboard.json
 %config(noreplace) %{_sysconfdir}/vce/apache_logging.conf
 %config(noreplace) %{_sysconfdir}/vce/logging.conf
-%config(noreplace) %{_sysconfdir}/vce/simp/compDataConfig.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/config.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/simp-tsds.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/simpDataConfig.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/tsds.d/static.xml
-%config(noreplace) %{_sysconfdir}/vce/simp/hosts.d/vce-switch.xml
+%{_sysconfdir}/vce/simp/comp/composites.d/interface.xml
+%{_sysconfdir}/vce/simp/poller/groups.d/intf.xml
+%{_sysconfdir}/vce/simp/poller/hosts.d/vce.xml
+%{_sysconfdir}/vce/simp/tsds/config.xml
+%{_sysconfdir}/vce/simp/tsds/collections.d/vce.xml
+%{_sysconfdir}/vce/httpd/conf.d/grnoc/tsds-services.conf
 %{_sysconfdir}/vce/schema.sqlite
 
 %dir               %attr(775,vce,vce) %{_sharedstatedir}/vce

@@ -16,12 +16,12 @@ etc/grafana-dashboard.json
 etc/schema.sqlite
 etc/vce.init
 etc/vce.systemd
-etc/simp/compDataConfig.xml
-etc/simp/simpDataConfig.xml
-etc/simp/config.xml
-etc/simp/simp-tsds.xml
-etc/simp/tsds.d/static.xml
-etc/simp/hosts.d/vce-switch.xml
+etc/simp/comp/composites.d/interface.xml
+etc/simp/poller/groups.d/intf.xml
+etc/simp/poller/hosts.d/vce.xml
+etc/simp/tsds/config.xml
+etc/simp/tsds/collections.d/vce.xml
+etc/httpd/conf.d/grnoc/tsds-services.conf
 etc/cron.d/vce_switch_cron
 lib/VCE.pm
 lib/VCE/Access.pm
@@ -38,6 +38,7 @@ lib/VCE/Database/VLAN.pm
 lib/VCE/Database/Workgroup.pm
 lib/VCE/Device.pm
 lib/VCE/Device/Brocade/MLXe/5_8_0.pm
+lib/VCE/Device/JUNOS/MX/17.pm
 lib/VCE/NetworkDB.pm
 lib/VCE/Services/ACL.pm
 lib/VCE/Services/Access.pm

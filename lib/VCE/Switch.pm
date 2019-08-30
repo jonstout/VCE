@@ -15,6 +15,7 @@ use GRNOC::WebService::Regex;
 use VCE::Database::Connection;
 use VCE::Device;
 use VCE::Device::Brocade::MLXe::5_8_0;
+use VCE::Device::JUNOS::MX::17;
 use VCE::NetworkDB;
 
 has logger => (is => 'rwp');
@@ -165,6 +166,33 @@ sub _connect_to_device{
             $self->logger->error( "No supported Brocade module for devices of type " . $self->type );
             return;
         }
+    }elsif($self->vendor eq 'JUNOS'){
+	if($self->type eq 'MX'){
+	    if($self->version eq '17'){
+		my $dev = VCE::Device::JUNOS::MX::17->new( username => $self->username,
+							   password => $self->password,
+							   hostname => $self->hostname,
+							   port => $self->port);
+
+		$self->_set_device($dev);
+		$dev->connect();
+		warn Dumper($dev);
+
+		if($dev->connected){
+		    $self->logger->debug( "Successfully connected to device!" );
+                    return 1;
+                }else{
+                    $self->logger->error( "Error connecting to device");
+                    return;
+                }
+	    }else{
+		$self->logger->error("No supported JUNOS MX module for version " . $self->version );
+		return;
+	    }
+	}else{
+	    $self->logger->error("No supported JUNOS module for device of type " . $self->type );
+	    return;
+	}
     }else{
         $self->logger->error( "No supported vendor of type " . $self->vendor );
         return;
@@ -258,6 +286,12 @@ sub _register_rpc_methods{
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
     );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
     $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new(
@@ -271,6 +305,12 @@ sub _register_rpc_methods{
         description => "VLAN number to use for tag",
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $d->register_method($method);
 
@@ -293,6 +333,12 @@ sub _register_rpc_methods{
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
     );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
+    );
     $d->register_method($method);
 
     $method = GRNOC::RabbitMQ::Method->new(
@@ -313,6 +359,12 @@ sub _register_rpc_methods{
         description => "VLAN number to use for tag",
         required    => 1,
         pattern     => $GRNOC::WebService::Regex::INTEGER
+    );
+    $method->add_input_parameter(
+        name        => "vlan_name",
+        description => "Name of VLAN identifier",
+        required    => 0,
+        pattern     => $GRNOC::WebService::Regex::TEXT
     );
     $d->register_method($method);
 
@@ -416,6 +468,7 @@ sub vlan_description {
 
     my $desc = $params->{'description'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     $self->logger->info("Calling get_vlans");
 
@@ -423,7 +476,7 @@ sub vlan_description {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->vlan_description($desc, $vlan);
+    my ($res, $err) = $self->device->vlan_description($desc, $vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -436,11 +489,14 @@ sub vlan_description {
 =head2 interface_tagged
 
     my $response = interface_tagged(
-      port => ['ethernet 15/1', 'ethernet 15/2'],
-      vlan => 300
+      port      => ['ethernet 15/1', 'ethernet 15/2'],
+      vlan      => 300,
+      vlan_name => 'vce-100'
     );
 
-interface_tagged adds C<vlan> to the array of interfaces in C<port>.
+interface_tagged adds C<vlan> to the array of interfaces in
+C<port>. Optional argument C<vlan_name> may be provided when
+identifying a Junos bridge domain.
 
 Response
 
@@ -461,12 +517,13 @@ sub interface_tagged {
 
     my $port = $params->{'port'}{'value'};
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     if (!$self->device->connected) {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->interface_tagged($port, $vlan);
+    my ($res, $err) = $self->device->interface_tagged($port, $vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -478,12 +535,14 @@ sub interface_tagged {
 =head2 no_interface_tagged
 
     my $response = no_interface_tagged(
-      port => ['ethernet 15/1', 'ethernet 15/2'],
-      vlan => 300
+      port      => ['ethernet 15/1', 'ethernet 15/2'],
+      vlan      => 300
+      vlan_name => 'vce-100'
     );
 
 no_interface_tagged removes C<vlan> from the array of interfaces in
-C<port>.
+C<port>. Optional argument C<vlan_name> may be provided when
+identifying a Junos bridge domain.
 
 Response
 
@@ -504,12 +563,13 @@ sub no_interface_tagged {
 
     my $port = $params->{'port'}{'value'} || [];
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     if (!$self->device->connected) {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->no_interface_tagged($port, $vlan);
+    my ($res, $err) = $self->device->no_interface_tagged($port, $vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -601,12 +661,13 @@ sub no_vlan {
     my $error   = $method->{'error_callback'};
 
     my $vlan = $params->{'vlan'}{'value'};
+    my $vlan_name = $params->{'vlan_name'}{'value'};
 
     if (!$self->device->connected) {
         return &$error("Device is not connected.");
     }
 
-    my ($res, $err) = $self->device->no_vlan($vlan);
+    my ($res, $err) = $self->device->no_vlan($vlan, $vlan_name);
     if (defined $err) {
         $self->logger->error($err);
         return &$error($err);
@@ -662,14 +723,16 @@ sub _gather_operational_status{
 
     foreach my $name (keys %{$interfaces_state}) {
         if (defined $ifaces->{$name}) {
-            $self->logger->info('Updating info on interface');
+            $self->logger->info('Updating info on interface: ' . Dumper($interfaces_state->{$name}));
             $self->db->update_interface(
                 id          => $ifaces->{$name}->{id},
                 admin_up    => $interfaces_state->{$name}->{admin_status},
                 link_up     => $interfaces_state->{$name}->{status},
                 description => $interfaces_state->{$name}->{description},
                 mtu         => $interfaces_state->{$name}->{mtu},
-                speed       => $interfaces_state->{$name}->{speed}
+                speed       => $interfaces_state->{$name}->{speed},
+                hardware_type => $interfaces_state->{$name}->{hardware_type},
+                mac_addr      => $interfaces_state->{$name}->{mac_addr}
             );
             delete $ifaces->{$name};
         } else {
@@ -726,7 +789,7 @@ sub _gather_operational_status{
             $self->logger->info("Discovered vlan $vlan->{vlan}!");
             my $id = $self->db->add_vlan(
                 created_by => 1, # admin user
-                description => $vlan->{name},
+                description => $vlan->{description},
                 name => $vlan->{name},
                 number => $vlan->{vlan},
                 switch_id => $self->{id},
@@ -806,9 +869,19 @@ sub execute_command{
     # We are now ready to send our command and get the results! The
     # regex prompt matches on the end of a line followed by text that
     # ends with a hash.
-    my ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*\#$/);
-    if (defined $err) {
-        return &$success({success => 0, error => 1, error_msg => $err});
+    my $result;
+    my $err;
+
+    if ($self->vendor eq 'Brocade') {
+        ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*\#$/, $p_ref->{'cli_type'}{'value'});
+        if (defined $err) {
+            return &$success({success => 0, error => 1, error_msg => $err});
+        }
+    } else {
+        ($result, $err) = $self->device->issue_command($p_ref->{'command'}{'value'}, qr/\n.*(\> |\# )$/, $p_ref->{'cli_type'}{'value'});
+        if (defined $err) {
+            return &$success({success => 0, error => 1, error_msg => $err});
+        }
     }
 
     # TODO _gather_operational_status takes a while to complete which
