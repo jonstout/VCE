@@ -661,6 +661,7 @@ sub issue_command{
     my $self    = shift;
     my $command = shift;
     my $prompt  = shift;
+    my $operation = shift || 'read';
 
     my $statements_run = 0;
     my @statements = split(/;\s*/, $command);
@@ -682,6 +683,15 @@ sub issue_command{
         }
 
         $statements_run += 1;
+    }
+
+    if ($operation eq 'write') {
+        $self->logger->info("Running command: commit");
+        my $ok = $self->comm->issue_command('commit', $prompt);
+        if (!defined $ok) {
+            $self->logger->error("Couldn't run 'commit'.");
+        }
+        $result = '';
     }
 
     # Consider running C<conf t>, C<vlan 218>, C<spanning-tree>. To
