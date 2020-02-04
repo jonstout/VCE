@@ -334,6 +334,7 @@ async function renderCommands(cmds) {
   <td><label class="checkbox">
     <input id="command-${cmd.id}" data-id="${cmd.id}" data-switch-command-id="${cmd.switch_command_id}" onclick="toggleCommand(this)" type="checkbox" ${cmd.switch_command_id != null ? 'checked' : ''}>
   </label></td>
+  <td>${cmd.name}</td>
   <td><div style="font-family: monospace">${cmd.template}</div></td>
   <td>
     <div class="select is-small">
