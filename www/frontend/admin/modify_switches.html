@@ -74,7 +74,11 @@
       </div>
 
       <div class="grnoc-content">
-        <!--<h1 class="title">Modify switch</h1>-->
+        <!-- error message notification display. -->
+        <div id="notification" class="notification is-danger" style="display: none;">
+          <button id="notification-close" class="delete" onClick="toggleNotification(this)"></button>
+          <p id="notification-content"></p>
+        </div>
 
         <div class="tabs is-boxed">
           <ul>
@@ -94,6 +98,7 @@
               <thead>
                 <tr>
                   <th></th>
+                  <th></th>
                   <th>Name</th>
                   <th>Template</th>
                   <th>Role</th>
@@ -110,6 +115,7 @@
               <thead>
                 <tr>
                   <th></th>
+                  <th></th>
                   <th>Name</th>
                   <th>Template</th>
                   <th>Role</th>
@@ -125,6 +131,7 @@
             <table class="table is-striped is-fullwidth">
               <thead>
                 <tr>
+                  <th></th>
                   <th></th>
                   <th>Name</th>
                   <th>Template</th>
