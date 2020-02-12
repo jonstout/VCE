@@ -193,7 +193,7 @@ function getPortCommands() {
                 formContainer.appendChild(commandForm);
 
                 var opt = document.createElement('option');
-                opt.innerHTML = cmds[i].name;
+                opt.innerHTML = cmds[i].description;
                 opt.setAttribute('value', `form-${cmds[i].command_id}`);
 
                 if (cmds[i].operation == "read") {
@@ -360,7 +360,7 @@ function getVlanCommands() {
                 formContainer.appendChild(commandForm);
 
                 var opt = document.createElement('option');
-                opt.innerHTML = cmds[i].name;
+                opt.innerHTML = cmds[i].description;
                 opt.setAttribute('value', `form-${cmds[i].command_id}`);
 
                 if (cmds[i].operation == "read") {
@@ -410,7 +410,7 @@ function loadSwitchCommands() {
                 formContainer.appendChild(commandForm);
 
                 var opt = document.createElement('option');
-                opt.innerHTML = cmds[i].name;
+                opt.innerHTML = cmds[i].description;
                 opt.setAttribute('value', `form-${cmds[i].command_id}`);
 
                 if (cmds[i].operation == "read") {

@@ -348,6 +348,7 @@ sub get_switch_commands{
         $obj->{'command_id'} = $cmd->{'id'};
         $obj->{'method_name'} = $name;
         $obj->{'name'} = $cmd->{'name'};
+        $obj->{'description'} = $cmd->{'description'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
         $obj->{'operation'} = $cmd->{'operation'};
@@ -472,7 +473,6 @@ sub get_port_commands{
 
                 delete $command->{params};
                 delete $command->{interaction};
-                delete $command->{description};
                 delete $command->{actual_command};
 
                 push(@{$results}, $command);
@@ -543,6 +543,7 @@ sub get_vlan_commands{
 
         $obj->{'method_name'} = $name;
         $obj->{'name'} = $cmd->{'name'};
+        $obj->{'description'} = $cmd->{'description'};
         $obj->{'parameters'} = ();
         $obj->{'type'} = $cmd->{'type'};
         $obj->{'operation'} = $cmd->{'operation'};
