@@ -228,14 +228,12 @@ async function getCommands(switch_id) {
     }
 }
 
-async function addCommandToSwitch(command_id) {
+async function addCommandToSwitch(command_id, role) {
     let cookie = Cookies.getJSON('vce');
     let workgroup = cookie.workgroup;
 
     let params = new URLSearchParams(location.search);
     let switch_id = params.get('switch_id');
-
-    let role = document.querySelector(`#command-${command_id}-role`).value;
 
     let data = new FormData();
     data.set('method', 'add_command_to_switch');
@@ -244,22 +242,15 @@ async function addCommandToSwitch(command_id) {
     data.set('switch_id', switch_id);
     data.set('role', role);
 
-    try {
-        const url = '../api/switch.cgi';
-        const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
-        const obj  = await resp.json();
+    const url = '../api/switch.cgi';
+    const resp = await fetch(url, {method: 'post', credentials: 'include', body: data});
+    const obj  = await resp.json();
 
-        if ('error_text' in obj) throw obj.error_text;
+    if ('error_text' in obj) throw obj.error_text;
 
-        let cmd = document.querySelector(`#command-${command_id}`);
-        cmd.dataset.switchCommandId = obj.results[0].id;
-        let cmdRole = document.querySelector(`#command-${command_id}-role`);
-        cmdRole.dataset.switchCommandId = obj.results[0].id;
-        console.log('Command enabled.');
-    } catch (error) {
-        console.log(error);
-        return false;
-    }
+    let btn = document.querySelector(`button[data-command-id="${command_id}"]`);
+    btn.dataset.switchCommandId = obj.results[0].id;
+    console.log('Command enabled.');
 }
 
 async function removeCommandFromSwitch(command_id, switch_command_id) {
@@ -269,58 +260,81 @@ async function removeCommandFromSwitch(command_id, switch_command_id) {
     let params = new URLSearchParams(location.search);
     let switch_id = params.get('switch_id');
 
-    try {
-        const url = `../api/switch.cgi?method=remove_command_from_switch&workgroup=${workgroup}&id=${switch_command_id}`;
-        const resp = await fetch(url, {method: 'get', credentials: 'include'});
-        const obj  = await resp.json();
+    const url = `../api/switch.cgi?method=remove_command_from_switch&workgroup=${workgroup}&id=${switch_command_id}`;
+    const resp = await fetch(url, {method: 'get', credentials: 'include'});
+    const obj  = await resp.json();
 
-        if ('error_text' in obj) throw obj.error_text;
+    if ('error_text' in obj) throw obj.error_text;
 
-        let cmd = document.querySelector(`#command-${command_id}`);
-        cmd.dataset.switchCommandId = -1;
-        let cmdRole = document.querySelector(`#command-${command_id}-role`);
-        cmdRole.dataset.switchCommandId = -1;
-        console.log('Command disabled.');
-    } catch (error) {
-        console.log(error);
-        return false;
-    }
+    let btn = document.querySelector(`button[data-command-id="${command_id}"]`);
+    btn.dataset.switchCommandId = null;
+    console.log('Command disabled.');
 }
 
-async function toggleCommand(e) {
-    let command_id = e.dataset.id;
-    let switch_command_id = e.dataset.switchCommandId;
+async function enableCommandSaveButton(e) {
+  let command_id = e.dataset.commandId;
 
-    if (e.checked) {
-        addCommandToSwitch(command_id);
-    } else {
-        removeCommandFromSwitch(command_id, switch_command_id);
-    }
+  let btn = document.querySelector(`button[data-command-id="${command_id}"]`);
+  btn.removeAttribute('disabled');
+  btn.innerText = 'Save';
 }
 
-async function updateCommandRole(e) {
-    if (e.dataset.switchCommandId === 'null' || e.dataset.switchCommandId == -1) {
-        return false;
+async function updateSwitchCommand(e) {
+  let command_id = e.dataset.commandId;
+  let switch_command_id = (e.dataset.switchCommandId === 'null') ? null : e.dataset.switchCommandId;
+  let roleElem = document.querySelector(`select[data-command-id="${command_id}"`);
+  let role = roleElem.options[roleElem.selectedIndex].value;
+  let enabled = document.querySelector(`input[data-command-id="${command_id}"`).checked;
+
+  console.log('id:', command_id, 'switch_command_id:', switch_command_id, 'role:', role, 'enabled:', enabled);
+
+  let btn = document.querySelector(`button[data-command-id="${command_id}"]`);
+  btn.setAttribute('disabled', true);
+  btn.classList.add('is-loading');
+
+  try {
+    if (!switch_command_id && enabled) {
+      await addCommandToSwitch(command_id, role);
+      btn.innerText = 'Saved';
+      btn.classList.remove('is-loading');
     }
-
-    let cookie = Cookies.getJSON('vce');
-    let workgroup = cookie.workgroup;
-
-    let role = e.value;
-    let switch_command_id = e.dataset.switchCommandId;
-
-    try {
-        const url = `../api/switch.cgi?method=modify_switch_command&workgroup=${workgroup}&id=${switch_command_id}&role=${role}`;
-        const resp = await fetch(url, {method: 'get', credentials: 'include'});
-        const obj  = await resp.json();
-
-        if ('error_text' in obj) throw obj.error_text;
-
-        console.log('Command role updated.');
-    } catch (error) {
-        console.log(error);
-        return false;
+    else if (!switch_command_id && !enabled) {
+      // Do nothing
+      btn.innerText = 'Saved';
+      btn.classList.remove('is-loading');
     }
+    else if (switch_command_id && !enabled) {
+      await removeCommandFromSwitch(command_id, switch_command_id);
+      btn.innerText = 'Saved';
+      btn.classList.remove('is-loading');
+    }
+    else {
+      // Exists and enabled. Call modify.
+      await updateCommandRole(switch_command_id, role);
+      btn.innerText = 'Saved';
+      btn.classList.remove('is-loading');
+    }
+  } catch(error) {
+    console.log(error);
+
+    setNotification(error);
+    toggleNotification();
+
+    btn.removeAttribute('disabled');
+    btn.classList.remove('is-loading');
+  }
+}
+
+async function updateCommandRole(switch_command_id, role) {
+  let cookie = Cookies.getJSON('vce');
+  let workgroup = cookie.workgroup;
+
+  const url = `../api/switch.cgi?method=modify_switch_command&workgroup=${workgroup}&id=${switch_command_id}&role=${role}`;
+  const resp = await fetch(url, {method: 'get', credentials: 'include'});
+  const obj  = await resp.json();
+
+  if ('error_text' in obj) throw obj.error_text;
+  console.log('Command role updated.');
 }
 
 async function renderCommands(cmds) {
@@ -331,13 +345,17 @@ async function renderCommands(cmds) {
     cmds.forEach(function(cmd) {
         let row = `
 <tr>
+  <td>
+    <button class="button is-small is-link" data-switch-command-id="${cmd.switch_command_id}" data-command-id="${cmd.id}" onClick="updateSwitchCommand(this)" disabled>Saved</button>
+  </td>
   <td><label class="checkbox">
-    <input id="command-${cmd.id}" data-id="${cmd.id}" data-switch-command-id="${cmd.switch_command_id}" onclick="toggleCommand(this)" type="checkbox" ${cmd.switch_command_id != null ? 'checked' : ''}>
+    <input data-command-id="${cmd.id}" onclick="enableCommandSaveButton(this)" type="checkbox" ${cmd.switch_command_id != null ? 'checked' : ''}>
   </label></td>
-  <td><div style="font-family: monospace">${cmd.template}</div></td>
+  <td style="white-space: nowrap">${cmd.name}</td>
+  <td width="100%"><div style="font-family: monospace">${cmd.template}</div></td>
   <td>
     <div class="select is-small">
-      <select id="command-${cmd.id}-role" data-switch-command-id="${cmd.switch_command_id}" onchange="updateCommandRole(this)">
+      <select data-command-id="${cmd.id}" onchange="enableCommandSaveButton(this)">
         <option ${cmd.role == 'admin' ? 'selected' : ''}>admin</option>
         <option ${cmd.role == 'owner' ? 'selected' : ''}>owner</option>
         <option ${cmd.role == 'user' ? 'selected' : ''}>user</option>
@@ -365,4 +383,18 @@ async function renderCommands(cmds) {
 
     let vlist = document.querySelector('#vlan-command-list');
     vlist.innerHTML = vlans;
+}
+
+function toggleNotification(e) {
+  let elem = document.querySelector('#notification');
+  if (elem.style.display === 'none') {
+    elem.style.display = 'block';
+  } else {
+    elem.style.display = 'none';
+  }
+}
+
+function setNotification(content) {
+  let elem = document.querySelector('#notification-content');
+  elem.innerText = content;
 }
